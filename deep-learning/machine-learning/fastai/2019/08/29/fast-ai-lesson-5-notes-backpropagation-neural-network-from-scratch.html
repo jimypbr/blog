@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai v3 Lesson 5 Notes: Backpropagation; Neural Network From Scratch | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai v3 Lesson 5 Notes: Backpropagation; Neural Network From Scratch" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 5 of part 1 of fast.ai v3 – Back propagation; Accelerated SGD; Neural net from scratch." />
+<meta property="og:description" content="My personal notes on Lesson 5 of part 1 of fast.ai v3 – Back propagation; Accelerated SGD; Neural net from scratch." />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/2019/08/29/fast-ai-lesson-5-notes-backpropagation-neural-network-from-scratch.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/2019/08/29/fast-ai-lesson-5-notes-backpropagation-neural-network-from-scratch.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-08-29T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/2019/08/29/fast-ai-lesson-5-notes-backpropagation-neural-network-from-scratch.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 5 Notes: Backpropagation; Neural Network From Scratch","dateModified":"2019-08-29T00:00:00-05:00","datePublished":"2019-08-29T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/2019/08/29/fast-ai-lesson-5-notes-backpropagation-neural-network-from-scratch.html"},"description":"My personal notes on Lesson 5 of part 1 of fast.ai v3 – Back propagation; Accelerated SGD; Neural net from scratch.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai v3 Lesson 5 Notes: Backpropagation; Neural Network From Scratch</h1><p class="page-description">My personal notes on Lesson 5 of part 1 of fast.ai v3 -- Back propagation; Accelerated SGD; Neural net from scratch.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-08-29T00:00:00-05:00" itemprop="datePublished">
+        Aug 29, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      17 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview-of-the-lesson">Overview of the Lesson</a></li>
+<li class="toc-entry toc-h2"><a href="#components-of-deep-learning">Components of Deep Learning</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#backpropagation">Backpropagation</a></li>
+<li class="toc-entry toc-h3"><a href="#how-is-transfer-learning-done">How is Transfer Learning Done?</a></li>
+<li class="toc-entry toc-h3"><a href="#freezing-layers">Freezing Layers</a></li>
+<li class="toc-entry toc-h3"><a href="#discriminative-learning-rates">Discriminative Learning Rates</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#collaborative-filtering-deep-dive">Collaborative Filtering: Deep Dive</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#interpreting-bias">Interpreting Bias</a></li>
+<li class="toc-entry toc-h3"><a href="#interpreting-weights-the-embeddings">Interpreting Weights (the Embeddings)</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#factor-0">Factor 0</a></li>
+<li class="toc-entry toc-h4"><a href="#factor-1">Factor 1</a></li>
+<li class="toc-entry toc-h4"><a href="#factor-2">Factor 2</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#regularization-weight-decay">Regularization: Weight Decay</a></li>
+<li class="toc-entry toc-h2"><a href="#jeremy-says">Jeremy Says…</a></li>
+<li class="toc-entry toc-h2"><a href="#q--a">Q &amp; A</a></li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview-of-the-lesson">
+<a class="anchor" href="#overview-of-the-lesson" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview of the Lesson</h2>
+
+<p>This lesson looks at the fundament components of deep learning - parameters, activations, backpropagation, transfer learning, and discriminative learning rates.</p>
+
+<h2 id="components-of-deep-learning">
+<a class="anchor" href="#components-of-deep-learning" aria-hidden="true"><span class="octicon octicon-link"></span></a>Components of Deep Learning</h2>
+
+<p>Roughly speaking, this is the bunch of concepts that we need to learn about -</p>
+
+<ul>
+  <li>Inputs</li>
+  <li>Weights/parameters</li>
+  <li>Random</li>
+  <li>Activations</li>
+  <li>Activation functions / nonlinearities</li>
+  <li>Output</li>
+  <li>Loss</li>
+  <li>Metric</li>
+  <li>Cross-entropy</li>
+  <li>Softmax</li>
+  <li>Fine tuning</li>
+  <li>Layer deletion and random weights</li>
+  <li>Freezing &amp; unfreezing</li>
+</ul>
+
+<p>Diagram of a neural network:</p>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/7/770155ba66ee3b7f7a2b6effa6bf14ccc1e52bd1_2_690x299.jpeg" alt="03%20PM"></p>
+
+<p>There are three types of layer in a NN:</p>
+
+<ol>
+  <li>
+    <p><strong>Input</strong>.</p>
+  </li>
+  <li>
+    <p><strong>Weights/Parameters</strong>: These are layers that contain parameters or weights. These are things like matrices or convolutions. Parameters are used by multiplying them by input activations doing a matrix product. The yellow things in the above diagram are our weight matrices / weight tensors. Parameters are the things that your model learns in train via gradient descent:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">weights</span><span class="p">.</span><span class="n">grad</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p><strong>Activations</strong>: These are layers that contain activations, also called as non-linear layers which are stateless. For example, ReLu, softmax, or sigmoid.</p>
+  </li>
+</ol>
+
+<p>Here is the process of input, weight multiplication, and activation up close (<a href="https://www.jeremyjordan.me/intro-to-neural-networks/">image credit</a>):</p>
+
+<p><img src="/blog/images/fastai/image-20190827124059217.png" alt="image-20190827124059217"></p>
+
+<p>The parameters/weights are the matrix $\mathbf{W}$, the input is the vector $x$, and there is also the <em>bias</em> vector $b$. This can be expressed mathematically as:
+\(\mathbf{a} = g(\mathbf{W^T}\mathbf{x} + \mathbf{b})\)
+Let’s get an intuition for how the dimension of the data changes as it flows through the network. In the diagram above there is an input vector of size 4 and a weight matrix of size 4x3. The matrix vector product in terms of just the dimensions is: $(4, 3)^T \cdot (4) = (3, 4) \cdot (4) = (3)$.</p>
+
+<p>In summation notation this is $(W_{ji})^Tx_j = W_{ij} x_j = a_i$. The $j$ terms are summed out and we are left with $i$ dimension only.</p>
+
+<p>The <strong>activation function</strong> is an <em>element-wise function</em>. It’s a function that is applied to each element of the input, activations in turn and creates one activation for each input element. If it starts with a twenty long vector it creates a twenty long vector by looking at each one of those, in turn, doing one thing to it and spitting out the answer, so an element-wise function. These days the activation function most often used is <strong>ReLu</strong>.</p>
+
+<h3 id="backpropagation">
+<a class="anchor" href="#backpropagation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Backpropagation</h3>
+
+<p>After the loss has been calculated from the different between the output and the ground truth, how are millions of parameters in the network then updated? This is done by a clever algorithm called <strong>backpropogation</strong>. This algorithm calculates the partial derivatives of the loss with respect to every parameter in the network. It does this using the <em>chain-rule</em> from calculus. The best explanation of this I’ve seen is from <a href="https://colah.github.io/posts/2015-08-Backprop/">Chris Olah’s blog</a>.</p>
+
+<p>In PyTorch, these derivatives are calculated automatically for you (aka <em>autograd</em>) and the gradient of any PyTorch variable is stored in its <code class="language-plaintext highlighter-rouge">.grad</code> attribute.</p>
+
+<p>Mathematically the weights are updated like so:
+\(w_t = w_{t-1} - lr \times \frac{\partial L}{\partial w_{t-1}}\)</p>
+
+<h3 id="how-is-transfer-learning-done">
+<a class="anchor" href="#how-is-transfer-learning-done" aria-hidden="true"><span class="octicon octicon-link"></span></a>How is Transfer Learning Done?</h3>
+
+<p>What happens when we take a resnet34 trained on ImageNet and we do transfer learning? How can a network that is trained to identify 1000 different everyday objects be repurposed for, say, identifying galaxies?</p>
+
+<p>Let’s look at some examples we’ve seen already. Here are is the last layer group of the resnet34 used in the dog/cat breed example:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">Sequential</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">AdaptiveConcatPool2d</span><span class="p">(</span>
+      <span class="p">(</span><span class="n">ap</span><span class="p">):</span> <span class="n">AdaptiveAvgPool2d</span><span class="p">(</span><span class="n">output_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">mp</span><span class="p">):</span> <span class="n">AdaptiveMaxPool2d</span><span class="p">(</span><span class="n">output_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">Flatten</span><span class="p">()</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">4</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">7</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">8</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">)</span>
+</code></pre></div></div>
+
+<p>And here is the same layer group from the head pose example:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">Sequential</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">AdaptiveConcatPool2d</span><span class="p">(</span>
+      <span class="p">(</span><span class="n">ap</span><span class="p">):</span> <span class="n">AdaptiveAvgPool2d</span><span class="p">(</span><span class="n">output_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">mp</span><span class="p">):</span> <span class="n">AdaptiveMaxPool2d</span><span class="p">(</span><span class="n">output_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">Flatten</span><span class="p">()</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">4</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">7</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">8</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">)</span>
+</code></pre></div></div>
+
+<p>The two layers that change here are (4) and (8).</p>
+
+<ul>
+  <li>Layer (4) is a matrix with some default size that is the same in both cases. It anyway needs to be relearned for a new problem.</li>
+  <li>Layer (8) is different in <code class="language-plaintext highlighter-rouge">out_features</code>. This is the dimensionality of the output. There are 37 cat/dog breeds in the first example, and there are x and y coordinates in the second. Layer (8) is a Linear layer – i.e. it’s a matrix!</li>
+</ul>
+
+<p>So to do transfer learning we just need to swap out the last matrix with a new one.</p>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/b/bec5bf8dc8376fbc2ec1e0e3067735c60b167c0e_2_345x500.jpeg" alt="41%20AM"></p>
+
+<p>For an imagenet network this matrix would have shape (512, 1000), for the cat/dog (512, 37), and for the head pose (512, 2). Every row in this matrix represents a category you are predicting.</p>
+
+<p>Fastai library figures out the right size for this matrix by looking at the data bunch you passed to it.</p>
+
+<h3 id="freezing-layers">
+<a class="anchor" href="#freezing-layers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Freezing Layers</h3>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/b/be3fef79e56f08a21fafa2ea595ff956fb6b3218_2_690x471.jpeg" alt="53%20AM"></p>
+
+<p>The new head of the network has two randomly initialized matrices. They need to be trained because they are random, however the rest of the network is quite well trained on imagenet already - they are <em>vastly</em> better than random even though they weren’t trained on the task at hand.</p>
+
+<p>So we <em>freeze</em> all the layers before the head, which means we don’t update their parameters during training. It’ll be a little bit faster because there are fewer calculations to do, and also it will save some memory because there are fewer gradients to store.</p>
+
+<p>After training a few epochs with just the head unfrozen, we are ready to train the whole network. So we unfreeze everything.</p>
+
+<h3 id="discriminative-learning-rates">
+<a class="anchor" href="#discriminative-learning-rates" aria-hidden="true"><span class="octicon octicon-link"></span></a>Discriminative Learning Rates</h3>
+
+<p>Now we’re going to train the whole thing but we still have a pretty good sense that these new layers we added to the end probably need more training and these ones right at the start that might just be like diagonal edges probably don’t need much training at all.</p>
+
+<p>Let’s review what the different layers in a CNN learn to do first. The first layer visualized looks like this:</p>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/4/4d6499d4661d07e7cd7f85ee1bd8c8f33c05d84b_2_690x283.jpeg" alt="31%20PM"></p>
+
+<p>This layer is good at finding diagonal lines in different directions.</p>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/e/e78155cabb4507c8008aa0e8eefef003935b60a6_2_690x333.jpeg" alt="07%20PM"></p>
+
+<p>In layer 2 some of the filters were good at spotting corners in the bottom right corner.</p>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/e/e0e27292cbc4f016ab3f6a3c7dfc3991b6a01a2b_2_690x260.png" alt="39%20PM"></p>
+
+<p>In layer 3, one of the filters found repeating patterns or round orange things or fluffy or floral textures.</p>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/2X/d/d147dce833ff2dfb9c947fcbf79621cf5e8c6374_2_690x422.jpeg" alt="17%20PM"></p>
+
+<p>As we go deeper, they’re becoming more sophisticated but also more specific.
+By layer 5, It could find bird eyeballs or dog faces.</p>
+
+<p>If you’re wanting to transfer and learn to something for galaxy morphology there’s probably going to be no eyeballs in that dataset. So the later layers are no good to you but there will certainly be some repeating patterns or some diagonal edges. The earlier a layers is in the pretrained model the more likely it is that you want those weights to stay as they are.</p>
+
+<p>We can implement this by splitting the model into a few sections and giving the earlier sections slower learning rates. Earlier layers of the model we might give a learning rate of 1e - 5 and newly added layers of the model we might give a learning rate of 1e - 3. What’s gonna happen now is that we can keep training the entire network. But because the learning rate for the early layers is smaller it’s going to move them around less because we think they’re already pretty good. If it’s already pretty good to the optimal value if you used a higher learning rate it could kick it out. It could actually make it worse which we really don’t want to happen.</p>
+
+<p>In fastai this is done with any of the following lines of code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">)</span>
+<span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">))</span>
+<span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>These mean:</p>
+
+<ol>
+  <li>A single number like <code class="language-plaintext highlighter-rouge">1e-3</code>:
+Just using a single number means every layer gets the same learning rate so you’re not using discriminative learning rates.</li>
+  <li>A slice with a single number <code class="language-plaintext highlighter-rouge">slice(1e-3)</code>:If you pass a single number to slice it means the final layers get a learning rate of <code class="language-plaintext highlighter-rouge">1e-3</code> and then all the other layers get the same learning rate which is that divided by 3. All of the other layers will be <code class="language-plaintext highlighter-rouge">(1e-3)/3</code> and the last layers will be <code class="language-plaintext highlighter-rouge">1e-3</code>.</li>
+  <li>A slice with two numbers, <code class="language-plaintext highlighter-rouge">slice(1e-5, 1e-3)</code>
+In the last case, the final layers the these randomly hidden added layers will still be again <code class="language-plaintext highlighter-rouge">1e-3</code>.
+The first layers will get <code class="language-plaintext highlighter-rouge">1e-5</code>. The other layers will get learning rates that are equally spread between those two. Multiplicatively equal. If there were three layers there would be <code class="language-plaintext highlighter-rouge">1e-5</code>, <code class="language-plaintext highlighter-rouge">1e-4</code> and <code class="language-plaintext highlighter-rouge">1e-3</code>. Multiplied by the same factor between layers each time.</li>
+</ol>
+
+<p>This divided by 3 thing that is a little weird and we won’t talk about why that is until part two of the course. it is specific quirk around batch normalization.</p>
+
+<h2 id="collaborative-filtering-deep-dive">
+<a class="anchor" href="#collaborative-filtering-deep-dive" aria-hidden="true"><span class="octicon octicon-link"></span></a>Collaborative Filtering: Deep Dive</h2>
+
+<p>Recall from the previous lesson the movie recommendation problem.</p>
+
+<p><img src="/blog/images/fastai/image-20190829135757194.png" alt="image-20190829135757194"></p>
+
+<p>For the movielens dataset the model looks like:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span><span class="o">&gt;</span> <span class="n">learn</span><span class="p">.</span><span class="n">model</span>
+
+  <span class="n">EmbeddingDotBias</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">u_weight</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">944</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">i_weight</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">1654</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">u_bias</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">944</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">i_bias</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">1654</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="p">)</span>
+</code></pre></div></div>
+
+<p>We already know what <code class="language-plaintext highlighter-rouge">u_weight</code> and <code class="language-plaintext highlighter-rouge">i_weight</code> are: the user and movie embedding matrices, respectively. What are the additional components of the model: <code class="language-plaintext highlighter-rouge">u_bias</code> and <code class="language-plaintext highlighter-rouge">i_bias</code>?</p>
+
+<h3 id="interpreting-bias">
+<a class="anchor" href="#interpreting-bias" aria-hidden="true"><span class="octicon octicon-link"></span></a>Interpreting Bias</h3>
+
+<p>These are the 1D bias terms for the movies and films. In the model diagram above these are the two edge nodes on the left and right that connect to the <code class="language-plaintext highlighter-rouge">ADD</code> node.</p>
+
+<p><em>Every user and every movie has its own bias term</em>.</p>
+
+<ul>
+  <li>
+    <p>You can interpret user bias as how much that user likes movies.</p>
+  </li>
+  <li>
+    <p>You can interpret movie bias as how well liked a movie is in general. (Ironically, the bias is the <em>unbiased</em> movie score).</p>
+  </li>
+</ul>
+
+<p>Here are the movies with the highest bias alongside their actual movie rating:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">movie_bias</span> <span class="o">=</span> <span class="n">learn</span><span class="p">.</span><span class="n">bias</span><span class="p">(</span><span class="n">top_movies</span><span class="p">,</span> <span class="n">is_item</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Top 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.6105</span><span class="p">),</span> <span class="s">"Schindler's List (1993)"</span><span class="p">,</span> <span class="mf">4.466442953020135</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5817</span><span class="p">),</span> <span class="s">'Titanic (1997)'</span><span class="p">,</span> <span class="mf">4.2457142857142856</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5685</span><span class="p">),</span> <span class="s">'Shawshank Redemption, The (1994)'</span><span class="p">,</span> <span class="mf">4.445229681978798</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5451</span><span class="p">),</span> <span class="s">'L.A. Confidential (1997)'</span><span class="p">,</span> <span class="mf">4.161616161616162</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5350</span><span class="p">),</span> <span class="s">'Rear Window (1954)'</span><span class="p">,</span> <span class="mf">4.3875598086124405</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5341</span><span class="p">),</span> <span class="s">'Silence of the Lambs, The (1991)'</span><span class="p">,</span> <span class="mf">4.28974358974359</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5330</span><span class="p">),</span> <span class="s">'Star Wars (1977)'</span><span class="p">,</span> <span class="mf">4.3584905660377355</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5227</span><span class="p">),</span> <span class="s">'Good Will Hunting (1997)'</span><span class="p">,</span> <span class="mf">4.262626262626263</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5114</span><span class="p">),</span> <span class="s">'As Good As It Gets (1997)'</span><span class="p">,</span> <span class="mf">4.196428571428571</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.4800</span><span class="p">),</span> <span class="s">'Casablanca (1942)'</span><span class="p">,</span> <span class="mf">4.45679012345679</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.4698</span><span class="p">),</span> <span class="s">'Boot, Das (1981)'</span><span class="p">,</span> <span class="mf">4.203980099502488</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.4589</span><span class="p">),</span> <span class="s">'Close Shave, A (1995)'</span><span class="p">,</span> <span class="mf">4.491071428571429</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.4567</span><span class="p">),</span> <span class="s">'Apt Pupil (1998)'</span><span class="p">,</span> <span class="mf">4.1</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.4566</span><span class="p">),</span> <span class="s">'Vertigo (1958)'</span><span class="p">,</span> <span class="mf">4.251396648044692</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.4542</span><span class="p">),</span> <span class="s">'Godfather, The (1972)'</span><span class="p">,</span> <span class="mf">4.283292978208232</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p>Bottom 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4076</span><span class="p">),</span>
+  <span class="s">'Children of the Corn: The Gathering (1996)'</span><span class="p">,</span>
+  <span class="mf">1.3157894736842106</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3053</span><span class="p">),</span>
+  <span class="s">'Lawnmower Man 2: Beyond Cyberspace (1996)'</span><span class="p">,</span>
+  <span class="mf">1.7142857142857142</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2892</span><span class="p">),</span> <span class="s">'Cable Guy, The (1996)'</span><span class="p">,</span> <span class="mf">2.339622641509434</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2856</span><span class="p">),</span> <span class="s">'Mortal Kombat: Annihilation (1997)'</span><span class="p">,</span> <span class="mf">1.9534883720930232</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2530</span><span class="p">),</span> <span class="s">'Striptease (1996)'</span><span class="p">,</span> <span class="mf">2.2388059701492535</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2405</span><span class="p">),</span> <span class="s">'Free Willy 3: The Rescue (1997)'</span><span class="p">,</span> <span class="mf">1.7407407407407407</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2361</span><span class="p">),</span> <span class="s">'Showgirls (1995)'</span><span class="p">,</span> <span class="mf">1.9565217391304348</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2332</span><span class="p">),</span> <span class="s">'Bio-Dome (1996)'</span><span class="p">,</span> <span class="mf">1.903225806451613</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2279</span><span class="p">),</span> <span class="s">'Crow: City of Angels, The (1996)'</span><span class="p">,</span> <span class="mf">1.9487179487179487</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2273</span><span class="p">),</span> <span class="s">'Barb Wire (1996)'</span><span class="p">,</span> <span class="mf">1.9333333333333333</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2246</span><span class="p">),</span> <span class="s">"McHale's Navy (1997)"</span><span class="p">,</span> <span class="mf">2.1884057971014492</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2197</span><span class="p">),</span> <span class="s">'Beverly Hills Ninja (1997)'</span><span class="p">,</span> <span class="mf">2.3125</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2178</span><span class="p">),</span> <span class="s">"Joe's Apartment (1996)"</span><span class="p">,</span> <span class="mf">2.2444444444444445</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2080</span><span class="p">),</span> <span class="s">'Island of Dr. Moreau, The (1996)'</span><span class="p">,</span> <span class="mf">2.1578947368421053</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2064</span><span class="p">),</span> <span class="s">'Tales from the Hood (1995)'</span><span class="p">,</span> <span class="mf">2.037037037037037</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p>Having seen many of the films in both these lists, I’m not not surprise by what I see here!</p>
+
+<h3 id="interpreting-weights-the-embeddings">
+<a class="anchor" href="#interpreting-weights-the-embeddings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Interpreting Weights (the Embeddings)</h3>
+
+<p>Grab the weights:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span><span class="o">&gt;</span> <span class="n">movie_w</span> <span class="o">=</span> <span class="n">learn</span><span class="p">.</span><span class="n">weight</span><span class="p">(</span><span class="n">top_movies</span><span class="p">,</span> <span class="n">is_item</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="err">$</span><span class="o">&gt;</span> <span class="n">movie_w</span><span class="p">.</span><span class="n">shape</span>
+
+	<span class="n">torch</span><span class="p">.</span><span class="n">Size</span><span class="p">([</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">40</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>There are 40 factors in the model. Looking at the 40 latent factors isn’t intuitive or necessarily meaningful so it’s better to squish the 40 factors down to 3 - using Principle Component Analysis (PCA).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span><span class="o">&gt;</span> <span class="n">movie_pca</span> <span class="o">=</span> <span class="n">movie_w</span><span class="p">.</span><span class="n">pca</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="err">$</span><span class="o">&gt;</span> <span class="n">movie_pca</span><span class="p">.</span><span class="n">shape</span>
+	
+	<span class="n">torch</span><span class="p">.</span><span class="n">Size</span><span class="p">([</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>We can now rank each of the films along these 3 dimensions, knowing film, interpret what these dimensions mean.</p>
+
+<h4 id="factor-0">
+<a class="anchor" href="#factor-0" aria-hidden="true"><span class="octicon octicon-link"></span></a>Factor 0</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">fac0</span><span class="p">,</span><span class="n">fac1</span><span class="p">,</span><span class="n">fac2</span> <span class="o">=</span> <span class="n">movie_pca</span><span class="p">.</span><span class="n">t</span><span class="p">()</span>
+<span class="n">movie_comp</span> <span class="o">=</span> <span class="p">[(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fac0</span><span class="p">,</span> <span class="n">top_movies</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p>Top 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.1000</span><span class="p">),</span> <span class="s">'Wrong Trousers, The (1993)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0800</span><span class="p">),</span> <span class="s">'Close Shave, A (1995)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0705</span><span class="p">),</span> <span class="s">'Casablanca (1942)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0304</span><span class="p">),</span> <span class="s">'Lawrence of Arabia (1962)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9957</span><span class="p">),</span> <span class="s">'Citizen Kane (1941)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9792</span><span class="p">),</span> <span class="s">'Some Folks Call It a Sling Blade (1993)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9778</span><span class="p">),</span> <span class="s">'Persuasion (1995)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9752</span><span class="p">),</span> <span class="s">'North by Northwest (1959)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9706</span><span class="p">),</span> <span class="s">'Wallace &amp; Gromit: The Best of Aardman Animation (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9703</span><span class="p">),</span> <span class="s">'Chinatown (1974)'</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p>Bottom 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.2963</span><span class="p">),</span> <span class="s">'Home Alone 3 (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.2210</span><span class="p">),</span> <span class="s">"McHale's Navy (1997)"</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.2199</span><span class="p">),</span> <span class="s">'Leave It to Beaver (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.1918</span><span class="p">),</span> <span class="s">'Jungle2Jungle (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.1209</span><span class="p">),</span> <span class="s">'D3: The Mighty Ducks (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0980</span><span class="p">),</span> <span class="s">'Free Willy 3: The Rescue (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0890</span><span class="p">),</span> <span class="s">'Children of the Corn: The Gathering (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0873</span><span class="p">),</span> <span class="s">'Bio-Dome (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0436</span><span class="p">),</span> <span class="s">'Mortal Kombat: Annihilation (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0409</span><span class="p">),</span> <span class="s">'Grease 2 (1982)'</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p><strong>Interpretation</strong>: This dimension is best described as ‘connoisseur movies’.</p>
+
+<h4 id="factor-1">
+<a class="anchor" href="#factor-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Factor 1</h4>
+
+<p>Top 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.1052</span><span class="p">),</span> <span class="s">'Braveheart (1995)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0759</span><span class="p">),</span> <span class="s">'Titanic (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0202</span><span class="p">),</span> <span class="s">'Raiders of the Lost Ark (1981)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.9324</span><span class="p">),</span> <span class="s">'Forrest Gump (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8627</span><span class="p">),</span> <span class="s">'Lion King, The (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8600</span><span class="p">),</span> <span class="s">"It's a Wonderful Life (1946)"</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8306</span><span class="p">),</span> <span class="s">'Pretty Woman (1990)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8271</span><span class="p">),</span> <span class="s">'Return of the Jedi (1983)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8211</span><span class="p">),</span> <span class="s">"Mr. Holland's Opus (1995)"</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8205</span><span class="p">),</span> <span class="s">'Field of Dreams (1989)'</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p>Bottom 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.8085</span><span class="p">),</span> <span class="s">'Nosferatu (Nosferatu, eine Symphonie des Grauens) (1922)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.8007</span><span class="p">),</span> <span class="s">'Brazil (1985)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7866</span><span class="p">),</span> <span class="s">'Trainspotting (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7703</span><span class="p">),</span> <span class="s">'Ready to Wear (Pret-A-Porter) (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7173</span><span class="p">),</span> <span class="s">'Beavis and Butt-head Do America (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7150</span><span class="p">),</span> <span class="s">'Serial Mom (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7144</span><span class="p">),</span> <span class="s">'Exotica (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7129</span><span class="p">),</span> <span class="s">'Lost Highway (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7094</span><span class="p">),</span> <span class="s">'Keys to Tulsa (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7083</span><span class="p">),</span> <span class="s">'Jude (1996)'</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p><strong>Interpretation</strong>: This dimension I think can be best described as ‘blockbuster’, or ‘family’.</p>
+
+<h4 id="factor-2">
+<a class="anchor" href="#factor-2" aria-hidden="true"><span class="octicon octicon-link"></span></a>Factor 2</h4>
+
+<p>Top 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0152</span><span class="p">),</span> <span class="s">'Beavis and Butt-head Do America (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8703</span><span class="p">),</span> <span class="s">'Reservoir Dogs (1992)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8640</span><span class="p">),</span> <span class="s">'Pulp Fiction (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8582</span><span class="p">),</span> <span class="s">'Terminator, The (1984)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8572</span><span class="p">),</span> <span class="s">'Scream (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.8058</span><span class="p">),</span> <span class="s">'Terminator 2: Judgment Day (1991)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.7728</span><span class="p">),</span> <span class="s">'Seven (Se7en) (1995)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.7457</span><span class="p">),</span> <span class="s">'Starship Troopers (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.7243</span><span class="p">),</span> <span class="s">'Clerks (1994)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.7227</span><span class="p">),</span> <span class="s">'Die Hard (1988)'</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p>Bottom 10:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6912</span><span class="p">),</span> <span class="s">'Lone Star (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6720</span><span class="p">),</span> <span class="s">'Jane Eyre (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6613</span><span class="p">),</span> <span class="s">'Steel (1997)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6227</span><span class="p">),</span> <span class="s">'Piano, The (1993)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6183</span><span class="p">),</span> <span class="s">'My Fair Lady (1964)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5946</span><span class="p">),</span> <span class="s">'Evita (1996)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5827</span><span class="p">),</span> <span class="s">'Home for the Holidays (1995)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5669</span><span class="p">),</span> <span class="s">'Cinema Paradiso (1988)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5668</span><span class="p">),</span> <span class="s">'All About Eve (1950)'</span><span class="p">),</span>
+ <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5586</span><span class="p">),</span> <span class="s">'Sound of Music, The (1965)'</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<h2 id="regularization-weight-decay">
+<a class="anchor" href="#regularization-weight-decay" aria-hidden="true"><span class="octicon octicon-link"></span></a>Regularization: Weight Decay</h2>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson3/1.png" alt="img"></p>
+
+<p>On the left the model isn’t complex enough. One the right the model has more parameters and is too complex. The middle model has just the right level of complexity.</p>
+
+<p>In Jeremy’s opinion, to reduce model complexity:</p>
+
+<ul>
+  <li>In statistics: they reduce the number of parameters. Jeremy thinks this is wrong.</li>
+  <li>In machine learning: they increase the number of parameters, but increase the amount of <em>regularization</em>.</li>
+</ul>
+
+<p>The regularization used in fastai is <strong>weight decay</strong> (aka <em>L2 regularization</em>). This is where the loss function is modified with an extra component that penalizes extreme values of the weights.</p>
+
+<ul>
+  <li>Unregularized loss:</li>
+</ul>
+
+\[\begin{align}
+	L(x, w) &amp;= mse(\hat{y}, y) \nonumber \\
+				  &amp;= mse(m(x, w), y) \\
+				  
+	
+\end{align}\]
+
+<ul>
+  <li>L2 regularized loss:</li>
+</ul>
+
+\[L(x, w) = mse(m(x,w), y) + \lambda\sum w^2\]
+
+<p>The weight decay parameter $\lambda$ corresponds to the fastai parameter to the <code class="language-plaintext highlighter-rouge">Learner</code> model: <code class="language-plaintext highlighter-rouge">wd</code> . This is set by default to 0.01.</p>
+
+<ul>
+  <li>
+    <p>Higher values of <code class="language-plaintext highlighter-rouge">wd</code> give <em>more</em> regularlization. Looking at the diagram of line fits above, more regularlization makes the line ‘<em>stiffer</em>’ - harder to force through every point.</p>
+  </li>
+  <li>
+    <p>Lower values of <code class="language-plaintext highlighter-rouge">wd</code>, conversely, make the line ‘<em>slacker</em>’ - it’s easier to force it through every point.</p>
+  </li>
+  <li>
+    <p>It’s worth experimenting with <code class="language-plaintext highlighter-rouge">wd</code> if your model is overfitting or underfitting.</p>
+  </li>
+</ul>
+
+<p>With weight decay the update formula for the weights in gradient descent becomes:</p>
+
+\[w_t = w_{t-1} - lr \times \frac{\partial L}{\partial w_{t-1}} - lr\times \lambda w_{t-1}\]
+
+<p>(<a href="https://stats.stackexchange.com/questions/29130/difference-between-neural-net-weight-decay-and-learning-rate">Source</a>)</p>
+
+<h2 id="jeremy-says">
+<a class="anchor" href="#jeremy-says" aria-hidden="true"><span class="octicon octicon-link"></span></a>Jeremy Says…</h2>
+
+<ol>
+  <li>The answer to the question “Should I try <em>blah</em>?” is to try <em>blah</em> and see, that’s how you become a good practitioner. <a href="https://youtu.be/CJKnDu2dxOE?t=2800">Lesson 5: Should I try <em>blah</em>?</a>
+</li>
+  <li>If you want to play around, try to create your own nn.linear class. You could create something called My_Linear and it will take you, depending on your PyTorch experience, an hour or two. We don’t want any of this to be magic and you know everything necessary to create this now. These are the things you should be doing for assignments this week, not so much new applications but trying to write more of these things from scratch and get them to work. Learn how to debug them and check them to see what’s going in and coming out. <a href="https://youtu.be/CJKnDu2dxOE?t=5431">Lesson 5 Assignment: Create your own version of nn.linear</a>
+</li>
+  <li>A great assignment would be to take Lesson 2 SGD and try to add momentum to it. Or even the new notebook we have for MNIST, get rid of the Optim.SGD and write your own update function with momentum <a href="https://youtu.be/CJKnDu2dxOE?t=6792">Lesson 5: Another suggested assignment</a>
+</li>
+  <li>It’s definitely worth knowing that taking layers of neural nets and chucking them through PCA is very often a good idea. Because very often you have way more activations than you want in a layer, and there’s all kinds of reasons you would might want to play with it. For example, Francisco who’s sitting next to me today has been working on something to do with image similarity. And for image similarity, a nice way to do that is to compare activations from a model, but often those activations will be huge and therefore your thing could be really slow and unwieldy. So people often, for something like image similarity, will chuck it through a PCA first and that’s kind of cool.</li>
+</ol>
+
+<p>(<a href="https://forums.fast.ai/t/things-jeremy-says-to-do/36682">Source - Robert Bracco</a>)</p>
+
+<h2 id="q--a">
+<a class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<ul>
+  <li>
+    <p><em>When we load a pre-trained model, can we explore the activation grids to see what they might be good at recognizing? [<a href="https://youtu.be/uQtTwhpv7Ew?t=2171">36:11</a>]</em></p>
+
+    <blockquote>
+      <p>Yes, you can. And we will learn how to (should be) in the next lesson.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Can we have an explanation of what the first argument in <code class="language-plaintext highlighter-rouge">fit_one_cycle</code> actually represents? Is it equivalent to an epoch?</em></p>
+
+    <blockquote>
+      <p>Yes, the first argument to <code class="language-plaintext highlighter-rouge">fit_one_cycle</code> or <code class="language-plaintext highlighter-rouge">fit</code> is number of epochs. In other words, an epoch is looking at every input once. If you do 10 epochs, you’re looking at every input ten times. So there’s a chance you might start overfitting if you’ve got lots of lots of parameters and a high learning rate. If you only do one epoch, it’s impossible to overfit, and so that’s why it’s kind of useful to remember how many epochs you’re doing.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>What is an affine function?</em></p>
+
+    <blockquote>
+      <p>An affine function is a linear function. I don’t know if we need much more detail than that. If you’re multiplying things together and adding them up, it’s an affine function. I’m not going to bother with the exact mathematical definition, partly because I’m a terrible mathematician and partly because it doesn’t matter. But if you just remember that you’re multiplying things together and then adding them up, that’s the most important thing. It’s linear. And therefore if you put an affine function on top of an affine function, that’s just another affine function. You haven’t won anything at all. That’s a total waste of time. So you need to sandwich it with any kind of non-linearity pretty much works - including replacing the negatives with zeros which we call ReLU. So if you do affine, ReLU, affine, ReLU, affine, ReLU, you have a deep neural network.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Why am I sometimes getting negative loss when training? [<a href="https://youtu.be/uQtTwhpv7Ew?t=3589">59:49</a>]</em></p>
+
+    <blockquote>
+      <p>You shouldn’t be. So you’re doing something wrong. Particularly since people are uploading this, I guess other people have seen it too, so put it on the forum. We’re going to be learning about cross entropy and negative log likelihood after the break today. They are loss functions that have very specific expectations about what your input looks like. And if your input doesn’t look like that, then they’re going to give very weird answers, so probably you press the wrong buttons. So don’t do that.</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li><a href="https://youtu.be/CJKnDu2dxOE">Link to Lesson 5 lecture</a></li>
+  <li>Parts of my notes were copied from the excellent lecture transcriptions made by @PoonamV: <a href="https://forums.fast.ai/t/deep-learning-lesson-5-notes/31298">Lecture notes</a>
+</li>
+  <li>Homework notebooks:
+    <ul>
+      <li>Notebook 1: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson5-sgd-mnist.ipynb">SGD and MNIST</a>
+</li>
+      <li>Notebook 2: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson5-rossmann.ipynb">Rossmann (tabular data)</a>
+</li>
+    </ul>
+  </li>
+  <li><a href="https://towardsdatascience.com/netflix-and-chill-building-a-recommendation-system-in-excel-c69b33c914f4">Netflix and Chill: Building a Recommendation System in Excel - Latent Factor Visualization in Excel blog post</a></li>
+  <li><a href="http://ruder.io/optimizing-gradient-descent/">An overview of gradient descent optimization algorithms - Sebastian Ruder</a></li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/2019/08/29/fast-ai-lesson-5-notes-backpropagation-neural-network-from-scratch.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
