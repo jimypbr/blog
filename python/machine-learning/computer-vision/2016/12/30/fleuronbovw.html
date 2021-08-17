@@ -10,14 +10,14 @@
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals." />
 <meta property="og:description" content="In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals." />
-<link rel="canonical" href="https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html" />
-<meta property="og:url" content="https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html" />
 <meta property="og:site_name" content="go-seq" />
 <meta property="og:image" content="https://jimypbr.github.io/blog/images/fleuron/headpiece.png" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2016-12-30T00:00:00-06:00" />
 <script type="application/ld+json">
-{"url":"https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html","@type":"BlogPosting","headline":"SIFTing Images","dateModified":"2016-12-30T00:00:00-06:00","datePublished":"2016-12-30T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fleuron/headpiece.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html"},"description":"In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.","@context":"https://schema.org"}</script>
+{"url":"https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html","@type":"BlogPosting","headline":"SIFTing Images","dateModified":"2016-12-30T00:00:00-06:00","datePublished":"2016-12-30T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fleuron/headpiece.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html"},"description":"In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
@@ -95,13 +95,54 @@ window.onload = wrap_img;
 </span></p>
 
     
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#python">python</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#computer-vision">computer-vision</a>
+        
+      
+      </p>
+    
 
     </header>
 
   <div class="post-content e-content" itemprop="articleBody">
-    <p><img src="/blog/images/fleuron/headpiece.png" alt="headpiece" /></p>
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#the-fleuron-project">The Fleuron Project</a></li>
+<li class="toc-entry toc-h2"><a href="#extraction">Extraction</a></li>
+<li class="toc-entry toc-h2"><a href="#image-filtering-pipeline">Image Filtering Pipeline</a></li>
+<li class="toc-entry toc-h2"><a href="#bag-of-visual-words-bovw">Bag of Visual Words (BoVW)</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#1-extract-notable-features-from-the-images">1. Extract notable features from the images</a></li>
+<li class="toc-entry toc-h3"><a href="#2-learn-a-visual-dictionary">2. Learn a visual dictionary</a></li>
+<li class="toc-entry toc-h3"><a href="#3-quantize-features-using-the-visual-vocabulary">3. Quantize features using the visual vocabulary</a></li>
+<li class="toc-entry toc-h3"><a href="#4-represent-images-by-histogram-of-visual-word-counts">4. Represent images by histogram of visual word counts</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#sift---the-visual-word">SIFT - The Visual Word</a></li>
+<li class="toc-entry toc-h2"><a href="#building-a-visual-word-dictionary">Building a Visual Word Dictionary</a></li>
+<li class="toc-entry toc-h2"><a href="#matching-key-points-to-the-dictionary">Matching Key Points to the Dictionary</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#tf-idf">tf-idf</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#visualisation-of-bovw">Visualisation of BoVW</a></li>
+<li class="toc-entry toc-h2"><a href="#classifying-the-bad-images-with-machine-learning">Classifying the Bad Images with Machine Learning</a></li>
+<li class="toc-entry toc-h2"><a href="#further-ideas">Further Ideas</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#image-search">Image search</a></li>
+<li class="toc-entry toc-h3"><a href="#neural-networks">Neural Networks</a></li>
+</ul>
+</li>
+</ul><p><img src="/blog/images/fleuron/headpiece.png" alt="headpiece"></p>
 
-<h2 id="the-fleuron-project">The Fleuron Project</h2>
+<h2 id="the-fleuron-project">
+<a class="anchor" href="#the-fleuron-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Fleuron Project</h2>
 
 <p>I have been involved in the Fleuron project this year. The aim of this project is to use computer vision to extract printers’ ornaments from a large corpus of ~150,000 scanned documents (32 million pages) from the 18th century. Printed books in the 18th century were highly decorated with miniature pieces of printed artwork - ‘ornaments’. Their pages were adorned with ornaments that ranged from small floral embellishments to large and intricate head- and tailpieces, depicting all manner of people, places, and things. Printers’ ornaments are of interest to historians from many disciplines, not least for their importance as examples of early graphic design and craftsmanship. They can help solve the mysteries of the book trade, and they can be used to detect piracy and fraud.</p>
 
@@ -109,36 +150,38 @@ window.onload = wrap_img;
 
 <p>My contribution to the project was to use the extraction code to generate data, which I then hand-labelled to create a training set to train a machine learning based filter to remove the bad images. The final filtered dataset is presented on the website: <a href="http://fleuron.lib.cam.ac.uk">http://fleuron.lib.cam.ac.uk</a> <em>(EDIT 2021: Fleuron now defunct. Has since become Compositor)</em>, which I also designed and built.  In this blog post I will describe the methodology and results of the image filtering part of the project.</p>
 
-<h2 id="extraction">Extraction</h2>
+<h2 id="extraction">
+<a class="anchor" href="#extraction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Extraction</h2>
 
 <p>The first challenge is to extract the ornaments from the raw page scans. This is an example of a page containing two ornaments, at the top of the page and at the start of the text body:</p>
 
-<p><img src="/blog/images/fleuron/example_page.png" alt="Typical Page" /></p>
+<p><img src="/blog/images/fleuron/example_page.png" alt="Typical Page"></p>
 
 <p>We required an algorithm that could ignore the text and draw bounding boxes around the two ornaments on the page. To solve this problem we enlisted <a href="https://dirkgorissen.com/">Dirk Gorissen</a> to develop a method using Python and OpenCV. I will not dive deeply into how Dirk’s algorithm works here. Basically it uses combines heuristics of where ornaments are typically located and how they look with various image filtering techniques to weed out text and other artifacts on the page to leave just the artwork intact.</p>
 
 <p>Here is a demonstration of how each of the different stages of the algorithm work using on the single page shown above as an example:</p>
 
-<p><img alt="Extracting ornaments" src="/blog/images/fleuron/debug_1.png" width="500" /></p>
+<p><img alt="Extracting ornaments" src="/blog/images/fleuron/debug_1.png" width="500"></p>
 
 <p>Ornaments are visually very dense compared to the text. In the first stage the image is cleaned removing dust and stains in the white space of the page. Then through several iterations of blurring and contouring are applied until just the ornaments are left as single contours as seen in stage 5. A bounding box is then drawn around these contours and content of these boxes is then extracted from the original image.</p>
 
 <p>This method is simple and effective, but it is also apt to falsely classifying blocks of text. In the following example you can see clearly how this can happen:</p>
 
-<p><img alt="Extracting ornaments with a false positive" src="/blog/images/fleuron/debug_2.png" width="500" /></p>
+<p><img alt="Extracting ornaments with a false positive" src="/blog/images/fleuron/debug_2.png" width="500"></p>
 
 <p>After running extraction on all of the pages, I found that in a random sample of the images, most of them were just images of blocks of text! However, given that most of the pages in the dataset contain only text and no ornaments, perhaps this is to be expected even if the algorithm is fairly good at removing text.</p>
 
 <p>After extracting the ornaments from a large sample of the books, I hand labeled a random sample of 15000 images as valid and invalid. Here is a collage of valid images:</p>
 
-<p><img alt="Examples of valid images" src="/blog/images/fleuron/collage_valid.jpg" width="500" /></p>
+<p><img alt="Examples of valid images" src="/blog/images/fleuron/collage_valid.jpg" width="500"></p>
 
-<p><br />
+<p><br>
 Here is a collage of invalid images that we want to filter out:</p>
 
-<p><img alt="Examples of invalid images" src="/blog/images/fleuron/collage_invalid.jpg" width="500" /></p>
+<p><img alt="Examples of invalid images" src="/blog/images/fleuron/collage_invalid.jpg" width="500"></p>
 
-<h2 id="image-filtering-pipeline">Image Filtering Pipeline</h2>
+<h2 id="image-filtering-pipeline">
+<a class="anchor" href="#image-filtering-pipeline" aria-hidden="true"><span class="octicon octicon-link"></span></a>Image Filtering Pipeline</h2>
 
 <p>The choice of image representation is essential to getting a well performing machine learning based classifier. The Images are black and white and so we can’t use any colour features and contain very rich textures. 
 The pipeline for the image filtering system:</p>
@@ -150,7 +193,8 @@ The pipeline for the image filtering system:</p>
   <li>Apply the classifier to unseen images in the data set.</li>
 </ol>
 
-<h2 id="bag-of-visual-words-bovw">Bag of Visual Words (BoVW)</h2>
+<h2 id="bag-of-visual-words-bovw">
+<a class="anchor" href="#bag-of-visual-words-bovw" aria-hidden="true"><span class="octicon octicon-link"></span></a>Bag of Visual Words (BoVW)</h2>
 
 <p>The Bag of Visual Words (BoVW) method is a common feature representation of images in computer vision. The method is directly inspired by the Bag of Words (BoW) method used in <em>text classificiation</em>. In the BoW method, the basic idea is that a text document is split up into its component words. Each of the words in the document is then matched to a word in the dictionary, and the number of unique words in the document is counted. The text document is then represented as a sparse <em>histogram</em> of word counts that is as long as the dictionary.</p>
 
@@ -162,35 +206,40 @@ The pipeline for the image filtering system:</p>
 
 <p>BoVW is exactly the same method except that instead of using actual words it uses ‘visual words’ extracted from the images. Visual words basically take the form of ‘iconic’ patches or fragments of an image.</p>
 
-<h3 id="1-extract-notable-features-from-the-images">1. Extract notable features from the images</h3>
+<h3 id="1-extract-notable-features-from-the-images">
+<a class="anchor" href="#1-extract-notable-features-from-the-images" aria-hidden="true"><span class="octicon octicon-link"></span></a>1. Extract notable features from the images</h3>
 
 <div class="row">
 <div class="col-md-6">
-<img src="/blog/images/fleuron/image_to_words_1.jpg" width="500" />
+<img src="/blog/images/fleuron/image_to_words_1.jpg" width="500">
 </div>
 <div class="col-md-6">
-<img src="/blog/images/fleuron/image_to_words_2.jpg" width="500" />
+<img src="/blog/images/fleuron/image_to_words_2.jpg" width="500">
 </div>
 </div>
 
-<h3 id="2-learn-a-visual-dictionary">2. Learn a visual dictionary</h3>
+<h3 id="2-learn-a-visual-dictionary">
+<a class="anchor" href="#2-learn-a-visual-dictionary" aria-hidden="true"><span class="octicon octicon-link"></span></a>2. Learn a visual dictionary</h3>
 
 <p>Use a clustering algorithm like k-means with a apriori number of clusters (&gt;1000) to learn a set of $k$ compound visual words.</p>
 
-<p><img src="/blog/images/fleuron/image_dict.png" width="500" /></p>
+<p><img src="/blog/images/fleuron/image_dict.png" width="500"></p>
 
-<h3 id="3-quantize-features-using-the-visual-vocabulary">3. Quantize features using the visual vocabulary</h3>
+<h3 id="3-quantize-features-using-the-visual-vocabulary">
+<a class="anchor" href="#3-quantize-features-using-the-visual-vocabulary" aria-hidden="true"><span class="octicon octicon-link"></span></a>3. Quantize features using the visual vocabulary</h3>
 
 <p>Now we could then take an image, find its visual words and match each of those words to their nearest equivalent in the dictionary.</p>
 
-<h3 id="4-represent-images-by-histogram-of-visual-word-counts">4. Represent images by histogram of visual word counts</h3>
+<h3 id="4-represent-images-by-histogram-of-visual-word-counts">
+<a class="anchor" href="#4-represent-images-by-histogram-of-visual-word-counts" aria-hidden="true"><span class="octicon octicon-link"></span></a>4. Represent images by histogram of visual word counts</h3>
 <p>By counting how many times a word in the dictionary is matched, the image can be re-represented as a histogram of word counts:</p>
 
-<p><img src="/blog/images/fleuron/image_hist.png" alt="Historgram of visual word counts" /></p>
+<p><img src="/blog/images/fleuron/image_hist.png" alt="Historgram of visual word counts"></p>
 
 <p>Similar looking images will have contains many of the same words and counts.</p>
 
-<h2 id="sift---the-visual-word">SIFT - The Visual Word</h2>
+<h2 id="sift---the-visual-word">
+<a class="anchor" href="#sift---the-visual-word" aria-hidden="true"><span class="octicon octicon-link"></span></a>SIFT - The Visual Word</h2>
 
 <p>Now that we have outlined the concept of the BoVW method, what do we actually use as the ‘visual word’? To create the visual words I used SIFT - ‘Scale Invariant Feature Transform’. SIFT is a method for detecting multiple interesting <em>keypoints</em> in a grey-scale image and describing each of those points using a 128 dimensional vector. The SIFT descriptor is invariant to scale, rotation, and illumination, which is why it is such a popular method in classification and CBIR. An excellent technical description of SIFT can be found <a href="http://www.scholarpedia.org/article/Scale_Invariant_Feature_Transform">here</a>.</p>
 
@@ -207,11 +256,11 @@ The pipeline for the image filtering system:</p>
 
 <div class="row">
 <div class="col-md-6">
-<img src="/blog/images/fleuron/image_sift_1.png" />
+<img src="/blog/images/fleuron/image_sift_1.png">
 </div>
 
 <div class="col-md-6">
-<img src="/blog/images/fleuron/image_sift_2.png" />
+<img src="/blog/images/fleuron/image_sift_2.png">
 </div>
 </div>
 
@@ -238,7 +287,8 @@ The pipeline for the image filtering system:</p>
     <span class="k">return</span> <span class="n">desc</span>
 </code></pre></div></div>
 
-<h2 id="building-a-visual-word-dictionary">Building a Visual Word Dictionary</h2>
+<h2 id="building-a-visual-word-dictionary">
+<a class="anchor" href="#building-a-visual-word-dictionary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building a Visual Word Dictionary</h2>
 
 <p>To create a visual word dictionary we need to first collect and store all the RootSIFT descriptors from a large sample of images from our dataset. Here I used a sample size of 50,000 images. For 50,000 images, $N \approx 1~ billion$.  The following script iterates through every image in the target directory, finds the RootSIFT descriptors of the image, and then stores them in a large $N\times128$ array in a HDF5 file.</p>
 
@@ -359,7 +409,8 @@ The pipeline for the image filtering system:</p>
     <span class="n">main</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">checkpoint_file</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
 </code></pre></div></div>
 
-<h2 id="matching-key-points-to-the-dictionary">Matching Key Points to the Dictionary</h2>
+<h2 id="matching-key-points-to-the-dictionary">
+<a class="anchor" href="#matching-key-points-to-the-dictionary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Matching Key Points to the Dictionary</h2>
 
 <p>With the dictionary created the next step is to represent all the images in the labeled training set as a histogram of matching keypoints. This is a nearest neighbour matching problem so with a brute force algorithm this is a $O(N)$ so this is slow for very high numbers of words. Faster nearest neighbour matching can be achieved with the <a href="http://www.cs.ubc.ca/research/flann/">FLANN</a> library. OpenCV contains a wrapper for FLANN. I wrote a class that uses the FLANN matcher in OpenCV to match an array of descriptors to a codebook:</p>
 
@@ -454,7 +505,8 @@ The pipeline for the image filtering system:</p>
 <span class="n">Xcounts</span> <span class="o">=</span> <span class="n">vectorizer</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </code></pre></div></div>
 
-<h3 id="tf-idf">tf-idf</h3>
+<h3 id="tf-idf">
+<a class="anchor" href="#tf-idf" aria-hidden="true"><span class="octicon octicon-link"></span></a>tf-idf</h3>
 
 <p>Not all words are created equal, some are more frequent than others. This is the same in human language and in the create visual vocabulary. Words like ‘the’, ‘what’, ‘where’, etc will swamp the count vectors of english words in almost all english documents. Clearly they are less interesting than a rare word like ‘disestablishment’ and that we’d like two different documents both containing a word like ‘disestablishment’ to have a high similarity. So we’d like to reweight words which appear in few documents so that they have a higher importance, and words that appear in most documents to have lower importance. 
 In another case, if a document only contained the word ‘disestablishment’ 1000 times should it be 1000 times more relevant than a document containing it once? So within an individual document we may want to reweight words that are repeated over and over so that they cannot artificially dominate.</p>
@@ -466,7 +518,8 @@ In another case, if a document only contained the word ‘disestablishment’ 10
 <span class="n">X</span> <span class="o">=</span> <span class="n">transformer</span><span class="p">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">Xcount</span><span class="p">)</span>
 </code></pre></div></div>
 
-<h2 id="visualisation-of-bovw">Visualisation of BoVW</h2>
+<h2 id="visualisation-of-bovw">
+<a class="anchor" href="#visualisation-of-bovw" aria-hidden="true"><span class="octicon octicon-link"></span></a>Visualisation of BoVW</h2>
 
 <p>That that we’ve transformed the images into tf-idf weighted, 20k dimensional, sparse vectors to visual word counts, we can visualise them and see if there is any apparent structure in this high dimensional data. Great algorithms for visualising high dimensional data are PCA and T-SNE, both of which have implementations in scikit-learn. I found here that PCA worked best. For high dimensional sparse data, the <code class="language-plaintext highlighter-rouge">TruncatedSVD</code> algorithm works best:</p>
 
@@ -478,11 +531,12 @@ In another case, if a document only contained the word ‘disestablishment’ 10
 
 <p>We can plot this with the images inlined and with colours representing the valid (red) and invalid (blue) labels:</p>
 
-<p><img src="/blog/images/fleuron/pca_both.png" alt="PCA viz" /></p>
+<p><img src="/blog/images/fleuron/pca_both.png" alt="PCA viz"></p>
 
 <p>You can clearly see that there is clear structure in the higher dimensions and that the valid and invalid images separate quite well from each other. This is quite promising for the performance of a machine learning algorithm!</p>
 
-<h2 id="classifying-the-bad-images-with-machine-learning">Classifying the Bad Images with Machine Learning</h2>
+<h2 id="classifying-the-bad-images-with-machine-learning">
+<a class="anchor" href="#classifying-the-bad-images-with-machine-learning" aria-hidden="true"><span class="octicon octicon-link"></span></a>Classifying the Bad Images with Machine Learning</h2>
 
 <p>I tried a number of algorithms including Random forest, logistic regression and linear SVM. I found that SVM with a linear kernel by far performed the best compared to the other algorithms.</p>
 
@@ -523,13 +577,16 @@ In another case, if a document only contained the word ‘disestablishment’ 10
 
 <p>The performance of approach this is very good. The trained classifier was then applied across the whole image dataset. In the end there were approximately 3 million invalid images and 2 million valid images detected.</p>
 
-<h2 id="further-ideas">Further Ideas</h2>
+<h2 id="further-ideas">
+<a class="anchor" href="#further-ideas" aria-hidden="true"><span class="octicon octicon-link"></span></a>Further Ideas</h2>
 
-<h3 id="image-search">Image search</h3>
+<h3 id="image-search">
+<a class="anchor" href="#image-search" aria-hidden="true"><span class="octicon octicon-link"></span></a>Image search</h3>
 
 <p>The BoVW approach is also very useful for image retrieval. This means that given some image we can find duplications and similar looking images in the rest of the image set simply by finding the BoVW vectors that are closest to that image’s own BoVW vector. This is just a nearest neighbour search. It is complicated by the number of images because scaling nearest neighbour search with large numbers of vectors that don’t necessarily fit into memory relies on more complicated algorithms.</p>
 
-<h3 id="neural-networks">Neural Networks</h3>
+<h3 id="neural-networks">
+<a class="anchor" href="#neural-networks" aria-hidden="true"><span class="octicon octicon-link"></span></a>Neural Networks</h3>
 
 <p>Convolutional Neural Networks (CNNs) have shown great application in image classification in recent years. While they perform well at classification, they also have the advantage that they can discover vector representations of the images given the just the raw pixels. So it doesn’t require all this work with inventing a representation for images such as BoVW. The downside is that they require a lot of data (10s of thousands of examples) to be effective. Rather than hand labelling more examples, it would be quicker to look at the output of images classified by the SVM, and eyeball any false negatives or false positives in there. Artificial data could also be created using image transformations like rotation and inversion.</p>
 
@@ -542,7 +599,7 @@ In another case, if a document only contained the word ‘disestablishment’ 10
         theme="github-light"
         crossorigin="anonymous"
         async>
-</script><a class="u-url" href="/blog/2016/12/30/fleuronbovw.html" hidden></a>
+</script><a class="u-url" href="/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html" hidden></a>
 </article>
       </div>
     </main><footer class="site-footer h-card">

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>My First Pull Request! :) | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="My First Pull Request! :)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My first pull request to an open source project was merged into fastai." />
+<meta property="og:description" content="My first pull request to an open source project was merged into fastai." />
+<link rel="canonical" href="https://jimypbr.github.io/blog/python/fastai/2019/04/01/my-first-pull-request.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/python/fastai/2019/04/01/my-first-pull-request.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-04-01T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/python/fastai/2019/04/01/my-first-pull-request.html","@type":"BlogPosting","headline":"My First Pull Request! :)","dateModified":"2019-04-01T00:00:00-05:00","datePublished":"2019-04-01T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/python/fastai/2019/04/01/my-first-pull-request.html"},"description":"My first pull request to an open source project was merged into fastai.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">My First Pull Request! :)</h1><p class="page-description">My first pull request to an open source project was merged into fastai.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-04-01T00:00:00-05:00" itemprop="datePublished">
+        Apr 1, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      4 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#python">python</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#problem">Problem</a></li>
+<li class="toc-entry toc-h2"><a href="#solution">Solution</a></li>
+<li class="toc-entry toc-h2"><a href="#aside-making-python-objects-counter-ready">Aside: Making Python Objects Counter-Ready</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#in-summary">In Summary</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#links">Links</a></li>
+</ul><p>I’m very proud to have made my first open source contribution! :-) I added a feature to the <a href="https://github.com/fastai/fastai">FastAI</a> deep learning library to make its data types ‘countable’ and thus work with the <code class="language-plaintext highlighter-rouge">collections.Counter</code> class.</p>
+
+<h2 id="problem">
+<a class="anchor" href="#problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>Problem</h2>
+
+<p>While I was working through the image classification homework from <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson2-download.ipynb">lesson 2</a>. I wanted to check the how many images of each class there were in my data block. The best way to count the number of values in a collection in python is to use the <code class="language-plaintext highlighter-rouge">collections.Counter</code> class which creates a dictionary mapping value to count.</p>
+
+<p>However when I tried this with the data block I got this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="n">Counter</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">train_ds</span><span class="p">.</span><span class="n">y</span><span class="p">)</span>
+
+ <span class="n">Counter</span><span class="p">({</span>
+    <span class="n">Category</span> <span class="n">chimp</span>        <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">chimp</span>        <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+    <span class="n">Category</span> <span class="n">gorilla</span>      <span class="mi">1</span>
+      <span class="p">...</span>
+
+</code></pre></div></div>
+
+<h2 id="solution">
+<a class="anchor" href="#solution" aria-hidden="true"><span class="octicon octicon-link"></span></a>Solution</h2>
+
+<p>This problem is caused by fact that there was no <code class="language-plaintext highlighter-rouge">__eq__</code> implemented for the <code class="language-plaintext highlighter-rouge">Category</code> class. When different <code class="language-plaintext highlighter-rouge">Category</code> objects were compared python’s default equality would only check whether they were literally the same object rather than checking their values. To get an object to work with a dictionary class in python you also have to implement a <code class="language-plaintext highlighter-rouge">__hash__</code> method.</p>
+
+<p>I confirmed this with the hot patch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="n">Category</span><span class="p">.</span><span class="n">__eq__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">that</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">data</span> <span class="o">==</span> <span class="n">that</span><span class="p">.</span><span class="n">data</span>
+<span class="o">&gt;</span> <span class="n">Category</span><span class="p">.</span><span class="n">__hash__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">obj</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="n">Counter</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">train_ds</span><span class="p">.</span><span class="n">y</span><span class="p">)</span>
+
+ <span class="n">Counter</span><span class="p">({</span><span class="n">Category</span> <span class="n">orangutan</span><span class="p">:</span> <span class="mi">56</span><span class="p">,</span> <span class="n">Category</span> <span class="n">gorilla</span><span class="p">:</span> <span class="mi">177</span><span class="p">,</span> <span class="n">Category</span> <span class="n">chimp</span><span class="p">:</span> <span class="mi">173</span><span class="p">})</span>
+</code></pre></div></div>
+
+<p>With Sylvain Gugger’s guidance, I then implemented <code class="language-plaintext highlighter-rouge">__eq__</code> method properly in fastai for the ground class <code class="language-plaintext highlighter-rouge">ItemBase</code> so that all of the different data classes in fastai could have equality. Hash didn’t make sense for all the subclasses (like floats or arrays of numbers), so we compromised on implementing hash methods only on the subclasses where it made sense.</p>
+
+<p>Here is the link to my pull request: <a href="https://github.com/fastai/fastai/pull/1717">https://github.com/fastai/fastai/pull/1717</a>.</p>
+
+<h2 id="aside-making-python-objects-counter-ready">
+<a class="anchor" href="#aside-making-python-objects-counter-ready" aria-hidden="true"><span class="octicon octicon-link"></span></a>Aside: Making Python Objects Counter-Ready</h2>
+
+<p>In order to make your python objects play nice with dictionary’s they need to override two python built-ins:</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">__eq__</code></li>
+  <li><code class="language-plaintext highlighter-rouge">__hash__</code></li>
+</ol>
+
+<p>Suppose that the python object contains some value <code class="language-plaintext highlighter-rouge">val</code> that defines the object’s uniquness.</p>
+
+<p>Let’s create a python class for categories called <code class="language-plaintext highlighter-rouge">Cat</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Cat</span><span class="p">:</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span> 
+      	<span class="bp">self</span><span class="p">.</span><span class="n">val</span> <span class="o">=</span> <span class="n">val</span> 
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+      	<span class="k">return</span> <span class="s">f'Cat(</span><span class="si">{</span><span class="bp">self</span><span class="p">.</span><span class="n">val</span><span class="si">}</span><span class="s">)'</span> 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+    	<span class="k">return</span> <span class="s">f'Cat(</span><span class="si">{</span><span class="bp">self</span><span class="p">.</span><span class="n">val</span><span class="si">}</span><span class="s">)'</span> 
+</code></pre></div></div>
+
+<p>This class won’t work properly with Counters:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+<span class="o">&gt;</span> <span class="n">Counter</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+  <span class="n">Counter</span><span class="p">({</span><span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="mi">1</span><span class="p">})</span>
+
+</code></pre></div></div>
+
+<p>Equality doesn’t work:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+ <span class="bp">False</span>
+</code></pre></div></div>
+
+<p>Two objects with the same value don’t have the same hash:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="nb">hash</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+ <span class="o">-</span><span class="mi">9223372036573193412</span>
+<span class="o">&gt;</span> <span class="nb">hash</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+ <span class="mi">281542562</span>
+</code></pre></div></div>
+
+<p>You have to implement the hash and equality built-ins:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Cat</span><span class="p">:</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span> 
+      	<span class="bp">self</span><span class="p">.</span><span class="n">val</span> <span class="o">=</span> <span class="n">val</span> 
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+      	<span class="k">return</span> <span class="s">f'Cat(</span><span class="si">{</span><span class="bp">self</span><span class="p">.</span><span class="n">val</span><span class="si">}</span><span class="s">)'</span> 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+    	<span class="k">return</span> <span class="s">f'Cat(</span><span class="si">{</span><span class="bp">self</span><span class="p">.</span><span class="n">val</span><span class="si">}</span><span class="s">)'</span> 
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    	<span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">other</span><span class="p">.</span><span class="n">val</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      	<span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">val</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now it works:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span> 
+ <span class="n">Counter</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+ <span class="n">Counter</span><span class="p">({</span><span class="n">Cat</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="mi">2</span><span class="p">,</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Cat</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="mi">1</span><span class="p">})</span>
+</code></pre></div></div>
+
+<p>How does this work? The <code class="language-plaintext highlighter-rouge">Cat</code> objects are being used as keys in the Counter. When a new <code class="language-plaintext highlighter-rouge">Cat</code> object comes into the Counter we need to compare it with all the other keys already in the Counter. If a <code class="language-plaintext highlighter-rouge">Cat</code> object of the same value is there already then we need to increment the value associated with that <code class="language-plaintext highlighter-rouge">Cat</code> object.</p>
+
+<p>For efficiency, however, dictionaries in python don’t store the keys in a big list rather in <em>buckets</em>. When a new <code class="language-plaintext highlighter-rouge">Cat</code> object comes into the Counter it is assigned to a bucket using its <code class="language-plaintext highlighter-rouge">hash</code> value. Here three things can happen.</p>
+
+<ol>
+  <li>If the bucket is empty then store the value there.</li>
+  <li>If the bucket isn’t empty compare the incoming object with the objects there using <code class="language-plaintext highlighter-rouge">eq</code>. If they are the same, increment the counter.</li>
+  <li>If they are different you have a <strong>hash collision</strong>. Store the incoming object in the bucket and set the counter value to 1.</li>
+</ol>
+
+<h3 id="in-summary">
+<a class="anchor" href="#in-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>In Summary</h3>
+
+<p>For correctness with dictionaries:</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">obj1 == obj2</code> if <code class="language-plaintext highlighter-rouge">obj1.val == obj2.val</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">hash(obj1) == hash(obj2)</code> if <code class="language-plaintext highlighter-rouge">obj1.val == obj2.val</code>
+</li>
+</ol>
+
+<p>If the object is to be used as a key in a Counter we need to be able to correctly compare it to other keys in the Counter. If two objects are equal then we know that they are the same key and we can increment the counter. Two objects with the same value need to be hashed to the same bucket.</p>
+
+<p>For efficiency with dictionaries:</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">hash(obj1) should ideally != hash(obj2)</code> if <code class="language-plaintext highlighter-rouge">obj1.val != obj2.val</code>
+</li>
+</ol>
+
+<p>It is possible, though undesirable, that two objects with different values get hashed to the same bucket. This is called a <strong>hash collision</strong>. This isn’t a correctness problem, rather an <em>efficiency problem</em>. Every hash collision is like an if statement in the dictionary to specially handle those cases. Ideally, every unique value should have its own unique hash so that there are no hash collisions. If we imagine the worst case where our hashing algorithm is something like <code class="language-plaintext highlighter-rouge">def hash(x): return 0</code>, then ever item ends up in the same bucket. To look up an item in this dictionary where everything is a hash collision we’d have to brute-force it and on average look at every item individually before we find what we are looking for. This would reduce the dictionary look-up performance to $\mathcal{O}(N)$, the same as an unordered list, instead of the $\mathcal{O}(1)$ performance that it should have.</p>
+
+<h2 id="links">
+<a class="anchor" href="#links" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links</h2>
+
+<ul>
+  <li>Link to pull request: <a href="https://github.com/fastai/fastai/pull/1717">https://github.com/fastai/fastai/pull/1717</a>
+</li>
+  <li>Link to forum post: <a href="https://forums.fast.ai/t/get-value-counts-from-a-imagedatabunch/38784/21">https://forums.fast.ai/t/get-value-counts-from-a-imagedatabunch/38784/21</a>
+</li>
+</ul>
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/python/fastai/2019/04/01/my-first-pull-request.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
