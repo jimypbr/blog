@@ -10,16 +10,16 @@
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="In this post I do performance experiments with the SIMD support the programming language Julia and compare the speed to equivalent code written in C++." />
 <meta property="og:description" content="In this post I do performance experiments with the SIMD support the programming language Julia and compare the speed to equivalent code written in C++." />
-<link rel="canonical" href="https://jimypbr.github.io/blog/2015/11/21/julia.html" />
-<meta property="og:url" content="https://jimypbr.github.io/blog/2015/11/21/julia.html" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/julia/c++/simd/2015/11/21/julia.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/julia/c++/simd/2015/11/21/julia.html" />
 <meta property="og:site_name" content="go-seq" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2015-11-21T00:00:00-06:00" />
 <script type="application/ld+json">
-{"url":"https://jimypbr.github.io/blog/2015/11/21/julia.html","@type":"BlogPosting","headline":"Experiments with Julia","dateModified":"2015-11-21T00:00:00-06:00","datePublished":"2015-11-21T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/2015/11/21/julia.html"},"description":"In this post I do performance experiments with the SIMD support the programming language Julia and compare the speed to equivalent code written in C++.","@context":"https://schema.org"}</script>
+{"url":"https://jimypbr.github.io/blog/julia/c++/simd/2015/11/21/julia.html","@type":"BlogPosting","headline":"Experiments with Julia","dateModified":"2015-11-21T00:00:00-06:00","datePublished":"2015-11-21T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/julia/c++/simd/2015/11/21/julia.html"},"description":"In this post I do performance experiments with the SIMD support the programming language Julia and compare the speed to equivalent code written in C++.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
 <script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
 <script type="text/x-mathjax-config">
    MathJax.Hub.Config({
@@ -94,15 +94,52 @@ window.onload = wrap_img;
 </span></p>
 
     
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#julia">julia</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#c++">c++</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#simd">simd</a>
+        
+      
+      </p>
+    
 
     </header>
 
   <div class="post-content e-content" itemprop="articleBody">
-    <h2 id="simd-support">SIMD Support</h2>
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#simd-support">SIMD Support</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#example-1-saxpy">Example 1. SAXPY</a></li>
+<li class="toc-entry toc-h3"><a href="#example-2-saxpy--simd">Example 2: SAXPY + SIMD</a></li>
+<li class="toc-entry toc-h3"><a href="#example-3-saxpy--implicit-vectorisation">Example 3: SAXPY + Implicit vectorisation</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#simd-limitations-in-julia">SIMD Limitations in Julia</a></li>
+<li class="toc-entry toc-h4"><a href="#more-info-on-vectorisation">More Info on Vectorisation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#case-study-fitzhugh-nagamo-pde">Case Study: Fitzhugh-Nagamo PDE</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#results">Results</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#notes">Notes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul><h2 id="simd-support">
+<a class="anchor" href="#simd-support" aria-hidden="true"><span class="octicon octicon-link"></span></a>SIMD Support</h2>
 
 <p>Since version 0.3 Julia has some vectorisation capabilities that can exploit SIMD instructions when executing loops. It seems to require some nudging though. There are macros that are a bit like the pragmas in OpenMP.</p>
 
-<h3 id="example-1-saxpy">Example 1. SAXPY</h3>
+<h3 id="example-1-saxpy">
+<a class="anchor" href="#example-1-saxpy" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example 1. SAXPY</h3>
 
 <div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">function</span><span class="nf"> saxpy</span><span class="x">(</span><span class="n">a</span><span class="o">::</span><span class="kt">Float32</span><span class="x">,</span> <span class="n">x</span><span class="o">::</span><span class="kt">Array</span><span class="x">{</span><span class="kt">Float32</span><span class="x">,</span><span class="mi">1</span><span class="x">},</span> <span class="n">y</span><span class="o">::</span><span class="kt">Array</span><span class="x">{</span><span class="kt">Float32</span><span class="x">,</span><span class="mi">1</span><span class="x">})</span>
   <span class="n">n</span> <span class="o">=</span> <span class="n">length</span><span class="x">(</span><span class="n">x</span><span class="x">)</span>
@@ -146,7 +183,8 @@ You can inspect how this code has compiled nicely in Julia by using the macros <
 
 <p>Note the scalar instructions <code class="language-plaintext highlighter-rouge">movss</code>, <code class="language-plaintext highlighter-rouge">mulss</code>, and <code class="language-plaintext highlighter-rouge">addss</code>.</p>
 
-<h3 id="example-2-saxpy--simd">Example 2: SAXPY + SIMD</h3>
+<h3 id="example-2-saxpy--simd">
+<a class="anchor" href="#example-2-saxpy--simd" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example 2: SAXPY + SIMD</h3>
 <p>To make it generate vectorised instructions you have to use the <em>explicit vectorisation</em> macros <code class="language-plaintext highlighter-rouge">@simd</code> and <code class="language-plaintext highlighter-rouge">@inbounds</code> macros. <code class="language-plaintext highlighter-rouge">@simd</code> gives the compiler license to vectorise without checking the legality of the transformation. <code class="language-plaintext highlighter-rouge">@inbounds</code> is an optimisation that turns off subscript checking, because subscript checking might throw an exception and so isn’t vectorisable.</p>
 
 <div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">function</span><span class="nf"> axpy</span><span class="x">(</span><span class="n">a</span><span class="o">::</span><span class="kt">Float32</span><span class="x">,</span> <span class="n">x</span><span class="o">::</span><span class="kt">Array</span><span class="x">{</span><span class="kt">Float32</span><span class="x">,</span><span class="mi">1</span><span class="x">},</span> <span class="n">y</span><span class="o">::</span><span class="kt">Array</span><span class="x">{</span><span class="kt">Float32</span><span class="x">,</span><span class="mi">1</span><span class="x">})</span>
@@ -269,7 +307,8 @@ You can inspect how this code has compiled nicely in Julia by using the macros <
 Hardware: <em>Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (AVX)</em>
 Julia version: <em>0.3.11</em></p>
 
-<h3 id="example-3-saxpy--implicit-vectorisation">Example 3: SAXPY + Implicit vectorisation</h3>
+<h3 id="example-3-saxpy--implicit-vectorisation">
+<a class="anchor" href="#example-3-saxpy--implicit-vectorisation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example 3: SAXPY + Implicit vectorisation</h3>
 
 <p>In my experiments, I found that it is sometimes possible to get implicit vectorisation by using just <code class="language-plaintext highlighter-rouge">@inbounds</code> to disable bounds checking:</p>
 
@@ -282,7 +321,8 @@ Julia version: <em>0.3.11</em></p>
 </code></pre></div></div>
 <p>This generates the same ASM as Example 2. Other simple cases have required <code class="language-plaintext highlighter-rouge">@simd</code> as well, so explicit vectorisation seems to be the only option at the moment.</p>
 
-<h4 id="simd-limitations-in-julia">SIMD Limitations in Julia</h4>
+<h4 id="simd-limitations-in-julia">
+<a class="anchor" href="#simd-limitations-in-julia" aria-hidden="true"><span class="octicon octicon-link"></span></a>SIMD Limitations in Julia</h4>
 
 <ul>
   <li>No SIMD functions. Function calls have to be inlined. Julia can manage to inline short functions itself.</li>
@@ -294,10 +334,12 @@ Julia version: <em>0.3.11</em></p>
   <li>Does handle any branching besides some ifelse function.</li>
 </ul>
 
-<h4 id="more-info-on-vectorisation">More Info on Vectorisation</h4>
+<h4 id="more-info-on-vectorisation">
+<a class="anchor" href="#more-info-on-vectorisation" aria-hidden="true"><span class="octicon octicon-link"></span></a>More Info on Vectorisation</h4>
 <p>See Intel page <a href="https://software.intel.com/en-us/articles/vectorization-in-julia">Vectorization in Julia</a>.</p>
 
-<h2 id="case-study-fitzhugh-nagamo-pde">Case Study: Fitzhugh-Nagamo PDE</h2>
+<h2 id="case-study-fitzhugh-nagamo-pde">
+<a class="anchor" href="#case-study-fitzhugh-nagamo-pde" aria-hidden="true"><span class="octicon octicon-link"></span></a>Case Study: Fitzhugh-Nagamo PDE</h2>
 
 <p>Experiment with a non-trivial example of a PDE solver using the reaction-diffusion system described by:</p>
 
@@ -454,14 +496,18 @@ This example is based on this <a href="http://ipython-books.github.io/featured-0
 </code></pre></div></div>
 </details>
 
-<h3 id="results">Results</h3>
+<h3 id="results">
+<a class="anchor" href="#results" aria-hidden="true"><span class="octicon octicon-link"></span></a>Results</h3>
 
 <p>Setup:</p>
 
 <ul>
-  <li>Hardware: <em>Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (AVX)</em></li>
-  <li>Julia version: <em>0.3.10</em></li>
-  <li>C++ Compiler: <em>g++4.8</em></li>
+  <li>Hardware: <em>Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (AVX)</em>
+</li>
+  <li>Julia version: <em>0.3.10</em>
+</li>
+  <li>C++ Compiler: <em>g++4.8</em>
+</li>
 </ul>
 
 <table>
@@ -508,7 +554,8 @@ This example is based on this <a href="http://ipython-books.github.io/featured-0
 
 <p>The best time in C++ is only 1.4x better than the best time in Julia. Inspecting the ASM of Julia + @inbounds + @simd shows that even with these macros Julia is still <em>not</em> generating vector instructions. :(. If I disable vectorisation in the C++ compiler, the times between Julia and C++ are much closer. This suggests that Julia could get even higher performance if it could generate vector instructions. I suppose that newer versions of Julia will improve this in the future. I find these results very impressive nonetheless. It will be worth trying with a newer LLVM version too.</p>
 
-<h4 id="notes">Notes</h4>
+<h4 id="notes">
+<a class="anchor" href="#notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Notes</h4>
 <p>The thing holding back performance in the Julia code was the use of <code class="language-plaintext highlighter-rouge">u[i,j]^3</code> instead of <code class="language-plaintext highlighter-rouge">u[i,j]*u[i,j]*u[i,j]</code>. The former version compiles to a call of <code class="language-plaintext highlighter-rouge">pow(double, double)</code> from libm! The latter does what you expect. This is a <a href="https://github.com/JuliaLang/julia/issues/2741">known bug</a>. Fixed when Julia is built against LLVM 3.6. Version I’m using is built with LLVM v3.4.</p>
 
 
@@ -520,7 +567,7 @@ This example is based on this <a href="http://ipython-books.github.io/featured-0
         theme="github-light"
         crossorigin="anonymous"
         async>
-</script><a class="u-url" href="/blog/2015/11/21/julia.html" hidden></a>
+</script><a class="u-url" href="/blog/julia/c++/simd/2015/11/21/julia.html" hidden></a>
 </article>
       </div>
     </main><footer class="site-footer h-card">
