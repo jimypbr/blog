@@ -17,7 +17,7 @@ module Jekyll
           # converter = site.getConverterImpl(::Jekyll::Converters::Markdown)
           caption = converter.convert(@caption).gsub(/<\/?p[^>]*>/, '').chomp
           body = converter.convert(super(context))
-          "<details><summary>#{caption}</summary>#{body}</details>"
+          "<details><summary class=\"btn btn-sm\" data-open=\"Hide Output\" data-close=\"Show Output\">#{caption}</summary>#{body}</details>"
         end
   
       end
