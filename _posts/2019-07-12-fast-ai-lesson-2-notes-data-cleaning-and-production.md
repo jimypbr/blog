@@ -10,9 +10,6 @@ comments: true
 ---
 
 
-![image-20190706182251357]({{site.baseurl}}/images/fastai/image-20190706182251357.png)
-
-
 ## Overview of Lesson
 
 This lesson has two parts. The first part is about constructing a image classifier from your own data. It details data collection from Google images, creating a validation set, and cleaning the data using the model. 

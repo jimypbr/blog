@@ -10,12 +10,6 @@ comments: true
 ---
 
 
-
-
-![image-20190706182251357]({{site.baseurl}}/images/fastai/image-20190706182251357.png)
-
-
-
 ## Overview of Lesson
 
 This is the introductory lesson to fastai part 1!
