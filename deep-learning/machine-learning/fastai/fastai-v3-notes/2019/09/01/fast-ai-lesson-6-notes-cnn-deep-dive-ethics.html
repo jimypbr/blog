@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai v3 Lesson 6 Notes: CNN Deep Dive; Ethics | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai v3 Lesson 6 Notes: CNN Deep Dive; Ethics" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 6 of part 1 of fast.ai v3 - Regularization; Convolutions; Data ethics" />
+<meta property="og:description" content="My personal notes on Lesson 6 of part 1 of fast.ai v3 - Regularization; Convolutions; Data ethics" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/09/01/fast-ai-lesson-6-notes-cnn-deep-dive-ethics.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/09/01/fast-ai-lesson-6-notes-cnn-deep-dive-ethics.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-09-01T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/09/01/fast-ai-lesson-6-notes-cnn-deep-dive-ethics.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 6 Notes: CNN Deep Dive; Ethics","dateModified":"2019-09-01T00:00:00-05:00","datePublished":"2019-09-01T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/09/01/fast-ai-lesson-6-notes-cnn-deep-dive-ethics.html"},"description":"My personal notes on Lesson 6 of part 1 of fast.ai v3 - Regularization; Convolutions; Data ethics","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai v3 Lesson 6 Notes: CNN Deep Dive; Ethics</h1><p class="page-description">My personal notes on Lesson 6 of part 1 of fast.ai v3 - Regularization; Convolutions; Data ethics</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-09-01T00:00:00-05:00" itemprop="datePublished">
+        Sep 1, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      20 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai-v3-notes">fastai-v3-notes</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview-of-the-lesson">Overview of the Lesson</a></li>
+<li class="toc-entry toc-h2"><a href="#platformai---assisted-image-labeling">Platform.ai - Assisted Image Labeling</a></li>
+<li class="toc-entry toc-h2"><a href="#tabular-data-deep-dive">Tabular Data: Deep Dive</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#model">Model</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#dropout">Dropout</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#dropout-in-tabular-learner">Dropout in Tabular Learner</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#batch-normalization">Batch Normalization</a></li>
+<li class="toc-entry toc-h2"><a href="#data-augmentation">Data Augmentation</a></li>
+<li class="toc-entry toc-h2"><a href="#how-do-convolutions-work">How do convolutions work?</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#manual-convolution">Manual Convolution</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#cnn-heatmap-example">CNN Heatmap Example</a></li>
+<li class="toc-entry toc-h2"><a href="#ethics-and-data-science">Ethics and Data Science</a></li>
+<li class="toc-entry toc-h2"><a href="#jeremy-says">Jeremy Says…</a></li>
+<li class="toc-entry toc-h2"><a href="#q--a">Q &amp; A</a></li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview-of-the-lesson">
+<a class="anchor" href="#overview-of-the-lesson" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview of the Lesson</h2>
+
+<p>This lesson starts with teaching the powerful techniques to avoid overfitting and decrease training time.:</p>
+
+<ul>
+  <li>
+<strong>Dropout</strong>: remove activations at random during training in order to regularize the model</li>
+  <li>
+<strong>Data augmentation</strong>: modify model inputs during training in order to effectively increase data size</li>
+  <li>
+<strong>Batch normalization</strong>: adjust the parameterization of a model in order to make the loss surface smoother.</li>
+</ul>
+
+<p>Next the lesson teaches <em>convolutions</em>, which can be thought of as a variant of matrix multiplication with tied weights, and are the operation at the heart of modern computer vision models (and, increasingly, other types of models too).</p>
+
+<p>This knowledge is then used to create a <em>class activated map</em>, which is a heat-map that shows which parts of an image were most important in making a prediction.</p>
+
+<p>Finally, the lesson ends with data ethics.</p>
+
+<h2 id="platformai---assisted-image-labeling">
+<a class="anchor" href="#platformai---assisted-image-labeling" aria-hidden="true"><span class="octicon octicon-link"></span></a>Platform.ai - Assisted Image Labeling</h2>
+
+<ul>
+  <li>Jeremy showed in his <a href="https://www.ted.com/talks/jeremy_howard_the_wonderful_and_terrifying_implications_of_computers_that_can_learn/up-next?language=en">TED talk</a> in 2015 a cool demo where you can ‘collaborate’ with a pretrained neural network to label an unlabeled image dataset.</li>
+  <li>Basically it is a UI where the images are projected from the network into a 2D space (via T-SNE or similar). If the model is trained well then there will be good separation between the images in this space.</li>
+  <li>It is an iterative process where the user labels a few images, the network trains with these labels, the network then guesses the labels, and the user can correct these and label more images. Repeat.</li>
+  <li>
+<a href="https://platform.ai/">Platform.ai</a> is a product brought out by Jeremy that lets you do with your own image dataset that you upload.</li>
+</ul>
+
+<p><img src="/blog/images/fastai/image-20190829170508529.png" alt="image-20190829170508529"></p>
+
+<ul>
+  <li>This is similar to <a href="https://en.wikipedia.org/wiki/Active_learning_(machine_learning)"><em>active learning</em>.</a>
+</li>
+</ul>
+
+<h2 id="tabular-data-deep-dive">
+<a class="anchor" href="#tabular-data-deep-dive" aria-hidden="true"><span class="octicon octicon-link"></span></a>Tabular Data: Deep Dive</h2>
+
+<p>We want to understand every line of the code of <code class="language-plaintext highlighter-rouge">TabularModel</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TabularModel</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+    <span class="s">"Basic model for tabular data."</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">emb_szs</span><span class="p">:</span><span class="n">ListSizes</span><span class="p">,</span> <span class="n">n_cont</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">out_sz</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span><span class="n">Collection</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">ps</span><span class="p">:</span><span class="n">Collection</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">emb_drop</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">y_range</span><span class="p">:</span><span class="n">OptRange</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">use_bn</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bn_final</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">ifnone</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">))</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">layers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">embeds</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">ModuleList</span><span class="p">([</span><span class="n">embedding</span><span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">nf</span><span class="p">)</span> <span class="k">for</span> <span class="n">ni</span><span class="p">,</span><span class="n">nf</span> <span class="ow">in</span> <span class="n">emb_szs</span><span class="p">])</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">emb_drop</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">emb_drop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">bn_cont</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="n">n_cont</span><span class="p">)</span>
+        <span class="n">n_emb</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">embedding_dim</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">embeds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">n_emb</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">n_cont</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">y_range</span> <span class="o">=</span> <span class="n">n_emb</span><span class="p">,</span><span class="n">n_cont</span><span class="p">,</span><span class="n">y_range</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">get_sizes</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">out_sz</span><span class="p">)</span>
+        <span class="n">actns</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,(</span><span class="n">n_in</span><span class="p">,</span><span class="n">n_out</span><span class="p">,</span><span class="n">dp</span><span class="p">,</span><span class="n">act</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">sizes</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],[</span><span class="mf">0.</span><span class="p">]</span><span class="o">+</span><span class="n">ps</span><span class="p">,</span><span class="n">actns</span><span class="p">)):</span>
+            <span class="n">layers</span> <span class="o">+=</span> <span class="n">bn_drop_lin</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">bn</span><span class="o">=</span><span class="n">use_bn</span> <span class="ow">and</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span> <span class="n">actn</span><span class="o">=</span><span class="n">act</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bn_final</span><span class="p">:</span> <span class="n">layers</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_sizes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="n">out_sz</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">.</span><span class="n">n_emb</span> <span class="o">+</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_cont</span><span class="p">]</span> <span class="o">+</span> <span class="n">layers</span> <span class="o">+</span> <span class="p">[</span><span class="n">out_sz</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_cat</span><span class="p">:</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">x_cont</span><span class="p">:</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_emb</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="p">(</span><span class="n">x_cat</span><span class="p">[:,</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">embeds</span><span class="p">)]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">cat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">emb_drop</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_cont</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x_cont</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">bn_cont</span><span class="p">(</span><span class="n">x_cont</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cont</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_emb</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">x_cont</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">y_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">y_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="p">.</span><span class="n">y_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">torch</span><span class="p">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="p">.</span><span class="n">y_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+</code></pre></div></div>
+
+<h3 id="model">
+<a class="anchor" href="#model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model</h3>
+
+<p>The model for a tabular learner in fastai is like this one (<a href="https://developers.google.com/machine-learning/crash-course/embeddings/video-lecture">source</a>):</p>
+
+<p><img src="/blog/images/fastai/image-20190831170948812.png" alt="image-20190831170948812"></p>
+
+<p>In this model there is a categorical variable: <code class="language-plaintext highlighter-rouge">words in real estate ad</code> and there are two continuous variables: <code class="language-plaintext highlighter-rouge">latitude</code> and <code class="language-plaintext highlighter-rouge">longitude</code>.</p>
+
+<p>The words in a real estate ad can be represented as a <em>sparse vector</em> of the word counts in the text. The network learns a lower dimensional embedding for these words as shown as the green layer in the diagram.</p>
+
+<p>In pink is the actual ML model: it’s a simple <em>multi-layer perceptron</em>. After the categorical variables have been encoded by their embedding layers, these vectors are catted together along with the continuous variables to make one big vector; this is the input to the MLP. That’s all there is to the tabular learner.</p>
+
+<p>In the fastai the code to create the tabular learner is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span> <span class="o">=</span> <span class="n">tabular_learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> 
+                        <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span><span class="mi">500</span><span class="p">],</span> 
+                        <span class="n">ps</span><span class="o">=</span><span class="p">[</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.01</span><span class="p">],</span> 
+                        <span class="n">emb_drop</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> 
+                        <span class="n">y_range</span><span class="o">=</span><span class="n">y_range</span><span class="p">,</span> 
+                        <span class="n">metrics</span><span class="o">=</span><span class="n">exp_rmspe</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>What do these parameters mean?</p>
+
+<ul>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">layers</code> is a list of ints, which specify the size of each of the layers in the MLP. Here it has two layers of size 1000 and 500 respectively.</p>
+  </li>
+  <li>
+    <p>Now the intermediate weight matrix is going to have to go from a 1000 activation input to a 500 activation output, which means it’s going to have to be 500,000 elements in that weight matrix. That’s an awful lot for a data set with only a few hundred thousand rows. So this is going to overfit, and we need to make sure it doesn’t. The way to make sure it doesn’t is to <strong>use regularization; not to reduce the number of parameters</strong>.</p>
+  </li>
+  <li>
+    <p>One way to do that will be to use weight decay which fast.ai will use automatically, and you can vary it to something other than the default if you wish. It turns out in this case, we’re going to want more regularization.</p>
+  </li>
+  <li>
+    <p>The parameter <code class="language-plaintext highlighter-rouge">ps</code> provides something called <strong>dropout</strong>.</p>
+  </li>
+  <li>
+    <p>Also the parameter <code class="language-plaintext highlighter-rouge">emb_drop</code> provides dropout to just the embeddings.</p>
+  </li>
+</ul>
+
+<h2 id="dropout">
+<a class="anchor" href="#dropout" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dropout</h2>
+
+<p>Dropout is a kind of regularization. This is <a href="https://www.cs.toronto.edu/~hinton/absps/JMLRdropout.pdf">the dropout paper</a>.</p>
+
+<p>The diagram from the paper illustrates perfectly what is going on:</p>
+
+<p><img src="/blog/images/fastai/e03fb76e.png" alt="e03fb76e.png"></p>
+
+<p>For dropout, we throw that away. At random, we <strong>throw away some percentage of the activations</strong>.</p>
+
+<p>N.B. it doesn’t zero the weights/parameters. (Remember, there’s <em>only two types of layer in a neural net - parameters and activations</em>).</p>
+
+<p>We throw each one away with a probability <code class="language-plaintext highlighter-rouge">p</code>. A common value of <code class="language-plaintext highlighter-rouge">p</code> is 0.5.</p>
+
+<p>It means that no one activation can memorize some part of the input because that’s what happens if we over fit. If we over fit, some part of the model is basically learning to recognize a particular image rather than a feature in general or a particular item. This forces the network to use more neurons to determine the outcome and so the network is more likely to learn the actual patterns in the data, rather than trying to short-circuit the problem by memorizing the data.</p>
+
+<p>During backpropagation, the gradients for the zeroed out neurons are also zero.</p>
+
+<p>Check out this quote from one of the creators, Geoffry Hinton:</p>
+
+<blockquote>
+  <p>I went to my bank. The tellers kept changing and I asked one of them why. He said he didn’t know but they got moved around a lot. I figured it must be because it would require cooperation between employees to successfully defraud the bank. This made me realize that randomly removing a different subset of neurons on each example would prevent conspiracies and thus reduce overfitting.</p>
+</blockquote>
+
+<p><a href="https://www.reddit.com/r/MachineLearning/comments/4w6tsv/ama_we_are_the_google_brain_team_wed_love_to/d6dgyse"><em>Hinton: Reddit AMA</em></a></p>
+
+<p>Dropout stops your neural network from conspiring against you! Dropout is a technique that <em>works really well</em>, and has become standard practice in training neural networks.</p>
+
+<p>In fastai nearly every learner has a parameter <code class="language-plaintext highlighter-rouge">ps</code> for defining how much dropout to use (number between 0 and 1).</p>
+
+<p><strong>Dropout: Training versus test time:</strong>
+<img src="https://github.com/hiromis/notes/raw/master/lesson6/7.png" alt="img"></p>
+
+<p>There is an interesting feature of dropout regarding <em>training time</em> and <em>test time</em> (AKA inference time). Training time is when we’re actually updating the weights - doing backpropagation etc. During training time, dropout works the way we just saw.</p>
+
+<p>At test time however we <em>turn off</em> dropout. We’re not going to do dropout anymore because we want it to be as accurate as possible. It’s not updating any weights at test time so overfitting obviously isn’t an issue. But there is a small issue here. If previously <code class="language-plaintext highlighter-rouge">p</code> was set to 0.5, then half the activations were being removed. Which means when we turn them all back on again, now our overall activation level is <em>twice</em> what it used to be. <em>Therefore, in the paper, they suggest multiplying all of the weights affect by dropout at test time by <code class="language-plaintext highlighter-rouge">p</code>.</em></p>
+
+<p>You could alternatively scale things at training time instead, except you would scale the activations and gradients of the non-zeroed neurons by $\frac{1}{1-p}$ . (<a href="https://stats.stackexchange.com/a/219240">Source</a>).</p>
+
+<h3 id="dropout-in-tabular-learner">
+<a class="anchor" href="#dropout-in-tabular-learner" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dropout in Tabular Learner</h3>
+
+<p>Looking again at the tabular learner:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span> <span class="o">=</span> <span class="n">tabular_learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> 
+                        <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span><span class="mi">500</span><span class="p">],</span> 
+                        <span class="n">ps</span><span class="o">=</span><span class="p">[</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.01</span><span class="p">],</span> 
+                        <span class="n">emb_drop</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> 
+                        <span class="n">y_range</span><span class="o">=</span><span class="n">y_range</span><span class="p">,</span> 
+                        <span class="n">metrics</span><span class="o">=</span><span class="n">exp_rmspe</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In this case:</p>
+
+<ul>
+  <li>Dropout of 0.001 on layer 1.</li>
+  <li>Dropout of 0.01 on layer 2.</li>
+  <li>Then some dropout of 0.04 on the embedding layers.</li>
+</ul>
+
+<p>What is the embedding dropout actually doing? Look at the source code of the <code class="language-plaintext highlighter-rouge">forward</code> method again specifically at the embedding part:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_cat</span><span class="p">:</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">x_cont</span><span class="p">:</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_emb</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="p">(</span><span class="n">x_cat</span><span class="p">[:,</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">embeds</span><span class="p">)]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">cat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">emb_drop</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="p">...</span>
+</code></pre></div></div>
+
+<ul>
+  <li>It calls each embedding</li>
+  <li>It concatenates the embeddings in a single matrix (batch of vectors)</li>
+  <li>It calls dropout on that</li>
+</ul>
+
+<p>The output of an embedding layers is basically a big vector so we can think of it as just another layer in the neural network and so just call dropout on that like we normally would.</p>
+
+<p>Here is the TabularModel for the Rossmann dataset:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">TabularModel</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">embeds</span><span class="p">):</span> <span class="n">ModuleList</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">1116</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">4</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">17</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">7</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">8</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">9</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">10</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">11</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">12</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">13</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">14</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">53</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">15</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">22</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">16</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">17</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">18</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">19</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">20</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">21</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">22</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">23</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="p">(</span><span class="n">emb_drop</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">bn_cont</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">layers</span><span class="p">):</span> <span class="n">Sequential</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">229</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">4</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">7</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">8</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>There are 24 categorical variables and so 24 embedding layers. <code class="language-plaintext highlighter-rouge">Embedding(53, 27)</code> means that there are 52+1 possible values (+1 is <code class="language-plaintext highlighter-rouge">#na#</code>) and the size of the embedding is 27D.</p>
+
+<p>There are also these extra layers in there <code class="language-plaintext highlighter-rouge">BatchNorm1d</code> too. These are batch normalization, another standard regularization technique.</p>
+
+<h2 id="batch-normalization">
+<a class="anchor" href="#batch-normalization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Batch Normalization</h2>
+
+<p>Batch norm is a very high impact training technique that was published in 2015.</p>
+
+<p><img src="/blog/images/fastai/2a10c9e9.png" alt="2a10c9e9.png"></p>
+
+<p>Showing the current then state of the art ImageNet model Inception. This is how long it took them to get a pretty good result, and then they tried the same thing with batch norm, and it <em>was a lot faster</em>.</p>
+
+<p>From the abstract of the original paper:</p>
+
+<blockquote>
+  <p>Training Deep Neural Networks is complicated by the fact that the distribution of each layer’s inputs changes during training, as the parameters of the previous layers change. This slows down the training by requiring lower learning rates…</p>
+</blockquote>
+
+<p>Batch Normalization layer adjusts the distribution of the output of a layer by controlling the the first two moments of the layer distributions (mean and standard deviation). <em>This allows networks to be trained with a higher learning rate (so they train faster) and with more layers.</em></p>
+
+<p>The algorithm:</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson6/16.png" alt="img"></p>
+
+<p>You have the activations from the layer $x$ going into the batch norm layer.</p>
+
+<ol>
+  <li>The first thing we do is we find the <em>mean</em> with those activations - sum divided by the count that is just the mean.</li>
+  <li>The second thing we do is we find the <em>variance</em> of those activations - a difference squared divided by the mean is the variance.</li>
+  <li>Then we <em>normalize</em> - the values minus the mean divided by the standard deviation is the normalized version. It turns out that bit is actually not that important. We used to think it was - it turns out it’s not. The really important bit is the next bit.</li>
+  <li>We take those values and we add a vector of biases (they call it beta here). We’ve seen that before. We’ve used a bias term before. So we’re just going to add a bias term as per usual. Then we’re going to use another thing that’s a lot like a bias term, but rather than adding it, we’re going to multiply by it. These are the parameters gamma $\gamma$ and beta $\beta$ <strong>which are learnable parameters.</strong>
+</li>
+</ol>
+
+<p>Basically $\gamma$ and $\beta$ are biases. $\beta$ is just a normal bias layer and $\gamma$ is a multiplicative/scale bias layer. They are parameters and so they are learned with gradient descent.</p>
+
+<p>Roughly speaking, this works by scaling a layer’s output to the size and location it needs to be in (like between 0 and 5 for a movie review). This is harder to do with just stacks of non-linear functions because of all the intricate interactions between them. Navigating that complex landscape is hard and there will be many bumps in the road.</p>
+
+<p>There is one more aspect to batch norm - <strong>momentum</strong>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This has <em>nothing</em> to do with momentum in optimization. This is momentum as in <em>exponentially weighted moving average</em>. Specifically this mean and standard deviation (in batch norm algorithm), we don’t actually use a different mean and standard deviation for every mini batch. If we did, it would vary so much that it be very hard to train. So instead, we take an exponentially weighted moving average of the mean and standard deviation.</p>
+
+<p><strong>Why Batch Normalization works</strong> is actually still a debated topic.</p>
+
+<p>In the original paper they said it accelerates training by reducing something they call <em>‘internal covariate shift’</em>. This is one of those things where researchers came up with some intuition and some idea about this thing they wanted to try and found that it worked well. They then look for an explanation after the fact. So the original explanation for why it works may well be wrong. In this paper - <a href="https://arxiv.org/abs/1805.11604">How Does Batch Normalization Help Optimization?</a> - they have an alternative explanation:</p>
+
+<p><img src="/blog/images/fastai/f81cbddc.png" alt="f81cbddc.png"></p>
+
+<p>The above is from this paper. The plot represents the ‘loss landscape’ of the network during training. The red line is what happens whn you train without Batch Norm - very very bumpy. The blue line is training with batch norm - a lot smoother. If the loss landscape is very bumpy then your model can get trapped in some awful region of parameter space that it can’t escape from. If it is smoother then you can train with a higher learning rate and hence converge faster.</p>
+
+<p><strong>Other points of view</strong>:</p>
+
+<ul>
+  <li>An influential twitter thread on how Batch Norm works that vindicates the Internal Covariate Shift explanation: <a href="https://twitter.com/dcpage3/status/1171867587417952260">Twitter thread</a>.</li>
+  <li>Blog post with analysis of the different points of view: <a href="https://arthurdouillard.com/post/normalization/">https://arthurdouillard.com/post/normalization/</a>
+</li>
+</ul>
+
+<p>Why it works is still debatable and I need to read more into this, but this aside, it seems that the output distribution of the hidden layers in the network is very important for training networks more quickly and with more layers. We already know that these internal distributions are very important for training because of all the research done into the art of initializing neural networks when training from scratch. Getting this wrong can prevent the network from training at all by making gradients vanish or explode. So with this in mind, it makes sense that adjusting these distributions as data flows through the network could improve training.</p>
+
+<h2 id="data-augmentation">
+<a class="anchor" href="#data-augmentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data Augmentation</h2>
+
+<p>One of the most effective and least studied forms of regularization is <em>data augmentation</em>.</p>
+
+<p>Here is a link to the notebook that explores data augmentation in computer vision: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson6-pets-more.ipynb">lesson6-pets-more.ipynb</a>.</p>
+
+<p>I recommend reading the fastai documentation on data augmentation for computer vision: <a href="https://docs.fast.ai/vision.transform.html">vision.transform</a>.</p>
+
+<p>In particular, read the list of transforms.</p>
+
+<ul>
+  <li>The data augmentation you pick should be realistic of what you expect in the dataset and problem domain.</li>
+</ul>
+
+<h2 id="how-do-convolutions-work">
+<a class="anchor" href="#how-do-convolutions-work" aria-hidden="true"><span class="octicon octicon-link"></span></a>How do convolutions work?</h2>
+
+<p>Convolutions are like a special kind of matrix multiply.</p>
+
+<p>Checkout the website: <a href="http://setosa.io/ev/image-kernels/">http://setosa.io/ev/image-kernels/</a>:</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson6/31.png" alt="img"></p>
+
+<p>Post from Matthew Kleinsmith: <a href="https://medium.com/impactai/cnns-from-different-viewpoints-fab7f52d159c">CNNs from Different Viewpoints</a>. This is a wonderfully concise explanation with great diagrams and hardly any text. The following diagrams are from that post.</p>
+
+<p>Sliding window view:</p>
+
+<p><img src="/blog/images/fastai/bfeddb4e.png" alt="bfeddb4e.png"></p>
+
+<p>You can alternatively think of it as a a set of linear equations.</p>
+
+<p><img src="/blog/images/fastai/224be1f0.png" alt="224be1f0.png"></p>
+
+<p>You can also think of it as a fully connected neural network. In the following the colour of the links stand for their weight, and the gray links are 0.</p>
+
+<p><img src="/blog/images/fastai/f5d63cd3.png" alt="f5d63cd3.png"></p>
+
+<p>You can also interpret it as a matrix multiply:</p>
+
+<p><img src="/blog/images/fastai/b60adeaf.png" alt="b60adeaf.png"></p>
+
+<p>Banded matrix multiply where the colours again stand for the weights. $b$ is a bias term.</p>
+
+<p>We have to also consider <strong>padding</strong>:</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson6/39.png" alt="img"></p>
+
+<p>This diagram uses zero padding, but it could be reflection padding or whatever.</p>
+
+<p>So a single convolution kernel is a small matrix of weights (typical sized 3 to 7) and a bias. In a convolutional layer the same convolution is applied to every channel of input. If you take example of a colour image there the image is 3x224x224 in size. The 2D convolutional kernal will be applied to all 3 channels simultaneously and the results from all 3 is summed to produce a single number for each pixel.</p>
+
+<p><img src="/blog/images/fastai/image-20190901210249684.png" alt="image-20190901210249684"></p>
+
+<p>If you have multiple convolutions then you have multiple different outputs. We stack these together to make another tensor:</p>
+
+<p><img src="/blog/images/fastai/image-20190901210510620.png" alt="image-20190901210510620"></p>
+
+<p>This output can also be fed into another convolution layer, and so on.</p>
+
+<p>In order to avoid our memory going out of control, from time to time we create a convolution where we don’t step over every single set of 3x3, but instead we skip over two at a time. We would start with a 3x3 centered at (2, 2) and then we’d jump over to (2, 4), (2, 6), (2, 8), and so forth. That’s called a <strong>stride 2 convolution</strong>. What that does is, it looks exactly the same, it’s still just a bunch of kernels, but we’re just jumping over 2 at a time. We’re skipping every alternate input pixel. So the output from that will be H/2 by W/2. When we do that, we generally create twice as many kernels, so we can now have 32 activations in each of those spots. That’s what modern convolutional neural networks tend to look like.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">learn.summary()</code> of a resnet it looks like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">======================================================================</span>
+<span class="n">Layer</span> <span class="p">(</span><span class="nb">type</span><span class="p">)</span>         <span class="n">Output</span> <span class="n">Shape</span>         <span class="n">Param</span> <span class="c1">#    Trainable 
+</span><span class="o">======================================================================</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">176</span><span class="p">]</span>       <span class="mi">9</span><span class="p">,</span><span class="mi">408</span>      <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">176</span><span class="p">]</span>       <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">176</span><span class="p">]</span>       <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">MaxPool2d</span>            <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">36</span><span class="p">,</span><span class="mi">864</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">36</span><span class="p">,</span><span class="mi">864</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">36</span><span class="p">,</span><span class="mi">864</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">36</span><span class="p">,</span><span class="mi">864</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">36</span><span class="p">,</span><span class="mi">864</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">36</span><span class="p">,</span><span class="mi">864</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">88</span><span class="p">]</span>         <span class="mi">128</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">73</span><span class="p">,</span><span class="mi">728</span>     <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">8</span><span class="p">,</span><span class="mi">192</span>      <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">ReLU</span>                 <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">0</span>          <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">147</span><span class="p">,</span><span class="mi">456</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">]</span>        <span class="mi">256</span>        <span class="bp">True</span>      
+<span class="n">______________________________________________________________________</span>
+<span class="n">Conv2d</span>               <span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">22</span><span class="p">]</span>        <span class="mi">294</span><span class="p">,</span><span class="mi">912</span>    <span class="bp">False</span>     
+<span class="n">______________________________________________________________________</span>
+<span class="n">BatchNorm2d</span>          <span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">22</span><span class="p">]</span>        <span class="mi">512</span>        <span class="bp">True</span>     
+</code></pre></div></div>
+
+<p>There are stacks of convolutional layers and every so often it <em>halves</em> the grid size and <em>doubles</em> the number of channels.</p>
+
+<h3 id="manual-convolution">
+<a class="anchor" href="#manual-convolution" aria-hidden="true"><span class="octicon octicon-link"></span></a>Manual Convolution</h3>
+
+<p>Input image:</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson6/40.png" alt="img"></p>
+
+<p>Convolve with tensor:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">k</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">([</span>
+    <span class="p">[</span><span class="mf">0.</span>  <span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">1.</span>  <span class="p">,</span><span class="mi">1</span>   <span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+<span class="p">]).</span><span class="n">expand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">6</span>
+</code></pre></div></div>
+
+<p>The images has 3 channels so we need to <code class="language-plaintext highlighter-rouge">expand</code> the tensor to replicate the kernel 3 times. We also add in an additional unit dimension because PyTorch expects to work with mini-batches always so this way it has the right tensor rank.</p>
+
+<p>You then take that image <code class="language-plaintext highlighter-rouge">t</code> and convolve it using PyTorch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">edge</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="bp">None</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>	
+</code></pre></div></div>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson6/41.png" alt="img"></p>
+
+<h2 id="cnn-heatmap-example">
+<a class="anchor" href="#cnn-heatmap-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>CNN Heatmap Example</h2>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson6/29.png" alt="img"></p>
+
+<p>This is covered in the notebook: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson6-pets-more.ipynb">lesson6-pets-more.ipynb</a>.</p>
+
+<h2 id="ethics-and-data-science">
+<a class="anchor" href="#ethics-and-data-science" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ethics and Data Science</h2>
+
+<p>I won’t cover this here. Instead just watch the video, it’s great: <a href="https://youtu.be/hkBa9pU-H48?t=6551">ethics and data science (YouTube)</a>
+Also here is the <a href="https://github.com/hiromis/notes/blob/master/Lesson6.md#ethics-and-data-science-14910">transcription of this section by @hiromi</a></p>
+
+<h2 id="jeremy-says">
+<a class="anchor" href="#jeremy-says" aria-hidden="true"><span class="octicon octicon-link"></span></a>Jeremy Says…</h2>
+
+<ol>
+  <li>Not an explicit “do this” but it feels like it fits here. “One of the big opportunities for research is to figure out how to do data augmentation for different domains. Almost nobody is looking at that and to me it is one of the biggest opportunities that could let you decrease data requirements by 5-10x.” <a href="https://youtu.be/hkBa9pU-H48?t=3852">Lesson 6: Data augmentation on inputs that aren’t images 26</a>
+</li>
+  <li>In context of data augmentation: reflection mode padding almost always works best.</li>
+  <li>If you take your time going through the convolution kernel section and the heatmap section of this notebook, running those lines of code and changing them around a bit. The most important thing to remember is shape (rank and dimensions of tensor). Try to think “why?”. Try going back to the printout of the summary, the list of the actual layers, the picture we drew and think about what’s going on. <a href="https://youtu.be/hkBa9pU-H48?t=6486">Lesson 6: Go through the convolution kernel and heatmap notebook 11</a>
+</li>
+</ol>
+
+<p>(<a href="https://forums.fast.ai/t/things-jeremy-says-to-do/36682">Source: Robert Bracco</a>)</p>
+
+<h2 id="q--a">
+<a class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<ul>
+  <li>
+    <p><em>In what proportion would you use dropout vs. other regularization errors, like, weight decay, L2 norms, etc.? [<a href="https://youtu.be/U7c-nYXrKD4?t=3299">54:49</a>]</em>:</p>
+
+    <blockquote>
+      <p>So remember that L2 regularization and weight decay are kind of two ways of doing the same thing? We should always use the weight decay version, not the L2 regularization version. So there’s weight decay. There’s batch norm which kind of has a regularizing effect. There’s data augmentation which we’ll see soon, and there’s dropout. So batch norm, we pretty much always want. So that’s easy. Data augmentation, we’ll see in a moment. So then it’s really between dropout versus weight decay. I have no idea. I don’t think I’ve seen anybody to provide a compelling study of how to combine those two things. Can you always use one instead of the other? Why? Why not? I don’t think anybody has figured that out. I think in practice, it seems that you generally want a bit of both. You pretty much always want some weight decay, but you often also want a bit of dropout. But honestly, I don’t know why. I’ve not seen anybody really explain why or how to decide. So this is one of these things you have to try out and kind of get a feel for what tends to work for your kinds of problems. I think the defaults that we provide in most of our learners should work pretty well in most situations. But yeah, definitely play around with it.</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li>
+<a href="https://youtu.be/hkBa9pU-H48">Link to Lesson 6 lecture</a>.</li>
+  <li>Parts of my notes were copied from the excellent lecture transcriptions made by @hiromi: <a href="https://github.com/hiromis/notes/blob/master/Lesson6.md">Detailed lesson notes</a>.</li>
+  <li>Homework notebooks:
+    <ul>
+      <li><a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson6-rossmann.ipynb">lesson6-rossmann.ipynb</a></li>
+      <li><a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/rossman_data_clean.ipynb">rossman_data_clean.ipynb</a></li>
+      <li><a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson6-pets-more.ipynb">lesson6-pets-more.ipynb</a></li>
+    </ul>
+  </li>
+  <li><a href="https://medium.com/impactai/cnns-from-different-viewpoints-fab7f52d159c">CNNs from Different Viewpoints</a></li>
+  <li>Blog post about different kinds of <a href="https://arthurdouillard.com/post/normalization/">Normalization</a>.</li>
+  <li><a href="https://gombru.github.io/2018/05/23/cross_entropy_loss/">Cross-entropy loss</a></li>
+  <li>Lecture on BackProp going deeper into how it works from A. Karpathy: <a href="https://www.youtube.com/watch?v=i94OvYb6noo">https://www.youtube.com/watch?v=i94OvYb6noo</a>
+</li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/09/01/fast-ai-lesson-6-notes-cnn-deep-dive-ethics.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
