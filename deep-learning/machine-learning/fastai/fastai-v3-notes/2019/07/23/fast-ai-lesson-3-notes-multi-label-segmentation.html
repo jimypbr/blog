@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai v3 Lesson 3 Notes: Multi-label, Segmentation | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai v3 Lesson 3 Notes: Multi-label, Segmentation" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 3 of part 1 of fast.ai v3 - Data blocks; Multi-label classification; Segmentation." />
+<meta property="og:description" content="My personal notes on Lesson 3 of part 1 of fast.ai v3 - Data blocks; Multi-label classification; Segmentation." />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/23/fast-ai-lesson-3-notes-multi-label-segmentation.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/23/fast-ai-lesson-3-notes-multi-label-segmentation.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-07-23T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/23/fast-ai-lesson-3-notes-multi-label-segmentation.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 3 Notes: Multi-label, Segmentation","dateModified":"2019-07-23T00:00:00-05:00","datePublished":"2019-07-23T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/23/fast-ai-lesson-3-notes-multi-label-segmentation.html"},"description":"My personal notes on Lesson 3 of part 1 of fast.ai v3 - Data blocks; Multi-label classification; Segmentation.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai v3 Lesson 3 Notes: Multi-label, Segmentation</h1><p class="page-description">My personal notes on Lesson 3 of part 1 of fast.ai v3 - Data blocks; Multi-label classification; Segmentation.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-07-23T00:00:00-05:00" itemprop="datePublished">
+        Jul 23, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      31 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai-v3-notes">fastai-v3-notes</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview-of-lesson">Overview of Lesson</a></li>
+<li class="toc-entry toc-h2"><a href="#datablock-api">DataBlock API</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#dataset-pytorch">Dataset (PyTorch)</a></li>
+<li class="toc-entry toc-h3"><a href="#dataloader-pytorch">DataLoader (PyTorch)</a></li>
+<li class="toc-entry toc-h3"><a href="#databunch-fastai">DataBunch (fastai)</a></li>
+<li class="toc-entry toc-h3"><a href="#learn-to-use-the-data-block-api-by-example">Learn to use the data block API by example</a></li>
+<li class="toc-entry toc-h3"><a href="#image-transforms-docs">Image Transforms (docs)</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#planet-amazon-multi-label-classification">Planet Amazon: Multi-label Classification</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#loading-the-data">Loading the Data</a></li>
+<li class="toc-entry toc-h3"><a href="#create-the-model">Create the Model</a></li>
+<li class="toc-entry toc-h3"><a href="#train-the-model">Train the Model</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#camvid-image-segmentation">Camvid: Image Segmentation</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#loading-the-data-1">Loading the Data</a></li>
+<li class="toc-entry toc-h3"><a href="#create-the-model-1">Create the Model</a></li>
+<li class="toc-entry toc-h3"><a href="#results">Results</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#biwi-head-pose-regression">BIWI Head Pose: Regression</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#loading-the-data-2">Loading the Data</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#imdb-text-classification">IMDB: Text Classification</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#loading-the-data-3">Loading the Data</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#tokenization">Tokenization</a></li>
+<li class="toc-entry toc-h4"><a href="#numericalization">Numericalization</a></li>
+<li class="toc-entry toc-h4"><a href="#with-the-data-block-api">With the data block API</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h3"><a href="#training-a-classifier-preview">Training a Classifier Preview</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#what-is-deep-learning-fundamentally">What is deep learning fundamentally?</a></li>
+<li class="toc-entry toc-h2"><a href="#jeremy-says">Jeremy Says…</a></li>
+<li class="toc-entry toc-h2"><a href="#q--a">Q &amp; A</a></li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview-of-lesson">
+<a class="anchor" href="#overview-of-lesson" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview of Lesson</h2>
+
+<p>This lesson firstly dives deeper in to fastai’s approach to loading data for deep learning: the <em>data block API</em>; and secondly goes into more advanced problems beyond classification that you can solve with deep learning and the fastai library. Namely:</p>
+
+<ul>
+  <li>Multi-label classification (Planet Amazon dataset)</li>
+  <li>Regression problems (Head Orientation dataset)</li>
+  <li>Image Segmentation (Camvid dataset)</li>
+  <li>Text Classification (IMDB dataset)</li>
+</ul>
+
+<p>The lesson ends with a brief look at the fundamentals of deep learning: non-linearity and the Universal Approximation theorem.</p>
+
+<h2 id="datablock-api">
+<a class="anchor" href="#datablock-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataBlock API</h2>
+
+<p>The trickiest step previously in deep learning has often been getting the data into a form that you can get it into a model. So far we’ve been showing you how to do that using various “factory methods” which are methods where you say, “I want to create this kind of data from this kind of source with these kinds of options.” That works fine, sometimes, and we showed you a few ways of doing it over the last couple of weeks. But sometimes you want more flexibility, because there’s so many choices that you have to make about:</p>
+
+<ul>
+  <li>Where do the files live</li>
+  <li>What’s the structure they’re in</li>
+  <li>How do the labels appear</li>
+  <li>How do you spit out the validation set</li>
+  <li>How do you transform it</li>
+</ul>
+
+<p>In fastai there is this unique API called the <a href="https://docs.fast.ai/data_block.html">data block API</a>. The data block API makes each one of those decisions a separate decision that you make. There are separate methods with their own parameters for every choice that you make around how to create / set up the data.</p>
+
+<p>To give you a sense of what that looks like, the first thing I’m going to do is go back and explain what are all of the PyTorch and fastai classes you need to know about that are going to appear in this process. Because you’re going to see them all the time in the fastai docs and PyTorch docs.</p>
+
+<p>We will now explain the different PyTorch and fastai classes that appear in the data block API.</p>
+
+<h3 id="dataset-pytorch">
+<a class="anchor" href="#dataset-pytorch" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dataset (PyTorch)</h3>
+
+<p>The first class you need to know is the <code class="language-plaintext highlighter-rouge">Dataset</code> class, which is part of PyTorch. It is very simple, here is the source code:</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson3/16.png" alt="img"></p>
+
+<p>It actually does nothing at all. It is an <em>abstract class</em>, defining that subclasses of Dataset must implement <code class="language-plaintext highlighter-rouge">__getitem__</code> and <code class="language-plaintext highlighter-rouge">__len__</code> methods. The first means you can use the python array indexing notation with a Dataset object: <code class="language-plaintext highlighter-rouge">d[12]</code>; and the second means that you can get the length of the Dataset object: <code class="language-plaintext highlighter-rouge">len(d)</code>.</p>
+
+<h3 id="dataloader-pytorch">
+<a class="anchor" href="#dataloader-pytorch" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataLoader (PyTorch)</h3>
+
+<p>A <code class="language-plaintext highlighter-rouge">Dataset</code> is not enough to train a model. For SGD we need to be able to produce <em>mini-batches</em> of data for training. To create mini-batches we use another PyTorch class called a <code class="language-plaintext highlighter-rouge">DataLoader</code>. Here is the <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader">documentation for that</a>:</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson3/17.png" alt="img"></p>
+
+<ul>
+  <li>This takes a <code class="language-plaintext highlighter-rouge">Dataset</code> as a parameter.</li>
+  <li>It will create batches of size <code class="language-plaintext highlighter-rouge">batch_size</code> by grabbing items at random from the dataset.</li>
+  <li>The dataloader then sends the batch over to the GPU to your model.</li>
+</ul>
+
+<h3 id="databunch-fastai">
+<a class="anchor" href="#databunch-fastai" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataBunch (fastai)</h3>
+
+<p>The DataLoader is still not enough to train a model. To train a model we need to split the data into training, validation, and testing. So for that fastai has its <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader">own class called <code class="language-plaintext highlighter-rouge">DataBunch</code>.</a></p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson3/18.png" alt="img"></p>
+
+<p>The DataBunch combines together a training DataLoader, a validation DataLoader, and optionally a test DataLoader.</p>
+
+<p>You can read from the documentation that DataBunch also handles on-the-fly data transformations with <code class="language-plaintext highlighter-rouge">tfms</code> and allows you to create a custom function for building the mini-batches with <code class="language-plaintext highlighter-rouge">collate_fn</code>.</p>
+
+<h3 id="learn-to-use-the-data-block-api-by-example">
+<a class="anchor" href="#learn-to-use-the-data-block-api-by-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Learn to use the data block API by example</h3>
+
+<p>I won’t reproduce the examples here because fastai’s documentation already has a fantastic page full of <a href="https://docs.fast.ai/data_block.html">data block API examples here</a>. I recommend you read the whole thing or download and run it because the documentation pages are all Jupyter notebooks!</p>
+
+<h3 id="image-transforms-docs">
+<a class="anchor" href="#image-transforms-docs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Image Transforms (<a href="https://docs.fast.ai/vision.transform.html">docs</a>)</h3>
+
+<ul>
+  <li>fastai provides a complete image transformation library written from scratch in PyTorch. Although the main purpose of the library is data augmentation for use when training computer vision models, you can also use it for more general image transformation purposes.</li>
+  <li>Data augmentation is perhaps the most important regularization technique when training a model for Computer Vision: instead of feeding the model with the same pictures every time, we do small random transformations (a bit of rotation, zoom, translation, etc…) that don’t change what’s inside the image (to the human eye) but do change its pixel values. Models trained with data augmentation will then generalize better.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">get_transforms</code> creates a list of a image transformations. 
+<img src="/blog/images/fastai/image-20190716233120785.png" alt="image-20190716233120785">
+</li>
+  <li>Which image transformations are appropriate to use depends on your problem and what would likely appear in the real data. Flipping images of cats/dogs vertical isn’t useful because they wouldn’t appear upside-down. While for satellite images it makes no sense to zoom, but flipping them vertically and horizontally would make sense.</li>
+  <li>fastai is unique in that it provides a fast implementation of <em>perspective warping</em>. This is the <code class="language-plaintext highlighter-rouge">max_wap</code> option in <code class="language-plaintext highlighter-rouge">get_transforms</code>. This is like the kind of warping that occurs if you take a picture of a cat from above versus from below. This kinds of transformation wouldn’t make sense for satellite images, but would for cats and dogs.</li>
+</ul>
+
+<h2 id="planet-amazon-multi-label-classification">
+<a class="anchor" href="#planet-amazon-multi-label-classification" aria-hidden="true"><span class="octicon octicon-link"></span></a>Planet Amazon: Multi-label Classification</h2>
+
+<p>(Link to <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson3-planet.ipynb">Notebook</a>)</p>
+
+<p><a href="https://www.kaggle.com/c/planet-understanding-the-amazon-from-space">The Planet Amazon dataset</a> is an example of a multi-label classification problem. The dataset consists of satellite images taken of the Amazon rainforest, each of which has a list of labels describing what’s in the image, for example: weather, trees, river, agriculture.</p>
+
+<p>Here is a sample of the images:
+<img src="/blog/images/fastai/image-20190713221942444.png" alt="image-20190713221942444"></p>
+
+<p>Here is what some of the training labels look like:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="s">'train_v2.csv'</span><span class="p">)</span>
+<span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>image_name</th>
+      <th>tags</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>train_0</td>
+      <td>haze primary</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>train_1</td>
+      <td>agriculture clear primary water</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>train_2</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>train_3</td>
+      <td>clear primary</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>train_4</td>
+      <td>agriculture clear habitation primary road</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>There are many different labels that an image can have and so there are a huge number of combinations. This makes treating it as a single label classification <em>impractical</em>. If there were 20 different labels then there could be as many as $2^{20}$ possible combinations. Better to have the model output a 20d vector than have it try to learn $2^{20}$ individual labels!</p>
+
+<h3 id="loading-the-data">
+<a class="anchor" href="#loading-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading the Data</h3>
+
+<p>Code for loading data with comments:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tfms</span> <span class="o">=</span> <span class="n">get_transforms</span><span class="p">(</span><span class="n">flip_vert</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">max_lighting</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_zoom</span><span class="o">=</span><span class="mf">1.05</span><span class="p">,</span> <span class="n">max_warp</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+
+<span class="n">src</span> <span class="o">=</span> <span class="p">(</span><span class="n">ImageList</span><span class="p">.</span><span class="n">from_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">'train_v2.csv'</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="s">'train-jpg'</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s">'.jpg'</span><span class="p">)</span>
+       <span class="c1"># image names are listed in a csv file (names found by default in first column)
+</span>       <span class="c1"># path to the data is `path`
+</span>       <span class="c1"># the folder containing the data is `folder`
+</span>       <span class="c1"># the file ext is missing from the names in the csv so add `suffix` to them.
+</span>       <span class="p">.</span><span class="n">split_by_rand_pct</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+       <span class="c1"># split train/val randomly with 80/20 split
+</span>       <span class="p">.</span><span class="n">label_from_df</span><span class="p">(</span><span class="n">label_delim</span><span class="o">=</span><span class="s">' '</span><span class="p">)</span>
+       <span class="c1"># label from dataframe (the output of `from_csv`). Default is second column.
+</span>       <span class="c1"># split the tags by ' '
+</span>      <span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tfms</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">databunch</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h3 id="create-the-model">
+<a class="anchor" href="#create-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Create the Model</h3>
+
+<p>To create a <code class="language-plaintext highlighter-rouge">Learner</code> for multi-label classification you don’t need to do anything different from before. fastai <code class="language-plaintext highlighter-rouge">create_cnn</code> takes the DataBunch object and see that the type of the target variable and takes care of creating the output layers etc for you behind the scenes.</p>
+
+<p>For this particular problem the only thing we do different is to pass a few different <strong>metrics</strong> to the Learner.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">acc_02</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">accuracy_thresh</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">f_score</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">fbeta</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">learn</span> <span class="o">=</span> <span class="n">cnn_learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">models</span><span class="p">.</span><span class="n">resnet50</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">acc_02</span><span class="p">,</span> <span class="n">f_score</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p><strong>Note</strong>: <code class="language-plaintext highlighter-rouge">metrics</code> change nothing about how the model learns. They are only an output for you to see how well it is learning. They are <em>not</em> to be confused with the model’s <em>loss function</em>.</p>
+
+<p>What are these metrics about here? Well the network will output some M-dimensional vector with numbers between 0 and 1. Each of the the elements in this vector indicate the presence of one of the labels, but we need to decide a <em>threshold</em> value, above which we will say that this or that label is ‘on’. We set this threshold to 0.2. <code class="language-plaintext highlighter-rouge">acc_02</code> and <code class="language-plaintext highlighter-rouge">f_score</code> here are the accuracy and f-score after applying 0.2 thresholding to the model output.</p>
+
+<h3 id="train-the-model">
+<a class="anchor" href="#train-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Train the Model</h3>
+
+<p>The model is trained in the basically same way as in the previous lessons:</p>
+
+<ol>
+  <li>Freeze all the layers except the head.</li>
+  <li>Run <code class="language-plaintext highlighter-rouge">lr_find()</code>.</li>
+  <li>Train the head for a few cycles.</li>
+  <li>Unfreeze the rest of the network and run <code class="language-plaintext highlighter-rouge">lr_find()</code> again.</li>
+  <li>Train the whole model for some more cycles with a differential learning rate.</li>
+</ol>
+
+<p>After this however, Jeremy shows a cool new trick however called <strong>progressive resizing</strong>. Here you train your network on images that are smaller, then continue training the network on larger images. So start $128^2$ for a few cycles, then $256^2$, $512^2$ etc. You can save time on training for higher resolution images by effectively using smaller resolution models as pretrained models for larger resolutions.</p>
+
+<p>To do this you simply have to tweak the DataBunch from before and give it a new size then give that to the Learner:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tfms</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">databunch</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">))</span>
+
+<span class="n">learn</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+<span class="n">data</span><span class="p">.</span><span class="n">train_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="n">shape</span>
+</code></pre></div></div>
+
+<p>I won’t reproduce anymore here, but the full example is covered in this <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson3-planet.ipynb">Lesson 3 homework notebook.</a></p>
+
+<h2 id="camvid-image-segmentation">
+<a class="anchor" href="#camvid-image-segmentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Camvid: Image Segmentation</h2>
+
+<p>(Link to <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson3-camvid.ipynb">Notebook</a>)</p>
+
+<p>The next example we’re going to look at is this dataset called CamVid. It’s going to be doing something called segmentation. We’re going to start with a picture like the left and produce a colour-coded picture on the right:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Input Image</th>
+      <th>Segmented Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><img src="https://github.com/hiromis/notes/raw/master/lesson3/c1.png" alt="img"></td>
+      <td><img src="https://github.com/hiromis/notes/raw/master/lesson3/c2.png" alt="img"></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>All the bicycle pixels are the same colour, all the car pixels are the same color etc.</p>
+
+<ul>
+  <li>
+    <p>Segmentation is an image classification problem where you need to label every single pixel in the image.</p>
+  </li>
+  <li>
+    <p>In order to build a segmentation model, you actually need to download or create a dataset where <em>someone has actually labeled every pixel</em>. As you can imagine, that’s a lot of work, so you’re probably not going to create your own segmentation datasets but you’re probably going to download or find them from somewhere else.</p>
+  </li>
+  <li>
+    <p>We use Camvid dataset. fastai comes with many datasets available for download through the fastai library. They are listed <a href="https://course.fast.ai/datasets">here</a>.</p>
+  </li>
+</ul>
+
+<h3 id="loading-the-data-1">
+<a class="anchor" href="#loading-the-data-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading the Data</h3>
+
+<ul>
+  <li>Segmentation problems come with sets of images: the input image and a <em>segmentation mask</em>.</li>
+  <li>The segmentation mask is a 2D array of integers.</li>
+  <li>fastai has a special function for opening image masks called <code class="language-plaintext highlighter-rouge">open_mask</code>. (For ordinary images use <code class="language-plaintext highlighter-rouge">open_image</code>).</li>
+</ul>
+
+<p>Create a databunch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">codes</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="s">'codes.txt'</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+<span class="n">get_y_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">path_lbl</span><span class="o">/</span><span class="s">f'</span><span class="si">{</span><span class="n">x</span><span class="p">.</span><span class="n">stem</span><span class="si">}</span><span class="s">_P</span><span class="si">{</span><span class="n">x</span><span class="p">.</span><span class="n">suffix</span><span class="si">}</span><span class="s">'</span>
+
+<span class="n">src</span> <span class="o">=</span> <span class="p">(</span><span class="n">SegmentationItemList</span><span class="p">.</span><span class="n">from_folder</span><span class="p">(</span><span class="n">path_img</span><span class="p">)</span>
+       <span class="c1">#Where to find the data? -&gt; in path_img and its subfolders
+</span>       <span class="p">.</span><span class="n">split_by_fname_file</span><span class="p">(</span><span class="s">'../valid.txt'</span><span class="p">)</span>
+       <span class="c1">#How to split in train/valid? -&gt; using predefined val set in valid.txt
+</span>       <span class="p">.</span><span class="n">label_from_func</span><span class="p">(</span><span class="n">get_y_fn</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">codes</span><span class="p">)</span>
+       <span class="c1">#How to label? -&gt; use the label function on the file name of the data
+</span>      <span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">get_transforms</span><span class="p">(),</span> <span class="n">tfm_y</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+        <span class="c1">#Data augmentation? -&gt; use tfms with a size of 128, 
+</span>        <span class="c1"># also transform the label images (tfm_y)
+</span>        <span class="p">.</span><span class="n">databunch</span><span class="p">(</span><span class="n">bs</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="c1">#Finally -&gt; use the defaults for conversion to databunch
+</span>       <span class="p">).</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>fastai shows the images with the masks superimposed for you with <code class="language-plaintext highlighter-rouge">show_batch</code>:</p>
+
+<p><img src="/blog/images/fastai/image-20190717172222609.png" alt="image-20190717172222609"></p>
+
+<h3 id="create-the-model-1">
+<a class="anchor" href="#create-the-model-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Create the Model</h3>
+
+<ul>
+  <li>For segmentation an architecture called <strong>UNET</strong> turns out to be better than using a CNN. Here’s what it looks like:<img src="https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/u-net-architecture.png" alt="u-net-architecture.png">.</li>
+  <li>Here is a link to the <a href="https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/">University website</a> where they talk about the U-Net. But basically this bit down on the left hand side is what a normal convolutional neural network looks like. It’s something which starts with a big image and gradually makes it smaller and smaller until eventually you just have one prediction. What a U-Net does is it then takes that and makes it bigger and bigger and bigger again, and then it takes every stage of the downward path and copies it across, and it creates this U shape.</li>
+  <li>It is a bit like a convolutional autoencoder except there are these data sharing links that cross horizontal across the network in the diagram.</li>
+  <li>In fastai you create a UNET  with <code class="language-plaintext highlighter-rouge">unet_learner(data, models.resnet34, metrics=metrics, wd=wd)</code> and you pass in all the same stuff as with <code class="language-plaintext highlighter-rouge">cnn_learner</code>.</li>
+</ul>
+
+<h3 id="results">
+<a class="anchor" href="#results" aria-hidden="true"><span class="octicon octicon-link"></span></a>Results</h3>
+
+<p>With UNET and the default fastai results Jeremy managed to achieve a SOTA result of 0.92 accuracy.</p>
+
+<h2 id="biwi-head-pose-regression">
+<a class="anchor" href="#biwi-head-pose-regression" aria-hidden="true"><span class="octicon octicon-link"></span></a>BIWI Head Pose: Regression</h2>
+
+<p>(Link to <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson3-head-pose.ipynb">Notebook</a>)</p>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson3/b1.png" alt="img"></p>
+
+<p>In this problem we want to locate the center point of the face of a person in an image.</p>
+
+<p>So far, everything we’ve done has been a classification model﹣something that created labels or classes. This, for the first time, is what we call a regression model. A lot of people think regression means linear regression, it doesn’t. Regression just means any kind of model where your output is some continuous number or set of numbers. So we need to create an image regression model (i.e. something that can predict these two numbers). How do you do that? Same way as always - data bunch api then CNN model.</p>
+
+<h3 id="loading-the-data-2">
+<a class="anchor" href="#loading-the-data-2" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading the Data</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tfms</span> <span class="o">=</span> <span class="n">get_transforms</span><span class="p">(</span><span class="n">max_rotate</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_zoom</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">max_lighting</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_warp</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">p_affine</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">p_lighting</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">PointsItemList</span><span class="p">.</span><span class="n">from_folder</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">split_by_valid_func</span><span class="p">(</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">name</span><span class="o">==</span><span class="s">'13'</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">label_from_func</span><span class="p">(</span><span class="n">get_ctr</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tfms</span><span class="p">,</span> <span class="n">tfm_y</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span><span class="mi">160</span><span class="p">))</span>
+        <span class="p">.</span><span class="n">databunch</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">)</span>
+       <span class="p">)</span>
+</code></pre></div></div>
+
+<p>This is exactly the same as we have already seen except the target variable is represented as a different data type - <a href="https://docs.fast.ai/vision.image.html#ImagePoints">the <code class="language-plaintext highlighter-rouge">ImagePoints</code> class</a>. An <code class="language-plaintext highlighter-rouge">ImagePoints</code> object represents a ‘flow’ (it’s just a list) of 2D points on an image. The points have the convention of <code class="language-plaintext highlighter-rouge">(y, x)</code> and are scaled to be between -1 and 1.</p>
+
+<p>An example flow looks like:</p>
+
+<p><img src="/blog/images/fastai/image-20190722203413595.png" alt="image-20190722203413595"></p>
+
+<p>In the case of BIWI, there is only one point in the flow however, but you get the idea. For facial keypoints type problems <code class="language-plaintext highlighter-rouge">ImagePoints</code> is what you want to use.</p>
+
+<p>When it comes to <strong>training</strong> the model you use the same <code class="language-plaintext highlighter-rouge">cnn_learner</code> as in the other examples, the only difference being the loss function. For problems where you are predicting a <em>continuous</em> value like here you typically use the <strong>Mean Squared Error</strong> (<code class="language-plaintext highlighter-rouge">MSELossFlat()</code> in fastai) as the loss function. In fastai you don’t need to specify this, <code class="language-plaintext highlighter-rouge">cnn_learner</code> will select it for you.</p>
+
+<h2 id="imdb-text-classification">
+<a class="anchor" href="#imdb-text-classification" aria-hidden="true"><span class="octicon octicon-link"></span></a>IMDB: Text Classification</h2>
+
+<p>(Link to the <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson3-imdb.ipynb">Notebook</a>)</p>
+
+<p>This is a short section on a <em>Natural Language Processing</em> (NLP) problem. Instead of classifying images we will look classifying documents. We will use the IMDB data set and classify if a movie review is negative or positive.</p>
+
+<p>Use different fastai module for text:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">fastai.text</span> <span class="kn">import</span> <span class="o">*</span>
+</code></pre></div></div>
+
+<h3 id="loading-the-data-3">
+<a class="anchor" href="#loading-the-data-3" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading the Data</h3>
+
+<p>The data is a csv and looks like:</p>
+
+<p><img src="/blog/images/fastai/image-20190723113041138.png" alt="image-20190723113041138"></p>
+
+<p>Use the datablock/databunch API to load the csv for text data types:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data_lm</span> <span class="o">=</span> <span class="n">TextDataBunch</span><span class="p">.</span><span class="n">from_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">'texts.csv'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>From this you can create a learner and train on this. There are two steps not shown here that transform the text from text to something that you can give to a neural network to train on (i.e. numbers). These steps are <em>Tokenization</em> and <em>Numericalization</em>.</p>
+
+<h4 id="tokenization">
+<a class="anchor" href="#tokenization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Tokenization</h4>
+
+<p>Split raw sentences into words, or ‘tokens’. It does this by:</p>
+
+<ul>
+  <li>Splitting the string into just the words</li>
+  <li>Takes care of punctuation</li>
+  <li>Separates contractions from words: “didn’t” -&gt; “did” + “n’t”</li>
+  <li>Replacing unknown words with a single token “xxunk”.</li>
+  <li>Cleaning out HTML from the text.</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="n">TextClasDataBunch</span><span class="p">.</span><span class="n">from_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">'texts.csv'</span><span class="p">,</span> <span class="n">valid_pct</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">data</span><span class="p">.</span><span class="n">show_batch</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Example:</p>
+
+<blockquote>
+  <p>“Raising Victor Vargas: A Review<br><br>You know, Raising Victor Vargas is like sticking your hands into a big, steaming bowl of oatmeal. It’s warm and gooey, but you’re not sure if it feels right. Try as I might, no matter how warm and gooey Raising Victor Vargas became I was always aware that something didn’t quite feel right. 
+…</p>
+</blockquote>
+
+<p>=&gt;</p>
+
+<blockquote>
+  <p>xxbos xxmaj raising xxmaj victor xxmaj vargas : a xxmaj review \n \n xxmaj you know , xxmaj raising xxmaj victor xxmaj vargas is like sticking your hands into a big , steaming bowl of xxunk . xxmaj it ‘s warm and gooey , but you ‘re not sure if it feels right . xxmaj try as i might , no matter how warm and gooey xxmaj raising xxmaj
+…</p>
+</blockquote>
+
+<p>Anything starting with ‘xx’ is some special token.</p>
+
+<h4 id="numericalization">
+<a class="anchor" href="#numericalization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Numericalization</h4>
+
+<p>Once we have extracted the tokens from the text, we can convert them to integers by create a big list of all the tokens used: <em>vocabulary</em>. This list only includes words that are used at least twice and is truncated with a maximum size of 60,000 (by default). Words that don’t make the cut are replaced with ‘XXUNK’.</p>
+
+<p>From the notebook:</p>
+
+<p><img src="/blog/images/fastai/image-20190723115918520.png" alt="image-20190723115918520"></p>
+
+<h4 id="with-the-data-block-api">
+<a class="anchor" href="#with-the-data-block-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>With the data block API</h4>
+
+<p>Here are the previous steps done this time with the data block API:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextList</span><span class="p">.</span><span class="n">from_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">'texts.csv'</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s">'text'</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">split_from_df</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">label_from_df</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">databunch</span><span class="p">())</span>
+</code></pre></div></div>
+
+<h3 id="training-a-classifier-preview">
+<a class="anchor" href="#training-a-classifier-preview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training a Classifier Preview</h3>
+
+<p>Lesson 4 covers the training of the text classifier in detail. Here are the steps covered as a preview.</p>
+
+<ol>
+  <li>You need to first create a <em>language model</em> trained on your text corpus. fastai has <code class="language-plaintext highlighter-rouge">language_model_learner</code> for this. This training is quite time/compute intensive.</li>
+  <li>Then you create a text classifier - <code class="language-plaintext highlighter-rouge">text_classifier_model</code> - and use the language model trained in 1 as the feature encoder.</li>
+</ol>
+
+<h2 id="what-is-deep-learning-fundamentally">
+<a class="anchor" href="#what-is-deep-learning-fundamentally" aria-hidden="true"><span class="octicon octicon-link"></span></a>What is deep learning fundamentally?</h2>
+
+<p>Up to this point we’ve seen loads of different problems that deep learning helps us tackle. Deep learning is buzzword for algorithms that use these things called neural networks, which sound like something complicated that may have something to do with how the human brain works. If you remove all the mystique from deep learning you see that it is basically a model with parameters that are updated using  Stochastic Gradient Descent. These parameters are parameters to matrix multiplications (convolutions also a tweaked kind of matrix multiplication).</p>
+
+<p>A matrix multiply is a linear function and any stacking of matrix multiplies is a also a linear function because of linearity. Telling the difference between cats and dogs is far more than a linear function can do. So after the matrix multiplications we have something called a non-linearity of <strong>activation function</strong>. This takes the result of the matrix multiplication and sticks it through some non-linear function.</p>
+
+<p>In the old days the most common function used was the <em>sigmoid</em>, e.g. tanh:</p>
+
+<p><img src="/blog/images/fastai/image-20190723140846030.png" alt="image-20190723140846030"></p>
+
+<p>These days the workhorse is the <strong>rectified linear unit (ReLU)</strong>:</p>
+
+<p><img src="/blog/images/fastai/image-20190723140947121.png" alt="image-20190723140947121"></p>
+
+<p>Sounds fancy, but in reality it’s this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">relu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So how can a stack of matrix multiplications and relu’s result in a model that can classify IMDB reviews or galaxies? Because of a thing called the <strong>Universal Approximation Theorem</strong>. What it says is that if you have stacks of linear functions and nonlinearities, the thing you end up with can approximate any function arbitrarily closely. So you just need to make sure that you have a big enough matrix to multiply by, or enough of them. If you have this function which is just a sequence of matrix multiplies and nonlinearities where the nonlinearities can be basically any of these activation functions, if that can approximate anything, then all you need is some way to find the particular values of the weight matrices in your matrix multiplies that solve the problem you want to solve. We already know how to find the values of parameters. We can use gradient descent. So that’s actually it.</p>
+
+<p>There is a nice website that has interactive javascript demos that demonstrate this: <a href="http://neuralnetworksanddeeplearning.com/">http://neuralnetworksanddeeplearning.com</a>.</p>
+
+<h2 id="jeremy-says">
+<a class="anchor" href="#jeremy-says" aria-hidden="true"><span class="octicon octicon-link"></span></a>Jeremy Says…</h2>
+
+<ol>
+  <li>If you use a dataset, it would be very nice of you to cite the creator and thank them for their dataset.</li>
+  <li>This week, see if you can come up with a problem that you would like to solve that is either multi-label classification or image regression or image segmentation or something like that and see if you can solve that problem. Context: <a href="https://youtu.be/MpZxV6DVsmM?t=7409">Fast.ai Lesson 3 Homework 36</a>
+</li>
+  <li>Always use the same stats that the model was trained with (e.g. imagenet). (See relevant question in Q &amp; A section). Context: <a href="https://youtu.be/MpZxV6DVsmM?t=6413">Lesson 3: Normalized data and ImageNet 7</a>
+</li>
+</ol>
+
+<p>(<a href="https://forums.fast.ai/t/things-jeremy-says-to-do/36682">Source: Robert Bracco</a>)</p>
+
+<h2 id="q--a">
+<a class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<ul>
+  <li>
+<em>When your model makes an incorrect prediction in a deployed app, is there a good way to “record” that error and use that learning to improve the model in a more targeted way? [<a href="https://youtu.be/PW2HKkzdkKY?t=2522">42:01</a>]</em>
+    <blockquote>
+      <ul>
+        <li>If you had, for example, an image classifier online you could have a user tell you if the classifier got it wrong and what the right answer is.</li>
+        <li>You could then store that image that was incorrectly classified.</li>
+        <li>Every so often you could go and fine-tune your network on a new data bunch of just the misclassified images.</li>
+        <li>You do this by taking your existing network, unfreezing the layers, and then run some epochs on the misclassified images. You may want to run with a slightly higher learning rate or for more epochs because these images are more interesting/suprising to the model.</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>What resources do you recommend for getting started with video? For example, being able to pull frames and submit them to your model. [<a href="https://youtu.be/PW2HKkzdkKY?t=2859">47:39</a>]</em></p>
+
+    <blockquote>
+      <p>The answer is it depends. If you’re using the web which I guess probably most of you will be then there’s web API’s that basically do that for you. So you can grab the frames with the web API and then they’re just images which you can pass along. If you’re doing a client side, I guess most people would tend to use OpenCV for that. But maybe during the week, people who are doing these video apps can tell us what have you used and found useful, and we can start to prepare something in the lesson wiki with a list of video resources since it sounds like some people are interested.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Is there a way to use <code class="language-plaintext highlighter-rouge">learn.lr_find()</code> and have it return a suggested number directly rather than having to plot it as a graph and then pick a learning rate by visually inspecting that graph? (And there are a few other questions around more guidance on reading the learning rate finder graph) [<a href="https://youtu.be/PW2HKkzdkKY?t=3626">1:00:26</a>]</em></p>
+
+    <blockquote>
+      <p>The short answer is no and the reason the answer is no is because this is still a bit more artisanal than I would like. As you can see, I’ve been saying how I read this learning rate graph depends a bit on what stage I’m at and what the shape of it is. I guess when you’re just training the head (so before you unfreeze), it pretty much always looks like this:</p>
+
+      <p><img src="https://github.com/hiromis/notes/raw/master/lesson3/n1.png" alt="img"></p>
+
+      <p>And you could certainly create something that creates a smooth version of this, finds the sharpest negative slope and picked that. You would probably be fine nearly all the time.</p>
+
+      <p>But then for you know these kinds of ones, it requires a certain amount of experimentation:</p>
+
+      <p><img src="https://github.com/hiromis/notes/raw/master/lesson3/n2.png" alt="img"></p>
+
+      <p>But the good news is you can experiment. Obviously if the lines going up, you don’t want it. Almost certainly at the very bottom point, you don’t want it right there because you needed to be going downwards. But if you kind of start with somewhere around 10x smaller than that, and then also you could try another 10x smaller than that. Try a few numbers and find out which ones work best.</p>
+
+      <p>And within a small number of weeks, you will find that you’re picking the best learning rate most of the time. So at this stage, it still requires a bit of playing around to get a sense of the different kinds of shapes that you see and how to respond to them. Maybe by the time this video comes out, someone will have a pretty reliable auto learning rate finder. We’re not there yet. It’s probably not a massively difficult job to do. It would be an interesting project﹣collect a whole bunch of different datasets, maybe grab all the datasets from our datasets page, try and come up with some simple heuristic, compare it to all the different lessons I’ve shown. It would be a really fun project to do. But at the moment, we don’t have that. I’m sure it’s possible but we haven’t got them.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Could you use unsupervised learning here (pixel classification with the bike example) to avoid needing a human to label a heap of images[<a href="https://youtu.be/PW2HKkzdkKY?t=4203">1:10:03</a>]</em></p>
+
+    <blockquote>
+      <p>Not exactly unsupervised learning, but you can certainly get a sense of where things are without needing these kind of labels. Time permitting, we’ll try and see some examples of how to do that. You’re certainly not going to get as such a quality and such a specific output as what you see here though. If you want to get this level of segmentation mask, you need a pretty good segmentation mask ground truth to work with.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Is there a reason we shouldn’t deliberately make a lot of smaller datasets to step up from in tuning? let’s say 64x64, 128x128, 256x256, etc… [<a href="https://youtu.be/PW2HKkzdkKY?t=4251">1:10:51</a>]</em></p>
+
+    <blockquote>
+      <p>Yes, you should totally do that. It works great. This idea, it’s something that I first came up with in the course a couple of years ago and I thought it seemed obvious and just presented it as a good idea, then I later discovered that nobody had really published this before. And then we started experimenting with it. And it was basically the main tricks that we use to win the DAWNBench ImageNet training competition.</p>
+
+      <p>Not only was this not standard, but nobody had heard of it before. There’s been now a few papers that use this trick for various specific purposes but it’s still largely unknown. It means that you can train much faster, it generalizes better. There’s still a lot of unknowns about exactly how small, how big, and how much at each level and so forth. We call it <strong>“progressive resizing”</strong>. I found that going much under 64 by 64 tends not to help very much. But yeah, it’s a great technique and I definitely try a few different sizes.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>What does accuracy mean for pixel wise segmentation? Is it<code class="language-plaintext highlighter-rouge">#correctly classified pixels / #total number of pixels</code>? [<a href="https://youtu.be/PW2HKkzdkKY?t=4355">1:12:35</a>]</em></p>
+
+    <blockquote>
+      <p>Yep, that’s it. So if you imagined each pixel was a separate object you’re classifying, it’s exactly the same accuracy. So you actually can just pass in <code class="language-plaintext highlighter-rouge">accuracy</code> as your metric, but in this case, we actually don’t. We’ve created a new metric called <code class="language-plaintext highlighter-rouge">acc_camvid</code> and the reason for that is that when they labeled the images, sometimes they labeled a pixel as <code class="language-plaintext highlighter-rouge">Void</code>. I’m not quite sure why but some of the pixels are <code class="language-plaintext highlighter-rouge">Void</code>. And in the CamVid paper, they say when you’re reporting accuracy, you should remove the void pixels. So we’ve created accuracy CamVid. So all metrics take the actual output of the neural net (i.e. that’s the <code class="language-plaintext highlighter-rouge">input</code> to the metric) and the target (i.e. the labels we are trying to predict).</p>
+
+      <p><img src="https://github.com/hiromis/notes/raw/master/lesson3/31.png" alt="img"></p>
+
+      <p>We then basically create a mask (we look for the places where the target is not equal to <code class="language-plaintext highlighter-rouge">Void</code>) and then we just take the input, do the <code class="language-plaintext highlighter-rouge">argmax</code> as per usual, but then we just grab those that are not equal to the void code. We do the same for the target and we take the mean, so it’s just a standard accuracy.</p>
+
+      <p>It’s almost exactly the same as the accuracy source code we saw before with the addition of this mask. This quite often happens. The particular Kaggle competition metric you’re using or the particular way your organization scores things, there’s often little tweaks you have to do. And this is how easy it is. As you’ll see, to do this stuff, the main thing you need to know pretty well is how to do basic mathematical operations in PyTorch so that’s just something you kind of need to practice.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>I’ve noticed that most of the examples and most of my models result in a training loss greater than the validation loss. What are the best ways to correct that? I should add that this still happens after trying many variations on number of epochs and learning rate. [<a href="https://youtu.be/PW2HKkzdkKY?t=4503">1:15:03</a>]</em></p>
+
+    <blockquote>
+      <p>Remember from last week, if your training loss is higher than your validation loss then you’re <strong>underfitting</strong>. It definitely means that you’re underfitting. You want your training loss to be lower than your validation loss. If you’re underfitting, you can:</p>
+
+      <ul>
+        <li>Train for longer.</li>
+        <li>Train the last bit at a lower learning rate.</li>
+      </ul>
+
+      <p>But if you’re still under fitting, then you’re going to have to decrease regularization. We haven’t talked about that yet. In the second half of this part of the course, we’re going to be talking quite a lot about regularization and specifically how to avoid overfitting or underfitting by using regularization. If you want to skip ahead, we’re going to be learning about:</p>
+
+      <ul>
+        <li>weight decay</li>
+        <li>dropout</li>
+        <li>data augmentation</li>
+      </ul>
+
+      <p>They will be the key things that are we talking about.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>For a dataset very different than ImageNet like the satellite images or genomic images shown in lesson 2, we should use our own stats. Jeremy once said: “If you’re using a pretrained model you need to use the same stats it was trained with.” 
+Why it is that? Isn’t it that, normalized dataset with its own stats will have roughly the same distribution like ImageNet? The only thing I can think of, which may differ is skewness. Is it the possibility of skewness or something else the reason of your statement? And does that mean you don’t recommend using pre-trained model with very different dataset like the one-point mutation that you showed us in lesson 2? [<a href="https://youtu.be/PW2HKkzdkKY?t=6413">1:46:53</a>]</em></p>
+
+    <blockquote>
+      <p>Nope. As you can see, I’ve used pre-trained models for all of those things. Every time I’ve used an ImageNet pre-trained model, I’ve used ImageNet stats. Why is that? Because that model was trained with those stats. For example, imagine you’re trying to classify different types of green frogs. If you were to use your own per-channel means from your dataset, you would end up converting them to a mean of zero, a standard deviation of one for each of your red, green, and blue channels. Which means they don’t look like green frogs anymore. They now look like grey frogs. But ImageNet expects frogs to be green. So you need to normalize with the same stats that the ImageNet training people normalized with. Otherwise the unique characteristics of your dataset won’t appear anymore﹣you’ve actually normalized them out in terms of the per-channel statistics. So you should always use the same stats that the model was trained with.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>There’s a question about tokenization. I’m curious about how tokenizing words works when they depend on each other such as San Francisco. [<a href="https://youtu.be/PW2HKkzdkKY?t=7005">1:56:45</a>]</em></p>
+
+    <blockquote>
+      <p>How do you tokenize something like San Francisco. San Francisco contains two tokens <code class="language-plaintext highlighter-rouge">San</code> <code class="language-plaintext highlighter-rouge">Francisco</code>. That’s it. That’s how you tokenize San Francisco. The question may be coming from people who have done traditional NLP which often need to use these things called n-grams. N-rams are this idea of a lot of NLP in the old days was all built on top of linear models where you basically counted how many times particular strings of text appeared like the phrase San Francisco. That would be a bi-gram for an n-gram with an n of 2. The cool thing is that with deep learning, we don’t have to worry about that. Like with many things, a lot of the complex feature engineering disappears when you do deep learning. So with deep learning, each token is literally just a word (or in the case that the word really consists of two words like <code class="language-plaintext highlighter-rouge">you're</code> you split it into two words) and then what we’re going to do is we’re going to then let the deep learning model figure out how best to combine words together. Now when we see like let the deep learning model figure it out, of course all we really mean is find the weight matrices using gradient descent that gives the right answer. There’s not really much more to it than that.</p>
+
+      <p>Again, there’s some minor tweaks. In the second half of the course, we’re going to be learning about the particular tweak for image models which is using a convolution that’ll be a CNN, for language there’s a particular tweak we do called using recurrent models or an RNN, but they’re very minor tweaks on what we’ve just described. So basically it turns out with an RNN, that it can learn that <code class="language-plaintext highlighter-rouge">San</code> plus <code class="language-plaintext highlighter-rouge">Francisco</code> has a different meaning when those two things are together.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Some satellite images have 4 channels. How can we deal with data that has 4 channels or 2 channels when using pre-trained models? [<a href="https://youtu.be/PW2HKkzdkKY?t=7149">1:59:09</a>]</em></p>
+
+    <blockquote>
+      <p>I think that’s something that we’re going to try and incorporate into fast AI. So hopefully, by the time you watch this video, there’ll be easier ways to do this. But the basic idea is a pre-trained ImageNet model expects a red green and blue pixels. So if you’ve only got two channels, there’s a few things you can do but basically you’ll want to create a third channel. You can create the third channel as either being all zeros, or it could be the average of the other two channels. So you can just use you know normal PyTorch arithmetic to create that third channel. You could either do that ahead of time in a little loop and save your three channel versions, or you could create a custom dataset class that does that on demand.</p>
+
+      <p>For 4 channel, you probably don’t want to get rid of the 4th channel. So instead, what you’d have to do is to actually modify the model itself. So to know how to do that, we’ll only know how to do in a couple more lessons time. But basically the idea is that the initial weight matrix (weight matrix is really the wrong term, they’re not weight matrices; their weight tensors so they can have more than just two dimensions), so that initial weight tensor in the neural net, one of its axes is going to have three slices in it. So you would just have to change that to add an extra slice, which I would generally just initialize to zero or to some random numbers. So that’s the short version. But really to understand exactly what I meant by that, we’re going to need a couple more lessons to get there.</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li><a href="https://youtu.be/MpZxV6DVsmM">Link to Lesson 3 lecture</a></li>
+  <li>Homework notebooks:
+    <ul>
+      <li>Notebook 1: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson3-planet.ipynb">lesson3-planet.ipynb</a>
+</li>
+      <li>Notebook 2: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson3-camvid.ipynb">lesson3-camvid.ipynb</a>
+</li>
+      <li>Notebook 3: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson3-imdb.ipynb">lesson3-imdb.ipynb</a>
+</li>
+      <li>Notebook 4: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson3-head-pose.ipynb">lesson3-head-pose.ipynb</a>
+</li>
+    </ul>
+  </li>
+  <li>Parts of my notes have been copied from the excellent lecture transcriptions made by @hiromi. Link: <a href="https://github.com/hiromis/notes/blob/master/Lesson3.md">Lesson3 Detailed Notes</a>.</li>
+  <li>Universal approximation theorem + more: <a href="http://neuralnetworksanddeeplearning.com/">http://neuralnetworksanddeeplearning.com</a>
+</li>
+  <li>Source for Jeremy says: https://forums.fast.ai/t/things-jeremy-says-to-do/36682</li>
+  <li>
+<a href="https://arxiv.org/abs/1506.01186">Cyclical Learning Rates for Training Neural Networks</a> paper by Leslie Smith</li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/23/fast-ai-lesson-3-notes-multi-label-segmentation.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
