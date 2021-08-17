@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai Lesson 4 Notes: NLP; Tabular Data; Recommenders | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai Lesson 4 Notes: NLP; Tabular Data; Recommenders" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings" />
+<meta property="og:description" content="My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-08-18T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html","@type":"BlogPosting","headline":"Fast.ai Lesson 4 Notes: NLP; Tabular Data; Recommenders","dateModified":"2019-08-18T00:00:00-05:00","datePublished":"2019-08-18T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html"},"description":"My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai Lesson 4 Notes: NLP; Tabular Data; Recommenders</h1><p class="page-description">My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-08-18T00:00:00-05:00" itemprop="datePublished">
+        Aug 18, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      27 min read
+    
+</span></p>
+
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview-of-the-lesson">Overview of the Lesson</a></li>
+<li class="toc-entry toc-h2"><a href="#natural-language-processing-nlp">Natural Language Processing (NLP)</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#language-model">Language Model</a></li>
+<li class="toc-entry toc-h3"><a href="#fine-tuning-the-language-model">Fine Tuning the Language Model</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#imdb-sentiment-classification">IMDB Sentiment Classification</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#training-the-language-model">Training the Language Model</a></li>
+<li class="toc-entry toc-h3"><a href="#predicting-text-with-the-language-model">Predicting Text with the Language Model</a></li>
+<li class="toc-entry toc-h3"><a href="#text-classifier">Text Classifier</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#tabular-data">Tabular Data</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#loading-the-data">Loading the Data</a></li>
+<li class="toc-entry toc-h3"><a href="#training-the-model">Training the Model</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#collaborative-filtering">Collaborative Filtering</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#embeddings">Embeddings</a></li>
+<li class="toc-entry toc-h3"><a href="#embedding-layer-as-a-look-up-table">Embedding Layer as a Look-up Table</a></li>
+<li class="toc-entry toc-h3"><a href="#embedding-layer-as-matrix-multiplication">Embedding Layer as matrix multiplication</a></li>
+<li class="toc-entry toc-h3"><a href="#different-uses-of-embeddings">Different Uses of Embeddings</a></li>
+<li class="toc-entry toc-h3"><a href="#example-movie-lens-dataset">Example: Movie Lens Dataset</a></li>
+<li class="toc-entry toc-h3"><a href="#cold-start-problem">Cold Start Problem</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#jeremy-says">Jeremy Says…</a></li>
+<li class="toc-entry toc-h2"><a href="#q--a">Q &amp; A</a></li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview-of-the-lesson">
+<a class="anchor" href="#overview-of-the-lesson" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview of the Lesson</h2>
+
+<p>The first part of this lesson dives into <em>natural language processing</em> (NLP), using the IMDB movie review dataset. We train a classifier that categorises if a review is negative or positive. This is called <em>sentiment analysis</em>. This is done via a state-of-the-art NLP algorithm called ULMFiT.</p>
+
+<p>Next the lesson shows how to use deep learning with <em>tabular data</em> using fastai.</p>
+
+<p>Lastly the lesson shows how <em>collaborative filtering</em> models (aka recommender systems) can be built using similar ideas to those for tabular data, but with some special tricks to get both higher accuracy and more informative model interpretation.</p>
+
+<div class="row">
+<div class="col-md-6" id="mdtoc">
+
+__Table of Contents__
+
+* TOC
+{:toc}
+</div>
+
+</div>
+
+<h2 id="natural-language-processing-nlp">
+<a class="anchor" href="#natural-language-processing-nlp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Natural Language Processing (NLP)</h2>
+
+<ul>
+  <li>We want to build a NLP classifier.</li>
+  <li>Task: IMDB movie reviews - postive or negative?</li>
+  <li>Using neural networks for NLP classification hasn’t been successful until a break through made in 2018 – <strong>ULMFit</strong>. This is what FastAI is using now.</li>
+</ul>
+
+<p><img src="/blog/images/fastai/image-20190727203324398.png" alt="image-20190727203324398"></p>
+
+<ul>
+  <li>Just as we have seen already in imaging problems, we can get good performance by using <strong>transfer learning</strong>.</li>
+  <li>In NLP transfer learning means taking a <em>language model</em> which has be pretrained on some large corpus of text and then fine tuning that for our current problem using its own text corpus.</li>
+</ul>
+
+<h3 id="language-model">
+<a class="anchor" href="#language-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Language Model</h3>
+
+<ul>
+  <li>The <em>language model</em> in this case is a special type of neural network called an RNN (recurrent neural network) and what it does is predict the next word given a sequence of prior words. So in the diagram above you have the sentences:
+    <ul>
+      <li>“I’d like to eat a hot [ ]” : the language model should predict “dog”</li>
+      <li>“It was a hot [ ]” : the language model should predict “day”</li>
+    </ul>
+  </li>
+  <li>This takes 2-3 days to train on a decent GPU, so not much point in you doing it. You may as well start with ours. Even if you’ve got a big corpus of like medical documents or legal documents, you should still start with Wikitext 103. There’s just no reason to start with random weights. It’s always good to use transfer learning if you can.</li>
+  <li>Once you have trained your language model you can stick it on the internet (e.g. github) for others to download and use for their own NLP problems. fastai provides a pretrain language model trained on text from Wikipedia.</li>
+  <li>This kind of learning is what Yann Lecun calls <strong>“Self-supervised Learning”</strong>. You don’t give the dataset labels, rather the labels are built into the data itself.</li>
+</ul>
+
+<h3 id="fine-tuning-the-language-model">
+<a class="anchor" href="#fine-tuning-the-language-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Fine Tuning the Language Model</h3>
+
+<ul>
+  <li>
+    <p>Starting from the pretrained Wikitext language model you can fine tune the language model with your own <em>target corpus</em>. Every domain that you work in will have its own domain specific language that it uses.</p>
+  </li>
+  <li>For the case of movie reviews it may learn about actor’s names or certain vocabulary will be more important. For example:
+    <ul>
+      <li>“My favourite actor is Tom ___ (Cruise)”</li>
+      <li>“I thought the photography was fantastic but I wasn’t really so happy about the _____ (director).”</li>
+    </ul>
+  </li>
+  <li>Fine tuning your language model will take a <em>long time</em>. However this is basically a <em>one-time cost</em>. You only have to train the language model once and then you can use that model for training classifiers or whatever, which won’t take a long time to train.</li>
+  <li>This transfer learning approach works very well and gives state of the art performance on the IMDB dataset.</li>
+</ul>
+
+<h2 id="imdb-sentiment-classification">
+<a class="anchor" href="#imdb-sentiment-classification" aria-hidden="true"><span class="octicon octicon-link"></span></a>IMDB Sentiment Classification</h2>
+
+<p>The data loading process for text was covered in the previous lesson. Here is a short review:</p>
+
+<ol>
+  <li>Load data using a data bunch or the data block API</li>
+  <li>The data is <em>tokenized</em>: this means that text is split into raw words or ‘tokens’. Special tokens denote puncuation, unknown words etc.</li>
+  <li>The tokenized data is then <em>numericalized</em>: every token is assigned its own unique number. A text document becomes a list of numbers, which can be processed by a neural network.</li>
+</ol>
+
+<p>This data loading and transforming is achieved in fastai with the data block API:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextList</span><span class="p">.</span><span class="n">from_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">'texts.csv'</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s">'text'</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">split_from_df</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">label_from_df</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">databunch</span><span class="p">())</span>
+</code></pre></div></div>
+
+<h3 id="training-the-language-model">
+<a class="anchor" href="#training-the-language-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training the Language Model</h3>
+
+<p>No point training the Wikitext 103 model from scratch just download the pretrained one from fastai. Instead we want to start with that a fine tune it with the IMDB corpus. First we load the IMDB data for language model learning:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">bs</span><span class="o">=</span><span class="mi">48</span>
+
+<span class="n">data_lm</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextList</span><span class="p">.</span><span class="n">from_folder</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+           <span class="c1">#Inputs: all the text files in path
+</span>           <span class="p">.</span><span class="n">filter_by_folder</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s">'train'</span><span class="p">,</span> <span class="s">'test'</span><span class="p">,</span> <span class="s">'unsup'</span><span class="p">])</span> 
+           <span class="c1">#We may have other temp folders that contain text files so we only keep what's in train and test
+</span>           <span class="p">.</span><span class="n">split_by_rand_pct</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+           <span class="c1">#We randomly split and keep 10% (10,000 reviews) for validation
+</span>           <span class="p">.</span><span class="n">label_for_lm</span><span class="p">()</span>           
+           <span class="c1">#We want to do a language model so we label accordingly
+</span>           <span class="p">.</span><span class="n">databunch</span><span class="p">(</span><span class="n">bs</span><span class="o">=</span><span class="n">bs</span><span class="p">))</span>
+<span class="n">data_lm</span><span class="p">.</span><span class="n">save</span><span class="p">(</span><span class="s">'data_lm.pkl'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can say:</p>
+
+<ul>
+  <li>It’s a list of text files﹣the full IMDB actually is not in a CSV. Each document is a separate text file.</li>
+  <li>Say where it is﹣in this case we have to make sure we just to include the <code class="language-plaintext highlighter-rouge">train</code> and <code class="language-plaintext highlighter-rouge">test</code> folders.</li>
+  <li>We randomly split it by 0.1.</li>
+</ul>
+
+<p>This data looks like:</p>
+
+<p><img src="/blog/images/fastai/image-20190728001439244.png" alt="image-20190728001439244"></p>
+
+<p>You then train the language model, not using a CNN rather a <em>Recursive Neural Network</em> (RNN). In fastai the code is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span> <span class="o">=</span> <span class="n">language_model_learner</span><span class="p">(</span><span class="n">data_lm</span><span class="p">,</span> <span class="n">AWD_LSTM</span><span class="p">,</span> <span class="n">drop_mult</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The pretrained language model that comes from fastai is <code class="language-plaintext highlighter-rouge">AWD_LSTM</code>: <a href="https://docs.fast.ai/text.models.html#AWD_LSTM">link</a>.</p>
+
+<p>You then do usual routine for training:</p>
+
+<ul>
+  <li>Run LRFind</li>
+  <li>Train the network head (1-2 epochs)</li>
+  <li>Unfreeze</li>
+  <li>Run LRFind again</li>
+  <li>Train the whole network (5+ epochs).</li>
+  <li>Save the encoder: <code class="language-plaintext highlighter-rouge">learn.save_encoder('fine_tuned_enc')</code>
+</li>
+</ul>
+
+<h3 id="predicting-text-with-the-language-model">
+<a class="anchor" href="#predicting-text-with-the-language-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Predicting Text with the Language Model</h3>
+
+<p>With the trained language model we can have some fun by making it finish sentences.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">TEXT</span> <span class="o">=</span> <span class="s">"I liked this movie because"</span>
+<span class="n">N_WORDS</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">N_SENTENCES</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">learn</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">TEXT</span><span class="p">,</span> <span class="n">N_WORDS</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_SENTENCES</span><span class="p">)))</span>
+</code></pre></div></div>
+
+<p>The output of this:</p>
+
+<blockquote>
+  <p>I liked this movie because of the cool scenery and the high level of xxmaj british hunting . xxmaj the only thing this movie has going for it is the horrible acting and no script . xxmaj the movie was a big disappointment . xxmaj
+I liked this movie because it was one of the few movies that made me laugh so hard i did n’t like it . xxmaj it was a hilarious film and it was very entertaining . 
+xxmaj the acting was great , i ‘m</p>
+</blockquote>
+
+<h3 id="text-classifier">
+<a class="anchor" href="#text-classifier" aria-hidden="true"><span class="octicon octicon-link"></span></a>Text Classifier</h3>
+
+<p>Load the data:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data_clas</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextList</span><span class="p">.</span><span class="n">from_folder</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">data_lm</span><span class="p">.</span><span class="n">vocab</span><span class="p">)</span>
+             <span class="c1">#grab all the text files in path
+</span>             <span class="p">.</span><span class="n">split_by_folder</span><span class="p">(</span><span class="n">valid</span><span class="o">=</span><span class="s">'test'</span><span class="p">)</span>
+             <span class="c1">#split by train and valid folder (that only keeps 'train' and 'test' so no need to filter)
+</span>             <span class="p">.</span><span class="n">label_from_folder</span><span class="p">(</span><span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s">'neg'</span><span class="p">,</span> <span class="s">'pos'</span><span class="p">])</span>
+             <span class="c1">#label them all with their folders
+</span>             <span class="p">.</span><span class="n">databunch</span><span class="p">(</span><span class="n">bs</span><span class="o">=</span><span class="n">bs</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Create a text classifer and give it the language model we trained:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span> <span class="o">=</span> <span class="n">text_classifier_learner</span><span class="p">(</span><span class="n">data_clas</span><span class="p">,</span> <span class="n">AWD_LSTM</span><span class="p">,</span> <span class="n">drop_mult</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">learn</span><span class="p">.</span><span class="n">load_encoder</span><span class="p">(</span><span class="s">'fine_tuned_enc'</span><span class="p">)</span> <span class="c1"># load language model
+</span></code></pre></div></div>
+
+<h2 id="tabular-data">
+<a class="anchor" href="#tabular-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Tabular Data</h2>
+
+<p>Tabular data is one of the most common problems that data scientists work on day-to-day. This are things like spreadsheets, relational databases, or financial reports. People used to be sceptical about using neural networks for tabular data - everybody knows you should be using XGBoost! However not only does it work well, it can do things that even XGBoost can’t do.</p>
+
+<p>fastai has created the module <code class="language-plaintext highlighter-rouge">fastai.tabular</code> for using NNs with tabular data.</p>
+
+<h3 id="loading-the-data">
+<a class="anchor" href="#loading-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading the Data</h3>
+
+<p>Import the fastai modules:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">fastai</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">fastai.tabular</span> <span class="kn">import</span> <span class="o">*</span>
+</code></pre></div></div>
+
+<p>The data input is assumed to be a <code class="language-plaintext highlighter-rouge">pandas</code> dataframe. Here is the Adult dataset, which is a classic dataset where you have to predict somebody’s salary given a number of variables like age, education, occupation etc:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">path</span> <span class="o">=</span> <span class="n">untar_data</span><span class="p">(</span><span class="n">URLs</span><span class="p">.</span><span class="n">ADULT_SAMPLE</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="s">'adult.csv'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>For fastai’s tabular models you need to tell it about your columns:</p>
+
+<ol>
+  <li>Which column is the target variable?</li>
+  <li>Which columns have continuous variables?</li>
+  <li>Which columns have categorical variables?</li>
+  <li>What preprocessing do you want to do to the columns?</li>
+</ol>
+
+<p>In code these variables look like:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dep_var</span> <span class="o">=</span> <span class="s">'salary'</span>
+<span class="n">cat_names</span> <span class="o">=</span> <span class="p">[</span><span class="s">'workclass'</span><span class="p">,</span> <span class="s">'education'</span><span class="p">,</span> <span class="s">'marital-status'</span><span class="p">,</span> <span class="s">'occupation'</span><span class="p">,</span> <span class="s">'relationship'</span><span class="p">,</span> <span class="s">'race'</span><span class="p">]</span>
+<span class="n">cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s">'age'</span><span class="p">,</span> <span class="s">'fnlwgt'</span><span class="p">,</span> <span class="s">'education-num'</span><span class="p">]</span>
+<span class="n">procs</span> <span class="o">=</span> <span class="p">[</span><span class="n">FillMissing</span><span class="p">,</span> <span class="n">Categorify</span><span class="p">,</span> <span class="n">Normalize</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Using these we can then load the data using data block API:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">TabularList</span><span class="p">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">cat_names</span><span class="o">=</span><span class="n">cat_names</span><span class="p">,</span> 		
+                            <span class="n">cont_names</span><span class="o">=</span><span class="n">cont_names</span><span class="p">,</span> <span class="n">procs</span><span class="o">=</span><span class="n">procs</span><span class="p">)</span>
+                    <span class="p">.</span><span class="n">split_by_idx</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span><span class="mi">1000</span><span class="p">)))</span>
+                    <span class="p">.</span><span class="n">label_from_df</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="n">dep_var</span><span class="p">)</span>
+                    <span class="p">.</span><span class="n">add_test</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="p">.</span><span class="n">databunch</span><span class="p">())</span>
+</code></pre></div></div>
+
+<p>There are a number of processors in the fastai library.  The ones we’re going to use this time are:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">FillMissing</code>: Look for missing values and deal with them some way (e.g. mean, median…).</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">Categorify</code>: Find categorical variables and turn them into Pandas categories</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">Normalize</code> : Do a normalization ahead of time which is to take continuous variables and subtract their mean and divide by their standard deviation so they are zero-one variables.</li>
+</ul>
+
+<p>For the full list of transforms available see the <a href="https://docs.fast.ai/tabular.transform.html#Transforms-for-tabular-data">documentation</a>.</p>
+
+<h3 id="training-the-model">
+<a class="anchor" href="#training-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training the Model</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span> <span class="o">=</span> <span class="n">tabular_learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">200</span><span class="p">,</span><span class="mi">100</span><span class="p">],</span> <span class="n">metrics</span><span class="o">=</span><span class="n">accuracy</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
+
+<span class="n">Total</span> <span class="n">time</span><span class="p">:</span> <span class="mi">00</span><span class="p">:</span><span class="mi">03</span>
+<span class="n">epoch</span>  <span class="n">train_loss</span>  <span class="n">valid_loss</span>  <span class="n">accuracy</span>
+<span class="mi">1</span>      <span class="mf">0.362837</span>    <span class="mf">0.413169</span>    <span class="mf">0.785000</span>  <span class="p">(</span><span class="mi">00</span><span class="p">:</span><span class="mi">03</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This creates a <code class="language-plaintext highlighter-rouge">tabular_learner</code> network with the parameter <code class="language-plaintext highlighter-rouge">layers=[200, 100]</code>. What is this exactly? If you look at model in pytorch, <code class="language-plaintext highlighter-rouge">learn.model</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">TabularModel</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">embeds</span><span class="p">):</span> <span class="n">ModuleList</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">4</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="p">(</span><span class="n">emb_drop</span><span class="p">):</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">bn_cont</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">layers</span><span class="p">):</span> <span class="n">Sequential</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">4</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">):</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">track_running_stats</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>The tabular learner is a just a multi-layer perceptron (MLP) (the <code class="language-plaintext highlighter-rouge">layers</code> group) with some funny input bolted onto the front of it. In the <code class="language-plaintext highlighter-rouge">layers</code> group you can see the first two <code class="language-plaintext highlighter-rouge">Linear</code> layers have an output size of 200 and 100, respectively. These are the sizes we put into the <code class="language-plaintext highlighter-rouge">layers</code> parameter in the model. So it’s a two layer MLP with layer sizes of 200 and 100.</p>
+
+<p>The input layer consists of a bunch of <code class="language-plaintext highlighter-rouge">Embedding</code> layers. We’ll explain these later, but basically for each of the categorical features in the data (there are 6 here) there is an embedding layer. An embedding maps the total number of unique values of a categorical variable to a lower dimensional continuous vector space. If you take the zeroth embedding layer as an example:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This variable has 9 unique values + 1 null value added by the fastai processors. Its output is 6 dimensional.</p>
+
+<p>All of the outputs of the embedding layers are concatenated together along with the 3 continuous features to create a 42 dimensional vector that is the input to the MLP part of the network.</p>
+
+<h2 id="collaborative-filtering">
+<a class="anchor" href="#collaborative-filtering" aria-hidden="true"><span class="octicon octicon-link"></span></a>Collaborative Filtering</h2>
+
+<p>Collaborative filtering is where you have many users and many items and you want to predict how much a certain user is going to like a certain item. You have historical information about who bought what, who liked which item etc. You then want to predict what a particular user would like that they haven’t seen before.</p>
+
+<p>The most basic version would be a table with <code class="language-plaintext highlighter-rouge">userId</code>, <code class="language-plaintext highlighter-rouge">movieId</code>, and <code class="language-plaintext highlighter-rouge">rating</code>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>userId</th>
+      <th>movieId</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>73</td>
+      <td>1097</td>
+      <td>4.0</td>
+      <td>1255504951</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>561</td>
+      <td>924</td>
+      <td>3.5</td>
+      <td>1172695223</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>157</td>
+      <td>260</td>
+      <td>3.5</td>
+      <td>1291598691</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>358</td>
+      <td>1210</td>
+      <td>5.0</td>
+      <td>957481884</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>130</td>
+      <td>316</td>
+      <td>2.0</td>
+      <td>1138999234</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The data is <strong>sparse</strong> - no single user has rated even a decent fraction of the films and many films haven’t been rated.</p>
+
+<p>To achieve these aims, the problem is posed as a <strong>Matrix Factorisation</strong> problem. That is you suppose that there is some matrix that describes all the users $U$, and a matrix that describes all the movies $M$, and that the ratings of all the movies by all the users is the <em>matrix product</em> of these two matrices:
+\(UM = R\)
+The matrices $U$ and $M$ are called the <em>Embedding</em> matrices. The idea is that every row of the matrix $U$ is some $D_u$ dimensional vector that represents a single user, and likewise every row of the matrix $M$ is some $D_m$ dimensional vector that represents a single movie. These vectors are such that, if I take the dot product of a user vector and movie vector it will predict the rating the user would assign that movie.</p>
+
+<p>The embeddings here are the same as what we saw earlier in the categorical variables for tabular data. It’s worth taking a deeper dive into what these are.</p>
+
+<h3 id="embeddings">
+<a class="anchor" href="#embeddings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Embeddings</h3>
+
+<ul>
+  <li>
+    <p>Given that users and movies are only categorical variables, how do we determine how ‘far apart’ they are from each other. How similar is one film to another. How similar is one user to another?</p>
+  </li>
+  <li>
+    <p>Often in machine learning categorical variables are represented using <strong>One-hot Encoding</strong>.</p>
+  </li>
+  <li>
+    <p>This is where categorical variables are represented as a sparse vector, with a dimension for every unique value. For example, consider three items:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="s">'Twix'</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="s">'Kit-kat'</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="s">'Vodka'</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>This is often sufficient for categorical variables in machine learning algorithms. However there is a lack of <em>meaning</em> in these vectors. For example, all the vectors are equidistant, but I know that ‘Twix’ and ‘Kit-kat’ are both chocolate bars and so are ‘nearer’ to each other than they are to ‘Vodka’. One-hot encoding does not encode these semantics.</p>
+  </li>
+  <li>
+    <p>This is what <em>embeddings</em> can do for us. An embedding is a matrix of weights. They map these one-hot vectors to a continuous vector space that encodes some meaning about the categories. In the example above this could be some 2D space of ‘foody’ things and ‘drinky’ things:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="s">'Twix'</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.98</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="s">'Kit-kat'</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.97</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="s">'Vodka'</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">]</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>But the meaning is context dependent. The embedded space dimensions could  represent anything like whether the item is expensive or  whether it is more likely to be consumed at night.</p>
+  </li>
+  <li>
+    <p>Embeddings have to be trained with <em>supervised learning</em>. They are initialized with random weights and then learned in collaborative filtering and in the tabular network with gradient-descent.</p>
+  </li>
+</ul>
+
+<h3 id="embedding-layer-as-a-look-up-table">
+<a class="anchor" href="#embedding-layer-as-a-look-up-table" aria-hidden="true"><span class="octicon octicon-link"></span></a>Embedding Layer as a Look-up Table</h3>
+
+<p>What does an embedding layer look like under the hood? <a href="https://stats.stackexchange.com/questions/270546/how-does-keras-embedding-layer-work">text mining - How does Keras ‘Embedding’ layer work? - Cross Validated</a></p>
+
+<ul>
+  <li>It’s pretty much a lookup table of vectors. You have an input size of 5000 and an embedding size of 100 then you will have a list of 5000 100d vectors. You could represent this as a spare-vector dense matrix multiply, but that would be inefficient.</li>
+</ul>
+
+<h3 id="embedding-layer-as-matrix-multiplication">
+<a class="anchor" href="#embedding-layer-as-matrix-multiplication" aria-hidden="true"><span class="octicon octicon-link"></span></a>Embedding Layer as matrix multiplication</h3>
+
+<p>The lookup, multiplication, and addition procedure we’ve just described is equivalent to matrix multiplication. Given a $1 \times N$ sparse representation $S$ and an $N \times M$ embedding table $E$, the matrix multiplication $S \times E$ gives you the $1 \times M$ dense vector.</p>
+
+<p><img src="/blog/images/fastai/image-20190804233737706.png" alt="image-20190804233737706"></p>
+
+<h3 id="different-uses-of-embeddings">
+<a class="anchor" href="#different-uses-of-embeddings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Different Uses of Embeddings</h3>
+
+<ul>
+  <li>Embeddings map items (e.g. movies, text…) to a low dimensional dense eal vectors such that similar items are close to each other.</li>
+  <li>Embeddings can also be applied to dense data (e.g. audio) to create a meaningful similarity metric.</li>
+  <li>Jointly embedding diverse data types (e.g. text, images, audio…) can define a similarity metric between them.</li>
+</ul>
+
+<h3 id="example-movie-lens-dataset">
+<a class="anchor" href="#example-movie-lens-dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example: Movie Lens Dataset</h3>
+
+<p>Link to notebook <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson4-collab.ipynb">here</a>.</p>
+
+<p>First you choose some number of factors $N_f$. This is the size of the embedding. There are $N_u$ users and $N_m$ movies. You then create emedding matrices for users and movies:</p>
+
+<ul>
+  <li>User embedding matrix of size $(N_u, N_f)$</li>
+  <li>Movie embedding matrix of size $(N_m, N_f)$</li>
+</ul>
+
+<p><em>Note that the sizes of the embeddings for the users and movies, $N_f$, have to be the same because we are taking a dot product of them.</em></p>
+
+<p>You can also add <em>biases</em>. Maybe some users just really like movies a lot more than other users. Maybe there are certain movies that everybody just likes. So in addition to the matrices you can add a single movie for how much a user likes movies, and a single number for how popular a movie is.</p>
+
+<p>So the prediction of how a user would rate a movie would be the dot product of the vector from the user embedding matrix with the vector from the movie embedding matrix, plus the bias for the user and the bias for the movie. This intuitively makes sense - you have the embedded model of how users like different movies (embedding model), and then the individual characteristics of that particular user and that particular film (bias).</p>
+
+<p>The rating of the movie is then calculated using a sigmoid function with a range of 0 to 5 stars.</p>
+
+<p><img src="/blog/images/fastai/image-20190829135757194.png" alt="image-20190829135757194"></p>
+
+<p>In fastai the code to do this is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ratings</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="s">'ratings.csv'</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">CollabDataBunch</span><span class="p">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">ratings</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">y_range</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">5.5</span><span class="p">]</span>
+<span class="n">learn</span> <span class="o">=</span> <span class="n">collab_learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_factors</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y_range</span><span class="o">=</span><span class="n">y_range</span><span class="p">)</span>
+
+<span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">5e-3</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>What does the model look like?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span><span class="o">&gt;</span> <span class="n">learn</span><span class="p">.</span><span class="n">model</span>
+
+  <span class="n">EmbeddingDotBias</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">u_weight</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">i_weight</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">u_bias</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">i_bias</span><span class="p">):</span> <span class="n">Embedding</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="p">)</span>
+</code></pre></div></div>
+
+<p>In this dataset there are 100 movies and 100 users. The inputs to the embedding layers are of size 101. This is because fastai adds in a ‘null’ category - <code class="language-plaintext highlighter-rouge">#na#</code>. You can see this in the <code class="language-plaintext highlighter-rouge">CollabDataBunch</code> object:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">.</span><span class="n">train_ds</span><span class="p">.</span><span class="n">x</span><span class="p">.</span><span class="n">classes</span>
+
+  <span class="n">OrderedDict</span><span class="p">([(</span><span class="s">'userId'</span><span class="p">,</span>
+                <span class="n">array</span><span class="p">([</span><span class="s">'#na#'</span><span class="p">,</span> <span class="s">'15'</span><span class="p">,</span> <span class="s">'17'</span><span class="p">,</span> <span class="s">'19'</span><span class="p">,</span> <span class="p">...,</span> <span class="s">'652'</span><span class="p">,</span> <span class="s">'654'</span><span class="p">,</span> <span class="s">'664'</span><span class="p">,</span> <span class="s">'665'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s">'&lt;U21'</span><span class="p">)),</span>
+               <span class="p">(</span><span class="s">'movieId'</span><span class="p">,</span>
+                <span class="n">array</span><span class="p">([</span><span class="s">'#na#'</span><span class="p">,</span> <span class="s">'1'</span><span class="p">,</span> <span class="s">'10'</span><span class="p">,</span> <span class="s">'32'</span><span class="p">,</span> <span class="p">...,</span> <span class="s">'6539'</span><span class="p">,</span> <span class="s">'7153'</span><span class="p">,</span> <span class="s">'8961'</span><span class="p">,</span> <span class="s">'58559'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s">'&lt;U21'</span><span class="p">))])</span>
+</code></pre></div></div>
+
+<h3 id="cold-start-problem">
+<a class="anchor" href="#cold-start-problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cold Start Problem</h3>
+
+<p>If you don’t have any data on your user’s preferences then you can’t recommend them anything. There isn’t an easy solution to this; likely the only way is to have a second model which is not a collaborative filtering model but a metadata driven model for new users or new movies. A few possible approaches to tackle this problem:</p>
+
+<ol>
+  <li>Ask the user in the UX. For example Netflix proposes films and tv series to a user and asks them which ones they like so that it can bootstrap collaborative filtering.</li>
+  <li>You could use metadata about the user and the products and handcraft a crude recommendation system that way.</li>
+</ol>
+
+<h2 id="jeremy-says">
+<a class="anchor" href="#jeremy-says" aria-hidden="true"><span class="octicon octicon-link"></span></a>Jeremy Says…</h2>
+
+<ol>
+  <li>If you’re doing NLP stuff, make sure you use all of the text you have (including unlabeled validation set) to train your language model, because there’s no reason not to. In Kaggle competions they don’t give you the labels for the test set, but you can still use the test data for self-supervised learning. <a href="https://youtu.be/9YK6AnqpuEA?t=1256">Lesson 4: A little NLP trick </a>
+</li>
+  <li>Jeremy used to use random forests / xgboost with tabular data 99% of the time. Today he uses neural networks 90% of the time. It’s his goto method he tries first.</li>
+</ol>
+
+<p>(<a href="https://forums.fast.ai/t/things-jeremy-says-to-do/36682">Source: Robert Bracco</a>)</p>
+
+<h2 id="q--a">
+<a class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<ul>
+  <li>
+    <p><em>Does the language model approach works for text in forums that are informal English, misspelled words or slangs or shortforms like s6 instead of Samsung S 6? [<a href="https://youtu.be/C9UdVPE3ynA?t=767">12:47</a>]</em></p>
+
+    <blockquote>
+      <p>Yes, absolutely it does. Particularly if you start with your wikitext model and then fine-tune it with your “target” corpus. Corpus is just a bunch of documents (emails, tweets, medical reports, or whatever). You could fine-tune it so it can learn a bit about the specifics of the slang , abbreviations, or whatever that didn’t appear in the full corpus. So interestingly, this is one of the big things that people were surprised about when we did this research last year. People thought that learning from something like Wikipedia wouldn’t be that helpful because it’s not that representative of how people tend to write. But it turns out it’s extremely helpful because there’s a much a difference between Wikipedia and random words than there is between like Wikipedia and reddit. So it kind of gets you 99% of the way there.</p>
+
+      <p>So language models themselves can be quite powerful. For example there was <a href="https://blog.swiftkey.com/swiftkey-debuts-worlds-first-smartphone-keyboard-powered-by-neural-networks/">a blog post</a> from SwiftKey (the folks that do the mobile-phone predictive text keyboard) and they describe how they kind of rewrote their underlying model to use neural nets. This was a year or two ago. Now most phone keyboards seem to do this. You’ll be typing away on your mobile phone, and in the prediction there will be something telling you what word you might want next. So that’s a language model in your phone.</p>
+
+      <p>Another example was the researcher Andrej Karpathy who now runs all this stuff at Tesla, back when he was a PhD student, he created <a href="http://karpathy.github.io/2015/05/21/rnn-effectiveness/">a language model of text in LaTeX documents</a> and created these automatic generation of LaTeX documents that then became these automatically generated papers. That’s pretty cute.</p>
+
+      <p>We’re not really that interested in the output of the language model ourselves. We’re just interested in it because it’s helpful with this process.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>How to combine NLP (tokenized) data with meta data (tabular data) with Fastai? For instance, for IMBb classification, how to use information like who the actors are, year made, genre, etc. [<a href="https://youtu.be/C9UdVPE3ynA?t=2954">49:14</a>]</em></p>
+
+    <blockquote>
+      <p>Yeah, we’re not quite up to that yet. So we need to learn a little bit more about how neural net architectures work as well. But conceptually, it’s kind of the same as the way we combine categorical variables and continuous variables. Basically in the neural network, you can have two different sets of inputs merging together into some layer. It could go into an early layer or into a later layer, it kind of depends. If it’s like text and an image and some metadata, you probably want the text going into an RNN, the image going into a CNN, the metadata going into some kind of tabular model like this. And then you’d have them basically all concatenated together, and then go through some fully connected layers and train them end to end. We will probably largely get into that in part two. In fact we might entirely get into that in part two. I’m not sure if we have time to cover it in part one. But conceptually, it’s a fairly simple extension of what we’ll be learning in the next three weeks.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Where does the magic number of <a href="https://camo.githubusercontent.com/6e0cd8f4c249c1e8c3218706b732f62f2edda0b1/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f322e365e7b347d"><img src="https://camo.githubusercontent.com/6e0cd8f4c249c1e8c3218706b732f62f2edda0b1/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f322e365e7b347d" alt="2.6^{4}"></a> in the learning rate come from? [<a href="https://youtu.be/C9UdVPE3ynA?t=2018">33:38</a>]</em></p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="mf">1e-3</span><span class="o">/</span><span class="p">(</span><span class="mf">2.6</span><span class="o">**</span><span class="mi">4</span><span class="p">),</span><span class="mf">1e-3</span><span class="p">),</span> <span class="n">moms</span><span class="o">=</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">0.7</span><span class="p">))</span>
+</code></pre></div>    </div>
+
+    <blockquote>
+      <p>Good question. So the learning rate is various things divided by 2.6 to the fourth. The reason it’s to the fourth, you will learn about at the end of today. So let’s focus on the 2.6. Why 2.6? Basically, as we’re going to see in more detail later today, this number, the difference between the bottom of the slice and the top of the slice is basically what’s the difference between how quickly the lowest layer of the model learns versus the highest layer of the model learns. So this is called discriminative learning rates. So really the question is as you go from layer to layer, how much do I decrease the learning rate by? And we found out that for NLP RNNs, the answer is 2.6.</p>
+
+      <p>How do we find out that it’s 2.6? I ran lots and lots of different models using lots of different sets of hyper parameters of various types (dropout, learning rates, and discriminative learning rate and so forth), and then I created something called a <strong>random forest which is a kind of model where I attempted to predict how accurate my NLP classifier would be based on the hyper parameters.</strong> And then I used random forest interpretation methods to basically figure out what the optimal parameter settings were, and I found out that the answer for this number was 2.6. So that’s actually not something I’ve published or I don’t think I’ve even talked about it before, so there’s a new piece of information. Actually, a few months after I did this, Stephen Merity and somebody else did publish a paper describing a similar approach, so the basic idea may be out there already.</p>
+
+      <p>Some of that idea comes from a researcher named Frank Hutter and one of his collaborators. They did some interesting work showing how you can use random forests to actually find optimal hyperparameters.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>How does the language model trained in this manner perform on code switched data (Hindi written in English words), or text with a lot of emojis?</em>:</p>
+
+    <blockquote>
+      <p>Text with emojis, it’ll be fine. There’s not many emojis in Wikipedia and where they are at Wikipedia it’s more like a Wikipedia page about the emoji rather than the emoji being used in a sensible place. But you can (and should) do this language model fine-tuning where you take a corpus of text where people are using emojis in usual ways, and so you fine-tune the Wikitext language model to your reddit or Twitter or whatever language model. And there aren’t that many emojis if you think about it. There are hundreds of thousands of possible words that people can be using, but a small number of possible emojis. So it’ll very quickly learn how those emojis are being used. So that’s a piece of cake.</p>
+
+      <p>I’m not really familiar with Hindi, but I’ll take an example I’m very familiar with which is Mandarin. In Mandarin, you could have a model that’s trained with Chinese characters. There are about five or six thousand Chinese characters in common use, but there’s also a romanization of those characters called pinyin. It’s a bit tricky because although there’s a nearly direct mapping from the character to the pinyin (I mean there is a direct mapping but that pronunciations are not exactly direct), there isn’t direct mapping from the pinyin to the character because one pinyin corresponds to multiple characters.</p>
+
+      <p>So the first thing to note is that if you’re going to use this approach for Chinese, you would need to start with a Chinese language model.</p>
+
+      <p>Actually fastai has something called <a href="https://forums.fast.ai/t/language-model-zoo-gorilla/14623">Language Model Zoo</a> where we’re adding more and more language models for different languages, and also increasingly for different domain areas like English medical texts or even language models for things other than NLP like genome sequences, molecular data, musical MIDI notes, and so forth. So you would you obviously start there.</p>
+
+      <p>To then convert that (in either simplified or traditional Chinese) into pinyin, you could either map the vocab directly, or as you’ll learn, these multi-layer models﹣it’s only the first layer that basically converts the tokens into a set of vectors, you can actually throw that away and fine-tune just the first layer of the model. So that second part is going to require a few more weeks of learning before you exactly understand how to do that and so forth, but if this is something you’re interested in doing, we can talk about it on the forum because it’s a nice test of understanding.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>Regarding using NN for Tabular data: <em>What are the 10% of cases where you would not default to neural nets? [<a href="https://youtu.be/C9UdVPE3ynA?t=2441">40:41</a>]</em>:</p>
+
+    <blockquote>
+      <p>Good question. I guess I still tend to give them a try. But yeah, I don’t know. It’s kind of like as you do things for a while, you start to get a sense of the areas where things don’t quite work as well. I have to think about that during the week. I don’t think I have a rule of thumb. But I would say, you may as well try both. I would say try a random forest and try a neural net. They’re both pretty quick and easy to run, and see how it looks. If they’re roughly similar, I might dig into each and see if I can make them better. But if the random forest is doing way better, I’d probably just stick with that. Use whatever works.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Do you think that things like <code class="language-plaintext highlighter-rouge">scikit-learn</code> and <code class="language-plaintext highlighter-rouge">xgboost</code> will eventually become outdated? Will everyone will use deep learning tools in the future? Except for maybe small datasets?[<a href="https://youtu.be/C9UdVPE3ynA?t=3036">50:36</a>]</em></p>
+
+    <blockquote>
+      <p>I have no idea. I’m not good at making predictions. I’m not a machine learning model. I mean <code class="language-plaintext highlighter-rouge">xgboost</code> is a really nice piece of software. There’s quite a few really nice pieces of software for gradient boosting in particular. Actually, random forests in particular has some really nice features for interpretation which I’m sure we’ll find similar versions for neural nets, but they don’t necessarily exist yet. So I don’t know. For now, they’re both useful tools. <code class="language-plaintext highlighter-rouge">scikit-learn</code> is a library that’s often used for pre-processing and running models. Again, it’s hard to predict where things will end up. In some ways, it’s more focused on some older approaches to modeling, but I don’t know. They keep on adding new things, so we’ll see. I keep trying to incorporate more scikit-learn stuff into fastai and then I keep finding ways I think I can do it better and I throw it away again, so that’s why there’s still no scikit-learn dependencies in fastai. I keep finding other ways to do stuff.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>What about time series on tabular data? is there any RNN model involved in <code class="language-plaintext highlighter-rouge">tabular.models</code>? [<a href="https://youtu.be/C9UdVPE3ynA?t=3909">1:05:09</a>]</em>:</p>
+
+    <blockquote>
+      <p>We’re going to look at time series tabular data next week, but the short answer is generally speaking you don’t use a RNN for time series tabular data but instead, you extract a bunch of columns for things like day of week, is it a weekend, is it a holiday, was the store open, stuff like that. It turns out that adding those extra columns which you can do somewhat automatically basically gives you state-of-the-art results. There are some good uses of RNNs for time series, but not really for these kind of tabular style time series (like retail store logistics databases, etc).</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li><a href="https://youtu.be/qqt3aMPB81c">Link to Lesson 4 lecture</a></li>
+  <li>Homework notebooks:
+    <ul>
+      <li>Notebook 1: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson4-collab.ipynb">lesson4-collab.ipynb</a>
+</li>
+      <li>Notebook 2: <a href="https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson4-tabular.ipynb">lesson4-tabular.ipynb</a>
+</li>
+    </ul>
+  </li>
+  <li>Parts of my notes have been copied from the excellent lecture transcriptions made by @hiromi. Link: <a href="https://github.com/hiromis/notes/blob/master/Lesson4.md">Lesson4 Detailed Notes</a>.</li>
+  <li>Link to ULMFiT paper: https://arxiv.org/abs/1801.06146</li>
+  <li>Fastai blog post on tabular data <a href="https://www.fast.ai/2018/04/29/categorical-embeddings/">An Introduction to Deep Learning for Tabular Data · fast.ai</a>
+</li>
+  <li>Medium post on recommenders with NN: <a href="https://towardsdatascience.com/collaborative-embeddings-for-lipstick-recommendations-98eccfa816bd">Collaborative Embeddings for Lipstick Recommendations</a>
+</li>
+  <li>Lecture on Embeddings: <a href="https://developers.google.com/machine-learning/crash-course/embeddings/video-lecture">Embeddings, Machine Learning Crash Course, Google Developers</a>
+</li>
+  <li>Word2Vec: <a href="https://www.tensorflow.org/tutorials/representation/word2vec">Vector Representations of Words</a>
+</li>
+  <li>Paper Review: <a href="https://towardsdatascience.com/paper-review-neural-collaborative-filtering-explanation-implementation-ea3e031b7f96">Neural Collaborative Filtering Explanation &amp; Implementation</a>
+</li>
+  <li>Blog post from Twitter on Embeddings: <a href="https://blog.twitter.com/engineering/en_us/topics/insights/2018/embeddingsattwitter.html">Embeddings@Twitter</a>
+</li>
+  <li>Video: <a href="https://www.youtube.com/watch?v=JGHVJXP9NHw">Embeddings for Everything: Search in the Neural Network Era</a>
+</li>
+  <li><a href="https://www.youtube.com/watch?v=HfnjQIhQzME">Applying the four step “Embed, Encode, Attend, Predict” framework to predict document similarity</a></li>
+  <li>Mini-course on Recommendation Systems, Google: <a href="https://developers.google.com/machine-learning/recommendation/">Introduction to Recommendation Systems, Google Developers</a>
+</li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
