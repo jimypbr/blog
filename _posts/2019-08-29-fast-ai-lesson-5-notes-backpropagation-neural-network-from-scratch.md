@@ -3,7 +3,7 @@ layout: post
 title: "Fast.ai v3 Lesson 5 Notes: Backpropagation; Neural Network From Scratch"
 date: 2019-08-29
 toc: true
-categories: deep-learning machine-learning fastai
+categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 5 of part 1 of fast.ai v3 -- Back propagation; Accelerated SGD; Neural net from scratch. 
 image: images/fastai/image-20190706182251357.png
 comments: true
