@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Fast.ai Lesson 10 Notes: Looking inside the model"
+title: "Fast.ai v3 Lesson 10 Notes: Looking inside the model"
 date: 2020-03-24
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
