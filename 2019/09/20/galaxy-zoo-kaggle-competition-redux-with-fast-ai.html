@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Galaxy Zoo Kaggle Competition Redux with Fast.ai | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Galaxy Zoo Kaggle Competition Redux with Fast.ai" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this post I use Fastai to tackle the Galaxy Zoo Kaggle competition from 2014. This is a multi-class classification problem using deep learning. (Image by Antonio Ciccolella / M. De Leo)." />
+<meta property="og:description" content="In this post I use Fastai to tackle the Galaxy Zoo Kaggle competition from 2014. This is a multi-class classification problem using deep learning. (Image by Antonio Ciccolella / M. De Leo)." />
+<link rel="canonical" href="https://jimypbr.github.io/blog/2019/09/20/galaxy-zoo-kaggle-competition-redux-with-fast-ai.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/2019/09/20/galaxy-zoo-kaggle-competition-redux-with-fast-ai.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/galaxy_zoo_nasa.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-09-20T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/2019/09/20/galaxy-zoo-kaggle-competition-redux-with-fast-ai.html","@type":"BlogPosting","headline":"Galaxy Zoo Kaggle Competition Redux with Fast.ai","dateModified":"2019-09-20T00:00:00-05:00","datePublished":"2019-09-20T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/galaxy_zoo_nasa.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/2019/09/20/galaxy-zoo-kaggle-competition-redux-with-fast-ai.html"},"description":"In this post I use Fastai to tackle the Galaxy Zoo Kaggle competition from 2014. This is a multi-class classification problem using deep learning. (Image by Antonio Ciccolella / M. De Leo).","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Galaxy Zoo Kaggle Competition Redux with Fast.ai</h1><p class="page-description">In this post I use Fastai to tackle the Galaxy Zoo Kaggle competition from 2014. This is a multi-class classification problem using deep learning. (Image  by <a class="external free" href="https://en.wikipedia.org/wiki/File:Hubble-Vaucouleurs.png">Antonio Ciccolella / M. De Leo</a>).</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-09-20T00:00:00-05:00" itemprop="datePublished">
+        Sep 20, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      8 min read
+    
+</span></p>
+
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview">Overview</a></li>
+<li class="toc-entry toc-h2"><a href="#problem">Problem</a></li>
+<li class="toc-entry toc-h2"><a href="#preprocessing">Preprocessing</a></li>
+<li class="toc-entry toc-h2"><a href="#transforms">Transforms</a></li>
+<li class="toc-entry toc-h2"><a href="#datablock">DataBlock</a></li>
+<li class="toc-entry toc-h2"><a href="#model">Model</a></li>
+<li class="toc-entry toc-h2"><a href="#training">Training</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#training-programme">Training Programme</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#summary-and-further-thoughts">Summary and Further Thoughts</a></li>
+</ul><h2 id="overview">
+<a class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p><img src="/blog/images/fastai/galaxy_zoo_nasa.png" alt="galaxy_zoo"></p>
+
+<p>The Galaxy Zoo kaggle competition is something that I feel a special connection with. Not only because my own background is in astrophysics, but this competition first introduced me to Kaggle and data science. While I didn’t have the time or knowledge to compete at the time, I followed it and I knew even then that the winning solutions would be based on convolutional neural networks.</p>
+
+<p>I’ve been learning deep learning on and off since 2017, but it wasn’t until fastai that I actually managed to get from zero to one. After finishing the first course in fastai, going back and doing the Galaxy Zoo challenge was actually pretty undaunting! It’s basically a quirky image multi-label classification classification posed as a regression problem. Once I got my head around this, I was very fast in getting a CNN running in fastai.</p>
+
+<h2 id="problem">
+<a class="anchor" href="#problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>Problem</h2>
+
+<p>From the <a href="https://www.kaggle.com/c/galaxy-zoo-the-galaxy-challenge/overview/description">Galaxy Zoo challenge description</a>:</p>
+
+<blockquote>
+  <p>Understanding how and why we are here is one of the fundamental questions for the human race. Part of the answer to this question lies in the origins of galaxies, such as our own Milky Way. Yet questions remain about how the Milky Way (or any of the other ~100 billion galaxies in our Universe) was formed and has evolved. Galaxies come in all shapes, sizes and colors: from beautiful spirals to huge ellipticals. Understanding the distribution, location and types of galaxies as a function of shape, size, and color are critical pieces for solving this puzzle.</p>
+</blockquote>
+
+<p>…</p>
+
+<p><img src="https://storage.googleapis.com/kaggle-competitions/kaggle/3175/media/mainimage.jpg" alt="Main Image"></p>
+
+<p>(Image Credit: <em>ESA/Hubble &amp; NASA</em>)</p>
+
+<blockquote>
+  <p>Galaxies in this set have already been classified once through the help of hundreds of thousands of volunteers, who collectively classified the shapes of these images by eye in a successful <a href="http://www.galaxyzoo.org/#/classify">citizen science</a> crowdsourcing project. However, this approach becomes less feasible as data sets grow to contain of hundreds of millions (or even billions) of galaxies. That’s where you come in.</p>
+
+  <p>This competition asks you to analyze the JPG images of galaxies to find automated metrics that reproduce the probability distributions derived from human classifications. For each galaxy, determine the probability that it belongs in a particular class. Can you write an algorithm that behaves as well as the crowd does?</p>
+</blockquote>
+
+<p>Rather than being an image classification or image multi-label classification problem, that one might initially assume, this problem is actually a <strong>regression problem</strong>. The task is actually to predict the distribution of how the users would label an image of a galaxy. The UX presented to the user is that of a descision tree of questions:</p>
+
+<p><img src="https://storage.googleapis.com/kaggle-competitions/kaggle/3175/media/Screen%20Shot%202013-09-25%20at%2010.08.17.png" alt="DecisionTreeImage"></p>
+
+<p>The distribution of user’s answers to these questions is represented as a 37D vector of floats with values between 0 and 1. These values are weighted according to the description <a href="https://www.kaggle.com/c/galaxy-zoo-the-galaxy-challenge/overview/the-galaxy-zoo-decision-tree">here</a>.</p>
+
+<p>The task is therefore to train an algorithm that takes an image of a galaxy as an input and outputs a 37D vector of floats; it is a multi-dimensional regression problem.</p>
+
+<h2 id="preprocessing">
+<a class="anchor" href="#preprocessing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Preprocessing</h2>
+
+<p>Let’s look at a batch of the images:</p>
+
+<p><img src="/blog/images/fastai/image-20190916215808708.png" alt="image-20190916215808708"></p>
+
+<p>The target galaxy is always in the centre of the image. There is a lot of redundant space round the outside of the galaxies. Each image is 424x424. I cropped the images down to 224x224. This saved on computation without throwing out resolution.</p>
+
+<h2 id="transforms">
+<a class="anchor" href="#transforms" aria-hidden="true"><span class="octicon octicon-link"></span></a>Transforms</h2>
+
+<p>The transforms I used:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tfms</span> <span class="o">=</span> <span class="n">get_transforms</span><span class="p">(</span><span class="n">flip_vert</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">max_warp</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_rotate</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">max_lighting</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_zoom</span><span class="o">=</span><span class="mf">1.05</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Here they are as a grid:</p>
+
+<p><img src="/blog/images/fastai/image-20190916224014902.png" alt="image-20190916224014902"></p>
+
+<p>I also tried with adjusting the brightness and contrast, but I found that that didn’t improve anything.</p>
+
+<h2 id="datablock">
+<a class="anchor" href="#datablock" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataBlock</h2>
+
+<p>The image file names and accompanying classification vectors are stored in a CSV file <code class="language-plaintext highlighter-rouge">training_solutions_rev1</code>.</p>
+
+<p>I modified the fastai class <code class="language-plaintext highlighter-rouge">FloatList</code> to <code class="language-plaintext highlighter-rouge">GalaxyFloatList</code>, which is the same except it uses <code class="language-plaintext highlighter-rouge">GalaxyFloatItem</code> instead of <code class="language-plaintext highlighter-rouge">FloatItem</code>. <code class="language-plaintext highlighter-rouge">GalaxyFloat</code> has the <code class="language-plaintext highlighter-rouge">show</code> method subclassed so that the 37D float vector is converted to a string using a function I wrote called <code class="language-plaintext highlighter-rouge">vec2labels</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">GalaxyFloatItem</span><span class="p">(</span><span class="n">FloatItem</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span><span class="n">plt</span><span class="p">.</span><span class="n">Axes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="s">"Translate the GalaxyZoo vector into a list of features"</span>
+        <span class="n">ax</span><span class="p">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">vec2labels</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">data</span><span class="p">))</span>
+    
+    
+<span class="k">class</span> <span class="nc">GalaxyFloatList</span><span class="p">(</span><span class="n">ItemList</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span><span class="n">Iterator</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">classes</span><span class="p">:</span><span class="n">Collection</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">float32</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">copy_new</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">'log'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">items</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">items</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">MSELossFlat</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="nb">super</span><span class="p">().</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">GalaxyFloatItem</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">log</span> <span class="k">else</span> <span class="n">o</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span> <span class="k">return</span> <span class="n">GalaxyFloatItem</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">numpy</span><span class="p">())</span>
+    
+    
+<span class="n">src</span> <span class="o">=</span> <span class="p">(</span><span class="n">ImageList</span><span class="p">.</span><span class="n">from_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span>
+                          <span class="s">'training_solutions_rev1.csv'</span><span class="p">,</span> 
+                          <span class="n">folder</span><span class="o">=</span><span class="s">'images_training_rev1_cropped'</span><span class="p">,</span> 
+                          <span class="n">suffix</span><span class="o">=</span><span class="s">'.jpg'</span><span class="p">,</span>
+                          <span class="n">cols</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+           		 <span class="p">.</span><span class="n">split_by_rand_pct</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+            	 <span class="p">.</span><span class="n">label_from_df</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">38</span><span class="p">)),</span> <span class="n">label_cls</span><span class="o">=</span><span class="n">GalaxyFloatList</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tfms</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">112</span><span class="p">,</span> <span class="n">resize_method</span><span class="o">=</span><span class="n">ResizeMethod</span><span class="p">.</span><span class="n">SQUISH</span><span class="p">,</span>
+                      <span class="n">padding_mode</span><span class="o">=</span><span class="s">'reflection'</span><span class="p">).</span><span class="n">databunch</span><span class="p">()).</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="model">
+<a class="anchor" href="#model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model</h2>
+
+<p>For my model I used a ResNet50 CNN pretrained on Imagenet.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">learner</span> <span class="o">=</span> <span class="n">cnn_learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">models</span><span class="p">.</span><span class="n">resnet50</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">rmse</span><span class="p">,</span> <span class="n">ps</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,)</span>
+<span class="n">learner</span><span class="p">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">learner</span><span class="p">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">GalaxyOutput</span><span class="p">())</span>
+</code></pre></div></div>
+
+<p>At the end of the network I tacked on a simple layer that correctly normalises the probability vector outputed by the network so that the output obeys the rules of probability. I got this idea after looking at the <a href="http://benanne.github.io/2014/04/05/galaxy-zoo.html">winning submission</a>. Training without normalising the output also worked quite well, I found, however it does produce ill-formed results such as small negative numbers so normalising is good idea to get a small performance boost.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">GalaxyOutput</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">answer_probability</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>   
+</code></pre></div></div>
+
+<p>Here is the code that normalises the probability vectors:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task_sectors</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
+    <span class="mi">5</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+    <span class="mi">7</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span>
+    <span class="mi">8</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">28</span><span class="p">),</span>
+    <span class="mi">10</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+    <span class="mi">11</span><span class="p">:</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">31</span><span class="p">,</span> <span class="mi">37</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">q</span> <span class="o">/</span> <span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)[:,</span> <span class="bp">None</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">answer_probability</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+  	<span class="c1"># Source: http://benanne.github.io/2014/04/05/galaxy-zoo.html
+</span>    <span class="c1"># clip probabilities 
+</span>    <span class="n">nb</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+    
+    <span class="c1"># normalize
+</span>    <span class="n">q1</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="n">q2</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+    <span class="n">q3</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
+    <span class="n">q4</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">4</span><span class="p">]])</span>
+    <span class="n">q5</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">5</span><span class="p">]])</span>
+    <span class="n">q6</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">6</span><span class="p">]])</span>
+    <span class="n">q7</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">7</span><span class="p">]])</span>
+    <span class="n">q8</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">8</span><span class="p">]])</span>
+    <span class="n">q9</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">9</span><span class="p">]])</span>
+    <span class="n">q10</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">10</span><span class="p">]])</span>
+    <span class="n">q11</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">task_sectors</span><span class="p">[</span><span class="mi">11</span><span class="p">]])</span>
+    
+    <span class="c1"># reweight 
+</span>    <span class="n">w1</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">w2</span> <span class="o">=</span> <span class="n">q1</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">w1</span>
+    <span class="n">w3</span> <span class="o">=</span> <span class="n">q2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">w2</span>
+    <span class="n">w4</span> <span class="o">=</span> <span class="n">w3</span>
+    <span class="n">w5</span> <span class="o">=</span> <span class="n">w4</span>
+    <span class="n">w6</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">w7</span> <span class="o">=</span> <span class="n">q1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">w1</span>
+    <span class="n">w8</span> <span class="o">=</span> <span class="n">q6</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">w6</span>
+    <span class="n">w9</span> <span class="o">=</span> <span class="n">q2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">w2</span>
+    <span class="n">w10</span> <span class="o">=</span> <span class="n">q4</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">w4</span>
+    <span class="n">w11</span> <span class="o">=</span> <span class="n">w10</span>
+    
+    <span class="n">wq1</span> <span class="o">=</span> <span class="n">w1</span><span class="o">*</span><span class="n">q1</span>
+    <span class="n">wq2</span> <span class="o">=</span> <span class="n">w2</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q2</span>
+    <span class="n">wq3</span> <span class="o">=</span> <span class="n">w3</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q3</span>
+    <span class="n">wq4</span> <span class="o">=</span> <span class="n">w4</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q4</span>
+    <span class="n">wq5</span> <span class="o">=</span> <span class="n">w5</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q5</span>
+    <span class="n">wq6</span> <span class="o">=</span> <span class="n">w6</span><span class="o">*</span><span class="n">q6</span>
+    <span class="n">wq7</span> <span class="o">=</span> <span class="n">w7</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q7</span>
+    <span class="n">wq8</span> <span class="o">=</span> <span class="n">w8</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q8</span>
+    <span class="n">wq9</span> <span class="o">=</span> <span class="n">w9</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q9</span>
+    <span class="n">wq10</span> <span class="o">=</span> <span class="n">w10</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q10</span>
+    <span class="n">wq11</span> <span class="o">=</span> <span class="n">w11</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">q11</span>
+    
+    <span class="k">return</span> <span class="n">torch</span><span class="p">.</span><span class="n">cat</span><span class="p">([</span><span class="n">wq1</span><span class="p">,</span> <span class="n">wq2</span><span class="p">,</span> <span class="n">wq3</span><span class="p">,</span> <span class="n">wq4</span><span class="p">,</span> <span class="n">wq5</span><span class="p">,</span> <span class="n">wq6</span><span class="p">,</span> <span class="n">wq7</span><span class="p">,</span> <span class="n">wq8</span><span class="p">,</span> <span class="n">wq9</span><span class="p">,</span> <span class="n">wq10</span><span class="p">,</span> <span class="n">wq11</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This code is pretty yuck so I will explain. <code class="language-plaintext highlighter-rouge">task_sectors</code> are the slices of the probability vector corresponding to the answers of each of the questions (tasks) in the decision tree. These sectors are all normalised individually, so they are &gt;=0 and sum to 1.</p>
+
+<h2 id="training">
+<a class="anchor" href="#training" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training</h2>
+
+<p>One of the things I stuggled a lot in remedying in this problem was <strong>underfitting</strong>. With the default settings of CNNs in fastai (<code class="language-plaintext highlighter-rouge">ps=0.5</code> and <code class="language-plaintext highlighter-rouge">wd=1e-2</code>) the validation loss was consistently lower than the training loss even after training for many epochs. The loss was also not improving over subsequent cycles. Here is an example of the loss plot for this case:</p>
+
+<p><img src="/blog/images/fastai/image-20190719152226799.png" alt="image-20190719152226799"></p>
+
+<p>According to Jeremy in lesson 2 of fastai, underfitting can be remedied with reducing regularization. After many experiments I settled on the following values:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">ps=0.1</code></li>
+  <li><code class="language-plaintext highlighter-rouge">wd=1e-4</code></li>
+</ul>
+
+<p>I then trained the network using the freeze/unfreeze protocol taught in the fastai course and used progressive resizing to get the drive down the error further. To overcome underfitting I had to run many cycles until the validation error stopped being less than the training error.</p>
+
+<h3 id="training-programme">
+<a class="anchor" href="#training-programme" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training Programme</h3>
+
+<ul>
+  <li>
+    <p>Train head 2 epochs <code class="language-plaintext highlighter-rouge">lr=5e-2</code></p>
+  </li>
+  <li>
+    <p>Unfreeze all layers</p>
+  </li>
+  <li>
+    <p>Train 10 epochs <code class="language-plaintext highlighter-rouge">lr=1e-4</code>. Validation error here is ~0.081.
+<img src="/blog/images/fastai/image-20190727172610130.png" alt="image-20190727172610130"></p>
+  </li>
+  <li>
+    <p>Resize to 224x224</p>
+  </li>
+  <li>
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">tfms</span><span class="p">,</span> <span class="n">padding_mode</span><span class="o">=</span><span class="s">'reflection'</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">databunch</span><span class="p">().</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">))</span>
+  
+<span class="n">learner</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+<span class="n">data</span><span class="p">.</span><span class="n">train_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="n">shape</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Freeze all layers</p>
+  </li>
+  <li>
+    <p>Train head 2 epochs <code class="language-plaintext highlighter-rouge">lr=1e-2</code></p>
+  </li>
+  <li>
+    <p>Unfreeze</p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">learner.fit_one_cycle(6, 1e-4)</code>
+<img src="/blog/images/fastai/image-20190727201006773.png" alt="image-20190727201006773"></p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">learner.fit_one_cycle(6, 1e-4)</code>
+<img src="/blog/images/fastai/image-20190727201034459.png" alt="image-20190727201034459"></p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">learner.fit_one_cycle(6, 1e-4)</code>
+<img src="/blog/images/fastai/image-20190727201056337.png" alt="image-20190727201056337"></p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">learner.fit_one_cycle(8, 1e-4/5)</code>
+<img src="/blog/images/fastai/image-20190727201304181.png" alt="image-20190727201304181"></p>
+  </li>
+  <li>
+    <p>Change dropout: <code class="language-plaintext highlighter-rouge">ps=0.25</code></p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">learner.fit_one_cycle(6, slice(1e-6, 1e-5/2))</code>
+<img src="/blog/images/fastai/image-20190727220024661.png" alt="image-20190727220024661"></p>
+  </li>
+  <li>
+    <p>The final training epochs:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: right">epoch</th>
+          <th style="text-align: right">train_loss</th>
+          <th style="text-align: right">valid_loss</th>
+          <th style="text-align: right">root_mean_squared_error</th>
+          <th style="text-align: right">time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align: right">0</td>
+          <td style="text-align: right">0.005536</td>
+          <td style="text-align: right">0.005953</td>
+          <td style="text-align: right">0.077037</td>
+          <td style="text-align: right">05:08</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">1</td>
+          <td style="text-align: right">0.005683</td>
+          <td style="text-align: right">0.005960</td>
+          <td style="text-align: right">0.077083</td>
+          <td style="text-align: right">05:09</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">2</td>
+          <td style="text-align: right">0.005581</td>
+          <td style="text-align: right">0.005979</td>
+          <td style="text-align: right">0.077199</td>
+          <td style="text-align: right">05:11</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">3</td>
+          <td style="text-align: right">0.005662</td>
+          <td style="text-align: right">0.005976</td>
+          <td style="text-align: right">0.077189</td>
+          <td style="text-align: right">05:09</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">4</td>
+          <td style="text-align: right">0.005648</td>
+          <td style="text-align: right">0.005932</td>
+          <td style="text-align: right">0.076905</td>
+          <td style="text-align: right">05:10</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">5</td>
+          <td style="text-align: right">0.005611</td>
+          <td style="text-align: right">0.005942</td>
+          <td style="text-align: right">0.076965</td>
+          <td style="text-align: right">05:11</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">6</td>
+          <td style="text-align: right">0.005511</td>
+          <td style="text-align: right">0.005919</td>
+          <td style="text-align: right">0.076818</td>
+          <td style="text-align: right">05:09</td>
+        </tr>
+        <tr>
+          <td style="text-align: right">7</td>
+          <td style="text-align: right">0.005534</td>
+          <td style="text-align: right">0.005906</td>
+          <td style="text-align: right">0.076728</td>
+          <td style="text-align: right">05:10</td>
+        </tr>
+      </tbody>
+    </table>
+  </li>
+</ul>
+
+<p><strong>Total training time</strong>: ~200 minutes</p>
+
+<p><strong>Final Validation RMSE</strong>: 0.076728</p>
+
+<h2 id="summary-and-further-thoughts">
+<a class="anchor" href="#summary-and-further-thoughts" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary and Further Thoughts</h2>
+
+<p>This competition was required a lot more work that I thought it would be, even with all the convenience of fastai. Before I started I expect this project to be a multi-label classification problem, but it’s actually a regression problem. Writing the normalization layer was tricky to figure out and in the end I learned a lot about PyTorch and fastai by writing this and appending it onto a pretrained network.</p>
+
+<p>I believe my main issue was underfitting in this problem. I remedied this by reducing the regularisation and running for more epochs. In the future I will do further experiments to see if it can be fixed in another way with a larger network or different learning rate schedules.</p>
+
+<p>The final validation RMSE is about the equal to what Dielemann achieved for a single model: <a href="http://benanne.github.io/2014/04/05/galaxy-zoo.html">http://benanne.github.io/2014/04/05/galaxy-zoo.html</a>. I’m a bit disappointed that I couldn’t do better than the result from 5 years ago, but on the other hand the amount of code required to do this today compared to what Dielemann wrote is tiny. His final score was down at 0.074 after bagging the results of many CNNs. This is a huge amount of effort and was necessary to win the Kaggle competition at the time, however I feel this isn’t worth trying to reproduce this.</p>
+
+<p>My Jupyter notebooks for this are on github: <a href="https://github.com/jimypbr/galaxyzoo-fastai">https://github.com/jimypbr/galaxyzoo-fastai</a></p>
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2019/09/20/galaxy-zoo-kaggle-competition-redux-with-fast-ai.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
