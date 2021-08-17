@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Fast.ai Lesson 4 Notes: NLP; Tabular Data; Recommenders"
+title: "Fast.ai v3 Lesson 4 Notes: NLP; Tabular Data; Recommenders"
 date: 2019-08-18
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
