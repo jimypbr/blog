@@ -3,7 +3,7 @@ layout: post
 title: "Fast.ai v3 Lesson 1 Notes: Image Classification"
 date: 2019-07-06
 toc: true
-categories: deep-learning machine-learning fastai
+categories: deep-learning machine-learning computer-vision fastai fastai-v3-notes
 description: My personal notes on Lesson 1 of part 1 of fast.ai v3 -- Image classification 
 image: images/fastai/image-20190706182251357.png
 comments: true
