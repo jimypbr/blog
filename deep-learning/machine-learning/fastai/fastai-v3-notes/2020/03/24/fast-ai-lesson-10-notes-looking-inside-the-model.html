@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai Lesson 10 Notes: Looking inside the model | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai Lesson 10 Notes: Looking inside the model" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 10 of part 2 of fast.ai v3 - Looking inside the model" />
+<meta property="og:description" content="My personal notes on Lesson 10 of part 2 of fast.ai v3 - Looking inside the model" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/03/24/fast-ai-lesson-10-notes-looking-inside-the-model.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/03/24/fast-ai-lesson-10-notes-looking-inside-the-model.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-03-24T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/03/24/fast-ai-lesson-10-notes-looking-inside-the-model.html","@type":"BlogPosting","headline":"Fast.ai Lesson 10 Notes: Looking inside the model","dateModified":"2020-03-24T00:00:00-05:00","datePublished":"2020-03-24T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/03/24/fast-ai-lesson-10-notes-looking-inside-the-model.html"},"description":"My personal notes on Lesson 10 of part 2 of fast.ai v3 - Looking inside the model","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai Lesson 10 Notes: Looking inside the model</h1><p class="page-description">My personal notes on Lesson 10 of part 2 of fast.ai v3 - Looking inside the model</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-03-24T00:00:00-05:00" itemprop="datePublished">
+        Mar 24, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      33 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai-v3-notes">fastai-v3-notes</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview">Overview</a></li>
+<li class="toc-entry toc-h2"><a href="#foundations">Foundations</a></li>
+<li class="toc-entry toc-h2"><a href="#multilabel-classification-when-softmax-is-a-bad-idea">MultiLabel Classification (When Softmax is a Bad Idea)</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#multilabel-predictions">MultiLabel Predictions</a></li>
+<li class="toc-entry toc-h3"><a href="#multilabel-loss-function">MultiLabel Loss Function</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#build-a-learning-rate-finder">Build a Learning Rate Finder</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#better-callback-cancellation">Better Callback Cancellation</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring-callback-and-runner">Refactoring Callback and Runner</a></li>
+<li class="toc-entry toc-h3"><a href="#lr_find-callback">LR_Find Callback</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#build-a-cnn-with-cuda">Build a CNN (with Cuda!)</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#some-refactoring">Some Refactoring</a></li>
+<li class="toc-entry toc-h3"><a href="#discussion-on-cnn-kernel-sizes">Discussion on CNN Kernel Sizes</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#looking-inside-the-model">Looking Inside the Model</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#pytorch-hooks">PyTorch Hooks</a></li>
+<li class="toc-entry toc-h3"><a href="#current-state-of-affairs">Current State of Affairs</a></li>
+<li class="toc-entry toc-h3"><a href="#better-initialization">Better Initialization</a></li>
+<li class="toc-entry toc-h3"><a href="#generalized-relu">Generalized ReLU</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#normalization">Normalization</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#batch-norm">Batch Norm</a></li>
+<li class="toc-entry toc-h3"><a href="#layer-norm">Layer Norm</a></li>
+<li class="toc-entry toc-h3"><a href="#instance-norm">Instance Norm</a></li>
+<li class="toc-entry toc-h3"><a href="#group-norm">Group Norm</a></li>
+<li class="toc-entry toc-h3"><a href="#summary-of-the-norms-with-one-picture">Summary of the Norms with One Picture</a></li>
+<li class="toc-entry toc-h3"><a href="#running-batch-norm-fixing-small-batch-size-problem">Running Batch Norm: Fixing Small Batch Size Problem</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview">
+<a class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>This lesson covers a lot of material. It starts off with a review of some important foundations such as more advanced Python programming, variance, covariance, and standard deviation. It then goes into a short discussion on situation where Softmax loss is a bad idea in image classification tasks. <em>My notes go  deeper into this part on Multilabel classification than the original lecture does.</em> The lesson then moves onto looking inside the model using PyTorch hooks. The last part of the lesson introduces Batch Normalization and studies the pros and cons of BatchNorm and shows some alternatives normalizations that are possible. Jeremy then develops a novel kind of normalization layer to overcome BatchNorm’s main problem, and compares it to previously published approaches, with some very encouraging results.</p>
+
+<p>Lesson 10 <a href="https://youtu.be/HR0lt1hlR6U">lesson video</a>.</p>
+
+<h2 id="foundations">
+<a class="anchor" href="#foundations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Foundations</h2>
+
+<p><em>Notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/05a_foundations.ipynb">05a_foundations.ipynb</a></em></p>
+
+<p><strong>Mean</strong>: <code class="language-plaintext highlighter-rouge">m = t.mean()</code></p>
+
+<p><strong>Variance</strong>: The average of how far away each data point is from the mean. Mean squared difference from the mean. Sensitive to outliers.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">var = (t-m).pow(2).mean()</code></li>
+  <li>Better: <code class="language-plaintext highlighter-rouge">var = (t*t).mean() - (m*m)</code>
+</li>
+  <li>$\mbox{E}[X^2] - \mbox{E}[X]^2$</li>
+</ul>
+
+<p><strong>Standard Deviation</strong>: Square root of the variance.</p>
+
+<ul>
+  <li>
+    <p>On same scale as the original data - easier to interpret.</p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">std = var.sqrt()</code></p>
+  </li>
+</ul>
+
+<p><strong>Mean Absolute Deviation</strong>: Mean absolute difference from the mean. It isn’t used nearly as much as it deserves to be. Less sensitive to outliers than variance.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">(t-m).abs().mean()</code></li>
+</ul>
+
+<p><strong>Covariance</strong>: A measure of how changes in one variable are associated with changes in a second variable. How linearly associated are two variables?</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">cov = ((t - t.mean()) * (v - v.mean())).mean()</code></li>
+  <li>$\operatorname{cov}(X,Y) = \operatorname{E}{\big[(X - \operatorname{E}[X])(Y - \operatorname{E}[Y])\big]} = \operatorname{E}[XY] - \operatorname{E}[X]\operatorname{E}[Y]$</li>
+  <li><code class="language-plaintext highlighter-rouge">cov = (t*v).mean() - t.mean()*v.mean()</code></li>
+</ul>
+
+<p><strong>Correlation</strong>: The strength and direction of the linear relationship between two variables.</p>
+
+<ul>
+  <li>Covariance divided by the standard deviations of X and Y.</li>
+  <li>$\rho_{X,Y}= \frac{\operatorname{cov}(X,Y)}{\sigma_X \sigma_Y}$</li>
+  <li><code class="language-plaintext highlighter-rouge">cor = cov / (t.std() * v.std())</code></li>
+</ul>
+
+<p><em>See this: 3 minute video on <a href="https://www.youtube.com/watch?v=85Ilb-89sjk&amp;feature=youtu.be">Correlation vs Covariance</a></em>.</p>
+
+<h2 id="multilabel-classification-when-softmax-is-a-bad-idea">
+<a class="anchor" href="#multilabel-classification-when-softmax-is-a-bad-idea" aria-hidden="true"><span class="octicon octicon-link"></span></a>MultiLabel Classification (When Softmax is a Bad Idea)</h2>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=2674">Jump_to lesson 10 video</a></em></p>
+
+<p>A common mistake many people make is using a Softmax where it isn’t appropriate.  Recall the Softmax formula:</p>
+
+\[p(z_i) = \hbox{softmax(z)}_{i} = \frac{e^{z_{i}}}{\sum_{0 \leq j \leq n-1} e^{z_{j}}}\]
+
+<p>In the Excel screenshot below, two different network outputs can produce the same Softmax output. This is weird, how does it happen?</p>
+
+<p><img src="/blog/images/fastai/image-20200221161504613.png" alt="image-20200221161504613"></p>
+
+<p>The sums of the exponentials for the two images (12.70 and 3.00) are dividing each of the exponentials and it happens that they come out with the exact same proportions for each category for both images.</p>
+
+<p>In Image 1 there is a large activation for category “fish” (2.07), but in image 2 the activation for “fish” is only 0.63. Image 1 likely contains a fish, but it’s possible that image 2 doesn’t contain any of the categories. Softmax has to pick something however so it takes the weak fish activation and makes it big. It’s also possible that image 1 contains a cat, fish, and a building.</p>
+
+<p>Put another way: many images are in fact <strong>multilabel</strong>, so Softmax is often a <em>dumb idea</em>, unless every one of your items has definitely at least one example of the thing you care about in it, and no items that have multiple examples in it. If an image doesn’t even have cat, dog, plane, fish, or building in it, <em>it still has to pick something!</em> Even if it has more than just one of the categories in it, <em>it will have to pick one of them</em>.</p>
+
+<p>(N.B <em>multiclass</em> means one valid label per image, while <em>multilabel</em> means multiple labels per image. <em>I always confuse these. <a href="https://scikit-learn.org/stable/modules/multiclass.html">Read this for a refresher.</a></em>)</p>
+
+<p>What do you do if there could there could be no things, or there could be more than one of these things? Instead you use a <strong>binary function</strong> where the output for each category in is:</p>
+
+\[B(z_i) = \frac{e^{z_i}}{1+e^{z_i}}\]
+
+<p>This treats every category independently. The network assigns each category with a probability between 0 and 1, corresponding to how likely it thinks the category is present in the input data. <em>(Note: the binary function is AKA the sigmoid function or logistic function).</em></p>
+
+<p>The output of a binary function with the same example would look like:</p>
+
+<p><img src="/blog/images/fastai/image-20200316215502538.png" alt="image-20200316215502538"></p>
+
+<p>See how each category gets its own probability and is independent from all the others.</p>
+
+<p>For image recognition, probably most of the time you <em>don’t want Softmax</em>. This habit comes from the fact that we all grew up with the luxury of ImageNet where the images are curated so that there is only one of each class in the image.</p>
+
+<p>What if you instead  added an additional category like “null”, “doesn’t exist”, “background”? This has been tried by researchers, but they found that it <em>doesn’t work</em>. The reason it doesn’t work is that we’d have to look for some set of features that correspond to “not cat/dog/plane/fish/building”. However this class of all things that are <em>not</em> something isn’t a kind of object so there isn’t some vector that can represent this.</p>
+
+<p>Creating a binary has/has-not for each class is much easier for the network to learn. According to Jeremy: <em>lots of well regarded papers make this mistake, so look out for it. If you suspect something does this, try replicating it without Softmax and you may just get a better result.</em></p>
+
+<p><strong>Example where Softmax is a good idea</strong>: language modelling -&gt; predict the next word. There can be only one word next.</p>
+
+<h3 id="multilabel-predictions">
+<a class="anchor" href="#multilabel-predictions" aria-hidden="true"><span class="octicon octicon-link"></span></a>MultiLabel Predictions</h3>
+
+<p>Now that we understand the concept, what would this look like in code and how would we modify the loss function with the binary output layer?</p>
+
+<p>Let’s first reproduce what Jeremy did in the Excel sheet in Python:</p>
+
+<p><img src="/blog/images/fastai/image-20200317115202323.png" alt="image-20200317115202323"></p>
+
+<p>Where the <code class="language-plaintext highlighter-rouge">logistic</code> function is what Jeremy calls ‘binary’ in his lecture.</p>
+
+<p>How do we interpret the outputs of <code class="language-plaintext highlighter-rouge">softmax</code> and <code class="language-plaintext highlighter-rouge">logistic</code> to get predictions? For Softmax layer the predicted label is the label with the highest output value. In code this is simply:</p>
+
+<p><img src="/blog/images/fastai/image-20200317125240118.png" alt="image-20200317125240118"></p>
+
+<p>For the <code class="language-plaintext highlighter-rouge">logistic</code> output we need to <em>threshold</em> the values to filter in only the largest outputs. This threshold is user defined; 0.2 is used in fastai lesson 3 so let’s just go with that. Code:</p>
+
+<p><img src="/blog/images/fastai/image-20200317130006099.png" alt="image-20200317130006099"></p>
+
+<h3 id="multilabel-loss-function">
+<a class="anchor" href="#multilabel-loss-function" aria-hidden="true"><span class="octicon octicon-link"></span></a>MultiLabel Loss Function</h3>
+
+<p>What about the loss function for a logistic output? Recall from the last lesson that Softmax outputs a <em>categorical probability distribution</em>. With the numbers from the example above this is:</p>
+
+<p><img src="/blog/images/fastai/image-20200324140255469.png" alt="image-20200324140255469"></p>
+
+<p>All the probabilities in a categorical distribution sum to 1 <em>(I denote this property with the blue colour)</em>. Recall also from last lesson that the loss function used for a categorical distribution is the <strong>cross-entropy</strong>.</p>
+
+<p>On the other hand, when we use the Binary/Logistic function the output isn’t a categorical distribution:</p>
+
+<p><img src="/blog/images/fastai/image-20200324140236986.png" alt="image-20200324140236986"></p>
+
+<p>The probabilities in this vector don’t all sum to 1 <em>(denoted with red)</em> because they are all independent of each other. These probabilities are each the probability that the label is present in the data, independent of all the other labels. If we take 1 minus these probabilities we’d get the probability of the label <em>not</em> being present in the data. We can think of each of these as a 2-state system of <em>present / not present</em> and expand the vector out to include the <em>not present</em> probability:</p>
+
+<p><img src="/blog/images/fastai/image-20200324140306897.png" alt="image-20200324140306897"></p>
+
+<p>Now we can see that each of the rows is itself a <em>categorical distribution</em> with two categories <em>(AKA Bernoulli distribution)</em>. Therefore to get the loss we can individually apply the cross-entropy loss to each of these distributions using target data (binary vector of <em>present / not present</em>  for each label), then take the average of them all. You do that for every sample in the batch and then take the averages of all those averages to get the loss for the batch.</p>
+
+<p>We don’t have to literally expand the vector out in practice, and can instead create a special case of the cross-entropy for this binary case, <code class="language-plaintext highlighter-rouge">binary_cross_entropy</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">binary_cross_entropy</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">targ</span> <span class="o">*</span> <span class="n">pred</span><span class="p">.</span><span class="n">log</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">targ</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pred</span><span class="p">).</span><span class="n">log</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>The loss would be:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">multilabel_loss</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">binary_cross_entropy</span><span class="p">(</span><span class="n">logistic</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">targ</span><span class="p">).</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Example use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span><span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">0.02</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.49</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.75</span><span class="p">,</span> <span class="mf">2.07</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">],</span> 
+                       <span class="p">[</span><span class="o">-</span><span class="mf">1.42</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.93</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.19</span><span class="p">,</span> <span class="mf">0.63</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.19</span><span class="p">]])</span>
+<span class="o">&gt;&gt;&gt;</span><span class="n">targ</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span>
+                        <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+                     
+<span class="o">&gt;&gt;&gt;</span><span class="n">multilabel_loss</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
+<span class="n">tensor</span><span class="p">(</span><span class="mf">0.4230</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This is a naive implementation of the loss, but it shows how it works. For a production implementation we need it to be more numerically stable (as discussed in last lesson) and do it all in log-space. We put the <code class="language-plaintext highlighter-rouge">logistic</code> function in log-space and then simplify things by fusing that with <code class="language-plaintext highlighter-rouge">binary_cross_entropy</code>. You can derive that the binary cross entropy with logistic function simplifies to:</p>
+
+\[l(x, y) = -yx + \log(1 + e^x)\]
+
+<p>Careful with the $e^x$, however, because it will overflow when $x$ isn’t even that large. To make things more numerically stable we employ the logsumexp trick again:</p>
+
+\[l(x, y) = m - yx + \log(e^{-m} + e^{x - m})\]
+
+<p>Where $m = \max(x, 0)$. As code, this is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">binary_cross_entropy_with_logits</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="n">max_val</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">max_val</span> <span class="o">-</span> <span class="n">out</span> <span class="o">*</span> <span class="n">targ</span> <span class="o">+</span> <span class="p">((</span><span class="o">-</span><span class="n">max_val</span><span class="p">).</span><span class="n">exp</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="n">out</span> <span class="o">-</span> <span class="n">max_val</span><span class="p">).</span><span class="n">exp</span><span class="p">()).</span><span class="n">log</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>The loss function is modified to:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">multilabel_loss</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">).</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We’ve now recreated the loss function <a href="https://pytorch.org/docs/stable/nn.html#bcewithlogitsloss"><code class="language-plaintext highlighter-rouge">BCEWithLogitsLoss</code></a> from PyTorch, which we can now use. Test with same example:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span><span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">0.02</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.49</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.75</span><span class="p">,</span> <span class="mf">2.07</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">],</span> 
+                       <span class="p">[</span><span class="o">-</span><span class="mf">1.42</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.93</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.19</span><span class="p">,</span> <span class="mf">0.63</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.19</span><span class="p">]])</span>
+<span class="o">&gt;&gt;&gt;</span><span class="n">targ</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span>
+                        <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+                     
+<span class="o">&gt;&gt;&gt;</span><span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">nn</span><span class="p">.</span><span class="n">BCEWithLogitsLoss</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span><span class="n">loss</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
+<span class="n">tensor</span><span class="p">(</span><span class="mf">0.4230</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><em>(Implementation in PyTorch (C++): <a href="https://github.com/pytorch/pytorch/blob/35fed93b1ef05175143f883c6f89f06c6dd9429b/aten/src/ATen/native/Loss.cpp#L96-L112">binary_cross_entropy_with_logits</a>)</em></p>
+
+<h2 id="build-a-learning-rate-finder">
+<a class="anchor" href="#build-a-learning-rate-finder" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build a Learning Rate Finder</h2>
+
+<p><em>Notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/05b_early_stopping.ipynb">05b_early_stopping.ipynb</a>, <a href="https://course.fast.ai/videos/?lesson=10&amp;t=3167">Jump to lesson 10 video</a></em></p>
+
+<h3 id="better-callback-cancellation">
+<a class="anchor" href="#better-callback-cancellation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Better Callback Cancellation</h3>
+
+<p>In the last implementation of the <code class="language-plaintext highlighter-rouge">Callback</code> and <code class="language-plaintext highlighter-rouge">Runner</code> classes, stopping the training prematurely (e.g. for early stopping) was handled by callbacks returning booleans or by a attribute called <code class="language-plaintext highlighter-rouge">stop</code> getting set and checked at some point. This is a bit inflexible and also not very readable.</p>
+
+<p>We can instead make use of <code class="language-plaintext highlighter-rouge">Exceptions</code> as a kind of control flow technique rather than just an error handling technique. You can subclass <code class="language-plaintext highlighter-rouge">Exception</code> to give it your own informative name without even changing its behaviour, like so:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">CancelTrainException</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">CancelEpochException</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">CancelBatchException</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span> <span class="k">pass</span>
+</code></pre></div></div>
+
+<p>Callbacks are free to raise <code class="language-plaintext highlighter-rouge">Exceptions</code>. The training loop can catch these and change control. This is a super neat and readable way that someone writing a callback can stop any of the three levels in the training loop from happening.</p>
+
+<h3 id="refactoring-callback-and-runner">
+<a class="anchor" href="#refactoring-callback-and-runner" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring Callback and Runner</h3>
+
+<p>Refactor/redesign the <code class="language-plaintext highlighter-rouge">Callback</code> and <code class="language-plaintext highlighter-rouge">Runner</code> class from last time. The <code class="language-plaintext highlighter-rouge">Callback</code> class now contains the ‘message passing’ (e.g. <code class="language-plaintext highlighter-rouge">self('begin_fit')</code> ) logic from before. This means that callback writers can now have control to override <code class="language-plaintext highlighter-rouge">__call__</code> themselves in special cases, for debugging etc.</p>
+
+<p>Here’s what the base class looks like now, alongside the default Training/Validation callback which holds the logic for the training or validating parts of the loop:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Callback</span><span class="p">():</span>
+    <span class="n">_order</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="k">def</span> <span class="nf">set_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="o">=</span><span class="n">run</span>
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="c1">## Get attributes from Runner object
+</span>        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    
+    <span class="o">@</span><span class="nb">property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="s">r'Callback$'</span><span class="p">,</span> <span class="s">''</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">__class__</span><span class="p">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">camel2snake</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="s">'callback'</span><span class="p">)</span>
+    
+    <span class="c1">## Refactored from before
+</span>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb_name</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">and</span> <span class="n">f</span><span class="p">():</span> <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+<span class="c1">## DEFAULT Callback for Training/Validation
+</span><span class="k">class</span> <span class="nc">TrainEvalCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_epochs</span><span class="o">=</span><span class="mf">0.</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_iter</span><span class="o">=</span><span class="mi">0</span>
+    
+    <span class="k">def</span> <span class="nf">after_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_epochs</span> <span class="o">+=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="p">.</span><span class="n">iters</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_iter</span>   <span class="o">+=</span> <span class="mi">1</span>
+        
+    <span class="k">def</span> <span class="nf">begin_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_epochs</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">epoch</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">model</span><span class="p">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">in_train</span><span class="o">=</span><span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">begin_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">model</span><span class="p">.</span><span class="nb">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">in_train</span><span class="o">=</span><span class="bp">False</span>
+</code></pre></div></div>
+
+<p>Notice how <code class="language-plaintext highlighter-rouge">Callback</code> and its subclasses can access attributes in <code class="language-plaintext highlighter-rouge">Runner</code> (set in the <code class="language-plaintext highlighter-rouge">set_runner</code> method) and even the <code class="language-plaintext highlighter-rouge">getattr</code> in <code class="language-plaintext highlighter-rouge">Callback</code> is overloaded to instead look in the <code class="language-plaintext highlighter-rouge">Runner</code>.</p>
+
+<p><em>The <code class="language-plaintext highlighter-rouge">__getattr__</code> overloading confused me for a while, until I realised how it actually works.  Quote from this <a href="https://stackoverflow.com/questions/2405590/how-do-i-override-getattr-in-python-without-breaking-the-default-behavior">Stackoverflow question</a>:</em></p>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">__getattr__</code> is only called as a last resort i.e. if there are no attributes in the instance that match the name. For instance, if you access <code class="language-plaintext highlighter-rouge">foo.bar</code>, then <code class="language-plaintext highlighter-rouge">__getattr__</code> will only be called if <code class="language-plaintext highlighter-rouge">foo</code> has no attribute called <code class="language-plaintext highlighter-rouge">bar</code>. If the attribute is one you don’t want to handle, raise <code class="language-plaintext highlighter-rouge">AttributeError</code></p>
+</blockquote>
+
+<p>Python looks for the attribute in the <code class="language-plaintext highlighter-rouge">Callback</code> first, if it can’t find it then it looks in the attributes of <code class="language-plaintext highlighter-rouge">Runner</code>.</p>
+
+<p>This kind of strong coupling / encapsulation breaking made me a bit nervous initially, but after thinking about it more I think its a special design that works well in this unique setting. <code class="language-plaintext highlighter-rouge">Runner</code> and <code class="language-plaintext highlighter-rouge">Callback</code> are kind of like ‘friend classes’ from C++, where two friend classes ‘share’ their attributes with each other, but are still separate classes. By doing it this way, callback writers can gain privileged access to internals of the training loop, and so can inject code into the loop as if they were directly editing the source code of <code class="language-plaintext highlighter-rouge">Runner</code>.</p>
+
+<p>Here is a skeleton of the code for <code class="language-plaintext highlighter-rouge">Runner</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Runner</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cb_funcs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">cbs</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">cbs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cbf</span> <span class="ow">in</span> <span class="n">listify</span><span class="p">(</span><span class="n">cb_funcs</span><span class="p">):</span>
+            <span class="n">cb</span> <span class="o">=</span> <span class="n">cbf</span><span class="p">()</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cb</span><span class="p">)</span>
+            <span class="n">cbs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">cbs</span> <span class="o">=</span> <span class="p">[</span><span class="n">TrainEvalCallback</span><span class="p">()]</span> <span class="o">+</span> <span class="n">cbs</span>
+
+    <span class="o">@</span><span class="nb">property</span>
+    <span class="k">def</span> <span class="nf">opt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>       <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">learn</span><span class="p">.</span><span class="n">opt</span>
+    <span class="o">@</span><span class="nb">property</span>
+    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>     <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">learn</span><span class="p">.</span><span class="n">model</span>
+    <span class="o">@</span><span class="nb">property</span>
+    <span class="k">def</span> <span class="nf">loss_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">learn</span><span class="p">.</span><span class="n">loss_func</span>
+    <span class="o">@</span><span class="nb">property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>      <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">learn</span><span class="p">.</span><span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">one_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+			<span class="c1">## INNER LOOP CODE
+</span>        <span class="k">except</span> <span class="n">CancelBatchException</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s">'after_cancel_batch'</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s">'after_batch'</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">all_batches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1">## EPOCH CODE
+</span>        <span class="k">except</span> <span class="n">CancelEpochException</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s">'after_cancel_epoch'</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">learn</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">epochs</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">learn</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">learn</span><span class="p">,</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">cbs</span><span class="p">:</span> <span class="n">cb</span><span class="p">.</span><span class="n">set_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s">'begin_fit'</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+                <span class="bp">self</span><span class="p">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">(</span><span class="s">'begin_epoch'</span><span class="p">):</span>
+					<span class="c1"># TRAIN
+</span>
+                <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span> 
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">(</span><span class="s">'begin_validate'</span><span class="p">):</span>
+                        <span class="c1"># VALIDATE
+</span>                <span class="bp">self</span><span class="p">(</span><span class="s">'after_epoch'</span><span class="p">)</span>
+            
+        <span class="k">except</span> <span class="n">CancelTrainException</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s">'after_cancel_train'</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s">'after_fit'</span><span class="p">)</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">learn</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb_name</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">cbs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">.</span><span class="n">_order</span><span class="p">):</span> 
+            <span class="n">res</span> <span class="o">=</span> <span class="n">cb</span><span class="p">(</span><span class="n">cb_name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">res</span>
+</code></pre></div></div>
+
+<p><em>I removed all the business code from the snippet, to save space and also so it could be implemented as an exercise.</em></p>
+
+<h3 id="lr_find-callback">
+<a class="anchor" href="#lr_find-callback" aria-hidden="true"><span class="octicon octicon-link"></span></a>LR_Find Callback</h3>
+
+<p>The learning rate finder is the work horse from part 1 of the fastai course. Let’s look at how to implement it and code that up as a callback.</p>
+
+<p><br></p>
+
+<p><strong>LR_Find Algorithm Outline:</strong></p>
+
+<ol>
+  <li>Define upper and lower bounds for the learning rate and a number of steps. Lower should be small like <code class="language-plaintext highlighter-rouge">1e-10</code> and the upper should be very layer like <code class="language-plaintext highlighter-rouge">1e+2</code>. Numbers of steps should be something like 100.</li>
+  <li>Start training the network with a learning rate starting at the lower bound.</li>
+  <li>After every batch update, exponentially increase the learning rate and record the loss.</li>
+  <li>If the learning rate hits the upper bound, or the loss ‘explodes’ then stop the process.</li>
+  <li>After the finder has finished, plot the loss versus learning rate so we can eyeball the best learning rate.</li>
+</ol>
+
+<p>To exponentially increase the learning rate using the formula:</p>
+
+\[lr_i = lr_{min} \left(\frac{lr_{max}}{lr_{min}}\right)^{i/i_{max}}\]
+
+<p>‘Exploding’ loss can be defined as some factor (e.g. 10) times the lowest loss value recorded.</p>
+
+<p>The code for the <code class="language-plaintext highlighter-rouge">LR_Find</code> callback is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">LR_Find</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">_order</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">min_lr</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">max_lr</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">max_iter</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">min_lr</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">max_lr</span> <span class="o">=</span> <span class="n">max_iter</span><span class="p">,</span> <span class="n">min_lr</span><span class="p">,</span> <span class="n">max_lr</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">best_loss</span> <span class="o">=</span> <span class="mf">1e9</span>
+        
+    <span class="k">def</span> <span class="nf">begin_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_iter</span> <span class="o">/</span> <span class="bp">self</span><span class="p">.</span><span class="n">max_iter</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">min_lr</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">max_lr</span> <span class="o">/</span> <span class="bp">self</span><span class="p">.</span><span class="n">min_lr</span><span class="p">)</span> <span class="o">**</span> <span class="n">pos</span>
+        <span class="k">for</span> <span class="n">pg</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">opt</span><span class="p">.</span><span class="n">param_groups</span><span class="p">:</span> 
+            <span class="n">pg</span><span class="p">[</span><span class="s">'lr'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lr</span>
+            
+    <span class="k">def</span> <span class="nf">after_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">n_iter</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="p">.</span><span class="n">max_iter</span> <span class="ow">or</span> <span class="bp">self</span><span class="p">.</span><span class="n">loss</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="p">.</span><span class="n">best_loss</span><span class="o">*</span><span class="mi">10</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CancelTrainException</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">loss</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="p">.</span><span class="n">best_loss</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="p">.</span><span class="n">best_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">loss</span>
+</code></pre></div></div>
+
+<p>Plot of loss versus learning rate:</p>
+
+<p><img src="/blog/images/fastai/image-20200319192323184.png" alt="image-20200319192323184"></p>
+
+<p><em>This <a href="https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder/">PyImageSearch blog post</a> is an excellent resource for learning more about LR Find and also uses exponential smoothing in the loss recordings too.</em></p>
+
+<h2 id="build-a-cnn-with-cuda">
+<a class="anchor" href="#build-a-cnn-with-cuda" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build a CNN (with Cuda!)</h2>
+
+<p><em>Notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/06_cuda_cnn_hooks_init.ipynb">06_cuda_cnn_hooks_init.ipynb</a>, Jump to <a href="https://course.fast.ai/videos/?lesson=10&amp;t=3641">lesson 10 video</a></em></p>
+
+<p>Let’s build a CNN for doing the MNIST problem using PyTorch and CUDA. Our simple CNN is a sequential model that contains a bunch of stride-2 convolutions, an average pooling, flatten, then a linear layer.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">get_cnn_model</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nn</span><span class="p">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">Lambda</span><span class="p">(</span><span class="n">mnist_resize</span><span class="p">),</span>
+        <span class="c1">#         ni,nf,ksize
+</span>        <span class="n">nn</span><span class="p">.</span><span class="n">Conv2d</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="c1"># 8x14x14
+</span>        <span class="n">nn</span><span class="p">.</span><span class="n">Conv2d</span><span class="p">(</span> <span class="mi">8</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="c1"># 16x7x7
+</span>        <span class="n">nn</span><span class="p">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="c1"># 32x4x4
+</span>        <span class="n">nn</span><span class="p">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="c1"># 32x2x2
+</span>        <span class="n">nn</span><span class="p">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>    <span class="c1"># 32x1
+</span>        <span class="n">Lambda</span><span class="p">(</span><span class="n">flatten</span><span class="p">),</span>            <span class="c1"># 32
+</span>        <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span><span class="n">data</span><span class="p">.</span><span class="n">c</span><span class="p">)</span>        <span class="c1"># 10
+</span>    <span class="p">)</span>
+</code></pre></div></div>
+
+<p>The dimensions of the data as it flows through the model are provided in the comments. <code class="language-plaintext highlighter-rouge">AdaptiveAvgPooling</code> downsamples the data using an average.</p>
+
+<ul>
+  <li><em>See: <a href="https://stackoverflow.com/questions/58692476/what-is-adaptive-average-pooling-and-how-does-it-work">What is adapative average pooling?</a></em></li>
+  <li><em>Also see: <a href="https://forums.fast.ai/t/lesson-10-discussion-wiki-2019/42781/531">How Convolutions Work: A Mini-Review</a></em></li>
+</ul>
+
+<p>Original data is vectors of 784 so they need to be reshaped to 28x28 to go into the convolution layers. We need to write a function <code class="language-plaintext highlighter-rouge">mnist_resize</code> to do this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">mnist_resize</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># batchsize, num_channels, height, width
+</span>    <span class="k">return</span> <span class="n">x</span><span class="p">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In order to turn helper functions into ‘layers’ that we can pass into <code class="language-plaintext highlighter-rouge">nn.Sequential</code>, we can create simple wrapper layer <code class="language-plaintext highlighter-rouge">class Lambda(nn.Module)</code> that takes this function and calls it in its <code class="language-plaintext highlighter-rouge">forward</code> method.  This is used in the code above for calling <code class="language-plaintext highlighter-rouge">mnist_resize</code> and <code class="language-plaintext highlighter-rouge">flatten</code>.</p>
+
+<p><em>Training this for one epoch on my laptop CPU took 7.14 seconds.</em></p>
+
+<p>We need to speed this up using the GPU! To get started we need to prepare PyTorch to use the GPU. First check that Cuda is available to use with <code class="language-plaintext highlighter-rouge">torch.cuda.is_available()</code>, which should return <code class="language-plaintext highlighter-rouge">True</code>. Then set the device in PyTorch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">device</span><span class="p">(</span><span class="s">'cuda'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>	<span class="c1"># NB assumes only 1 GPU
+</span><span class="n">torch</span><span class="p">.</span><span class="n">cuda</span><span class="p">.</span><span class="n">set_device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>To run on the GPU we need to do two things:</p>
+
+<ol>
+  <li>Put the model on the GPU, i.e. the model’s parameters.</li>
+  <li>Put the inputs and the loss function on the GPU, i.e. the things that come out of the dataloaders.</li>
+</ol>
+
+<p>We can implement this with a callback:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">CudaCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">model</span><span class="p">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">begin_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>	
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">xb</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">yb</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">xb</span><span class="p">.</span><span class="n">cuda</span><span class="p">(),</span> <span class="bp">self</span><span class="p">.</span><span class="n">yb</span><span class="p">.</span><span class="n">cuda</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>At the beginning of the fit, put the model on the GPU. Before each batch starts, put the batch data on the GPU.</p>
+
+<p><em>Adding this in training for 3 epochs took 7.12 s on my laptop - a nice 3x speedup. :)</em></p>
+
+<h3 id="some-refactoring">
+<a class="anchor" href="#some-refactoring" aria-hidden="true"><span class="octicon octicon-link"></span></a>Some Refactoring</h3>
+
+<p>First we can regroup all the conv/ReLU in a single function because they are always called together.</p>
+
+<p>Next to refactor is the batch resizing for MNIST. This is hardcoded in the model, but we need something more general that could be used on other datasets. Of course this can be implemented as a callback! Make a callback <code class="language-plaintext highlighter-rouge">BatchTransformXCallback</code> for doing ‘transformations’ to the data before it goes into the model. Resize is one such possible transformation.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">BatchTransformXCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tfm</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">tfm</span> <span class="o">=</span> <span class="n">tfm</span> <span class="c1"># stores a transform
+</span>    <span class="k">def</span> <span class="nf">begin_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">xb</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">tfm</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">xb</span><span class="p">)</span> <span class="c1"># transform the batch
+</span></code></pre></div></div>
+
+<p>So we have a resize or <code class="language-plaintext highlighter-rouge">view</code> transform to perform for each batch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">view_tfm</span><span class="p">(</span><span class="o">*</span><span class="n">size</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="p">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span><span class="o">+</span><span class="n">size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_inner</span>
+
+<span class="n">mnist_view</span> <span class="o">=</span> <span class="n">view_tfm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">)</span>
+<span class="n">cbfs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">BatchTransformXCallback</span><span class="p">,</span> <span class="n">mnist_view</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h3 id="discussion-on-cnn-kernel-sizes">
+<a class="anchor" href="#discussion-on-cnn-kernel-sizes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Discussion on CNN Kernel Sizes</h3>
+
+<p><em>(<a href="https://youtu.be/HR0lt1hlR6U?t=4106">Jump_to lesson 10 video</a>)</em></p>
+
+<p>First conv layer on imagenet networks typically have 7x7 or 5x5 size kernels, while the rest of the conv layers use 3x3 kernels. Why is that?</p>
+
+<p>If we just focus on MNIST, the first layer of the MNIST-CNN we only have a <em>single channel image</em>. We need to be mindful of what’s going on when we apply a kernel to this. If we have 8 3x3 filters then for a single point in the image we are converting 9 pixels (from 3x3 kernel) into a vector of 8 numbers (from 8 filters). We aren’t gaining anything from that, it’s basically shuffling the numbers around. For the first conv layer when we just have 1 or 3 channels people use a larger kernel size such as 7x7 or 5x5 in order to capture more information.</p>
+
+<ul>
+  <li>8 3x3 filters 1 channel =&gt; 9 -&gt; 8</li>
+  <li>8 3x3 filters 3 channels =&gt; 27 -&gt; 8</li>
+  <li>8 5x5 filters 1 channel =&gt;  25 -&gt; 8</li>
+  <li>8 5x5 filters 3 channels =&gt; 75 -&gt; 8</li>
+  <li>8 7x7 filters 1 channel =&gt; 49 -&gt; 8</li>
+  <li>8 7X7 filters 3 channels =&gt; 147 -&gt; 8</li>
+</ul>
+
+<p>Later conv layers have more ‘channels’ so that isn’t an issue anymore. The deeper layers are typically 3x3.</p>
+
+<p><em>Here are some useful discussions on this part of the lecture that helped me grok what Jeremy meant here: <a href="https://forums.fast.ai/t/help-me-understand-lesson-10-part-2/58494/33">fastai forum</a>, <a href="https://twitter.com/radekosmulski/status/1195445514294222854">twitter</a>.</em></p>
+
+<h2 id="looking-inside-the-model">
+<a class="anchor" href="#looking-inside-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Looking Inside the Model</h2>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=4353">Jump_to lesson 10 video</a></em></p>
+
+<p>We want to look inside of the model while it is training and see how the parameters are changing over time. Are they behaving themselves? Are they actually learning anything? Are there vanishing or exploding gradients?</p>
+
+<h3 id="pytorch-hooks">
+<a class="anchor" href="#pytorch-hooks" aria-hidden="true"><span class="octicon octicon-link"></span></a>PyTorch Hooks</h3>
+
+<p><em>Hooks</em> are PyTorch’s version of callbacks, which are called inside of the model, and can be added, or <em>registered</em>, to any <code class="language-plaintext highlighter-rouge">nn.Module</code>. Hooks allow you to inject a function into the model that that is executed in either the forward pass (forward hook) or backward pass (backward hook). With hooks you can inspect / modify the output and <code class="language-plaintext highlighter-rouge">grad</code> of a layer. The hook can be a forward hook or a backward book.</p>
+
+<p>A hook is attached to a layer, and needs to have a function that takes three arguments: module, input, output. Here we store the mean and std of the output in the correct position of our list.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Hook</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">hook</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">hook</span><span class="p">.</span><span class="n">remove</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">remove</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">append_stats</span><span class="p">(</span><span class="n">hook</span><span class="p">,</span> <span class="n">mod</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">outp</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">hook</span><span class="p">,</span><span class="s">'stats'</span><span class="p">):</span> <span class="n">hook</span><span class="p">.</span><span class="n">stats</span> <span class="o">=</span> <span class="p">([],[],[])</span>
+    <span class="n">means</span><span class="p">,</span><span class="n">stds</span><span class="p">,</span><span class="n">hists</span> <span class="o">=</span> <span class="n">hook</span><span class="p">.</span><span class="n">stats</span>
+    <span class="n">means</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">outp</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">mean</span><span class="p">().</span><span class="n">cpu</span><span class="p">())</span>
+    <span class="n">stds</span> <span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">outp</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">std</span><span class="p">().</span><span class="n">cpu</span><span class="p">())</span>
+    <span class="n">hists</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">outp</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">cpu</span><span class="p">().</span><span class="n">histc</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span> <span class="c1">#histc isn't implemented on the GPU
+</span></code></pre></div></div>
+
+<p>It’s very important to remove the hooks when they are deleted, otherwise there will be references kept and the memory won’t be properly released when your model is deleted.</p>
+
+<p><code class="language-plaintext highlighter-rouge">Hooks</code> class that contains several hooks:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Hooks</span><span class="p">(</span><span class="n">ListContainer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span> <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">([</span><span class="n">Hook</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span>
+    <span class="k">def</span> <span class="nf">__exit__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span> <span class="bp">self</span><span class="p">.</span><span class="n">remove</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="bp">self</span><span class="p">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">remove</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__delitem__</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span> <span class="n">h</span><span class="p">.</span><span class="n">remove</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Having given an <code class="language-plaintext highlighter-rouge">__enter__</code> and <code class="language-plaintext highlighter-rouge">__exit__</code> method to our <code class="language-plaintext highlighter-rouge">Hooks</code> class, we can use it as a context manager. This makes sure that onces we are out of the <code class="language-plaintext highlighter-rouge">with</code> block, all the hooks have been removed and aren’t there to pollute our memory.</p>
+
+<h3 id="current-state-of-affairs">
+<a class="anchor" href="#current-state-of-affairs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Current State of Affairs</h3>
+
+<p>Use the <code class="language-plaintext highlighter-rouge">append_stats</code> hook to look at the mean and std of the parameters in each of the layers.</p>
+
+<p>The layer means:</p>
+
+<p><img src="/blog/images/fastai/image-20200322204846254.png" alt="image-20200322204846254"></p>
+
+<p>This looks awful. At the beginning of the training the values increase exponentially and then suddenly crash, repeatedly. It’s not training anything when this is happening. Eventually they settle down into some range and start to train. However are we sure that all the parameters are getting back to reasonable places after these ‘crashes’? Maybe the vast majority of them have zero gradients or are zero. Likely that this awful behaviour at the start of training is leaving the model in a really sad state.</p>
+
+<p>The layer standard deviations:</p>
+
+<p><img src="/blog/images/fastai/Sun,%2022%20Mar%202020%20161357.png" alt="img"></p>
+
+<p>Subsequent layers standard deviations get closer and closer to 0. Later layers are basically getting 0 gradient.</p>
+
+<h3 id="better-initialization">
+<a class="anchor" href="#better-initialization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Better Initialization</h3>
+
+<p>Use Kaiming init:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">nn</span><span class="p">.</span><span class="n">Sequential</span><span class="p">):</span>
+        <span class="n">init</span><span class="p">.</span><span class="n">kaiming_normal_</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">bias</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">zero_</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Here are the layer means and stds now:</p>
+
+<p><img src="/blog/images/fastai/image-20200322154342643.png" alt="image-20200322154342643"></p>
+
+<p>This is looking a lot better. No longer has the repeated exponential-crash pattern anymore. The standard deviations are all much closer to 1.</p>
+
+<p>However these values are just aggregates of the layer parameters, so they don’t give us the full picture about how all the parameters are behaving. Rather than look at a single number we’d like to look at the distribution. To do that we can look at how the histogram of the  parameters changes over time.</p>
+
+<p>Here is a histogram of the activations, binned between 0 (relu) and 10 with 40 bins:</p>
+
+<p><img src="/blog/images/fastai/image-20200323212842850.png" alt="image-20200323212842850"></p>
+
+<p>What we find is that even with Kaiming init, with the high learning rate we still get the same exponential-crash behaviour. The biggest concern is the amount of mass at the bottom of the histogram at 0.</p>
+
+<p>Here is a plot of the percentage of activations that are 0 or nearly 0:</p>
+
+<p><img src="/blog/images/fastai/image-20200323213326290.png" alt="image-20200323213326290"></p>
+
+<p>This is not good. In the last layer nearly 90% of the activations are actually 0. If you were training your model like this, it could appear like it was learning something, but you could be leaving a lot of performance on the table by wasting 90% of your activations.</p>
+
+<h3 id="generalized-relu">
+<a class="anchor" href="#generalized-relu" aria-hidden="true"><span class="octicon octicon-link"></span></a>Generalized ReLU</h3>
+
+<p>Let’s try to fix this so we can train a nice high learning rate and not have this happen. The main thing we will use to fix this is a <code class="language-plaintext highlighter-rouge">GeneralRelu</code> layer, where you can specify:</p>
+
+<ul>
+  <li>An amount to subtract from the ReLU. (In earlier lesson it seemed that subtracting 0.5 from the ReLU might be a good idea.)</li>
+  <li>Use <em>leaky ReLU</em>.</li>
+  <li>Also the option of a maximum value.</li>
+</ul>
+
+<p>Code for that:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">GeneralRelu</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leak</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxv</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">leak</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">sub</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">maxv</span> <span class="o">=</span> <span class="n">leak</span><span class="p">,</span><span class="n">sub</span><span class="p">,</span><span class="n">maxv</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> 
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="n">leaky_relu</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">leak</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">leak</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">F</span><span class="p">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">sub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">x</span><span class="p">.</span><span class="n">sub_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">sub</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">maxv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">x</span><span class="p">.</span><span class="n">clamp_max_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">maxv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></div>
+
+<p>Retrain just like before with Kaiming init, and a <code class="language-plaintext highlighter-rouge">GeneralRelu</code> with parameters:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">leak=0.1</code></li>
+  <li><code class="language-plaintext highlighter-rouge">sub=0.4</code></li>
+  <li><code class="language-plaintext highlighter-rouge">maxv=6.0</code></li>
+</ul>
+
+<p>The layer means and standard deviations over time:</p>
+
+<p><img src="/blog/images/fastai/image-20200323214146662.png" alt="image-20200323214146662"></p>
+
+<p>Looking better than before - means are around 0 and the stds are around 1 and are also a lot smoother looking.</p>
+
+<p>Plot the histogram of the activations again, this time from -7 to 7 (leaky relu):</p>
+
+<p><img src="/blog/images/fastai/image-20200323213749046.png" alt="image-20200323213749046"></p>
+
+<p>This is <em>way better</em>! It’s using the full richness of the possible activations. There’s not crashing of values.</p>
+
+<p>How many of the activations are at or around zero:</p>
+
+<p><img src="/blog/images/fastai/image-20200323213810177.png" alt="image-20200323213810177"></p>
+
+<p>The majority of the activations are <strong>not zero</strong>.</p>
+
+<p>If we are careful about initialization, the ReLU, use one-cycle training, and a nice high learning rate of 0.9 we can achieve 98%-99% validation set accuracy after 8 epochs.</p>
+
+<h2 id="normalization">
+<a class="anchor" href="#normalization" aria-hidden="true"><span class="octicon octicon-link"></span></a>Normalization</h2>
+
+<p><em>Notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/07_batchnorm.ipynb">07_batchnorm.ipynb</a></em></p>
+
+<h3 id="batch-norm">
+<a class="anchor" href="#batch-norm" aria-hidden="true"><span class="octicon octicon-link"></span></a>Batch Norm</h3>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=6018">Jump_to lesson 10 video</a></em></p>
+
+<p>Up to this point we have learned how to initialize the values to get better results. To get even better results we need to use <em>normalization</em>. The most common form of normalization is <em>Batch Normalization</em>. This was covered in Lesson 6, but here we implement it from scratch.</p>
+
+<p><strong>Algorithm</strong> from the <a href="https://arxiv.org/abs/1502.03167">BatchNorm paper</a>:</p>
+
+<p><img src="/blog/images/fastai/image-20200321122846391.png" alt="image-20200321122846391"></p>
+
+<p>It normalizes the batch and scales and shifts it by $\gamma$ and $\beta$, which are <em>learnable parameters</em> in the model.</p>
+
+<p>Here is that as code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">BatchNorm</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">mom</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="c1"># NB: pytorch bn mom is opposite of what you'd expect
+</span>        <span class="bp">self</span><span class="p">.</span><span class="n">mom</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">mom</span><span class="p">,</span> <span class="n">eps</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">mults</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">ones</span> <span class="p">(</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">adds</span>  <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'vars'</span><span class="p">,</span>  <span class="n">torch</span><span class="p">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'means'</span><span class="p">,</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">update_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c1"># x has dims (nb, nf, h, w)
+</span>        <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">mean</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">var</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">means</span><span class="p">.</span><span class="n">lerp_</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="nb">vars</span><span class="p">.</span><span class="n">lerp_</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span><span class="p">,</span><span class="n">v</span>
+        
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span> <span class="n">m</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">update_stats</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">m</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">means</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="nb">vars</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="bp">self</span><span class="p">.</span><span class="n">eps</span><span class="p">).</span><span class="n">sqrt</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">*</span><span class="bp">self</span><span class="p">.</span><span class="n">mults</span> <span class="o">+</span> <span class="bp">self</span><span class="p">.</span><span class="n">adds</span>
+</code></pre></div></div>
+
+<p><br>
+<strong>Let’s understand what this code is doing:</strong></p>
+
+<ul>
+  <li>
+    <p>Instead of $\gamma$ and $\beta$, use descriptive names - <code class="language-plaintext highlighter-rouge">mults</code> and <code class="language-plaintext highlighter-rouge">adds</code>. There is a <code class="language-plaintext highlighter-rouge">mult</code> and an <code class="language-plaintext highlighter-rouge">add</code> for each filter coming into the BatchNorm. These are initialized to 1 and 0, respectively.</p>
+  </li>
+  <li>
+    <p><strong>At training time</strong>, it normalizes the batch data using the mean and variance of the batch. The mean calculation is: <code class="language-plaintext highlighter-rouge">x.mean((0,2,3), ...)</code>. The dimensions of <code class="language-plaintext highlighter-rouge">x</code> are <code class="language-plaintext highlighter-rouge">(nb, nf, h, w)</code>. So <code class="language-plaintext highlighter-rouge">(0,2,3)</code> tells it to take the mean over the batches, heights and widths, leaving <code class="language-plaintext highlighter-rouge">nf</code> numbers. Same thing with the variance.</p>
+  </li>
+  <li>
+    <p>However, <strong>at inference time</strong> every batch needs to be normalized with the same means and variances. If we didn’t do this, then if we get a totally different kind of image then it would remove all the things that are interesting about it.</p>
+  </li>
+  <li>
+    <p>While we are training, we keep an <em>exponentially weighted moving average</em> of the means and variances. The <code class="language-plaintext highlighter-rouge">lerp_</code> method updates the moving average. These averages are what are used at inference time.</p>
+  </li>
+  <li>
+    <p>These averages are stored in special way using:  <code class="language-plaintext highlighter-rouge">self.register_buffer</code>. This comes from <code class="language-plaintext highlighter-rouge">nn.Module</code>. It works the same as a normal PyTorch tensor, except it moves the values to the GPU when the model is moved there.  Also, we need to store these values the same way we store other parameters. This will save the numbers when the model is saved. We need to do this when we have ‘helper variables’ in a layer that aren’t parameters of the model.</p>
+  </li>
+  <li>
+    <p>Another thing to note: if you use BatchNorm then the layer before doesn’t need to have a bias because BatchNorm has a bias already.</p>
+  </li>
+</ul>
+
+<p><br>
+<strong>Exponentially Weighted Moving Average (EWMA)</strong></p>
+
+<p>The EWMA is a moving average that gives most weighting to recent values and exponentially decaying weight to older values. It allows you to keep a running average that is robust to outliers and requires that we keep track of only one number. The formula is:</p>
+
+\[\mu_t = \alpha x_t + (1 - \alpha)\mu_{t-1}\]
+
+<p>Where $\alpha$ is called the <em>momentum</em>, which represents the degree of weight decrease. A higher value discounts older observations faster.</p>
+
+<p>In PyTorch, EWMA is called ‘linear interpolation’ and uses the function <code class="language-plaintext highlighter-rouge">means.lerp_(m, mom)</code>. In PyTorch the momentum in both <code class="language-plaintext highlighter-rouge">lerp</code> and in PyTorch’s BatchNorm uses opposite convention from everyone else, so you have to subtract value from 1 before you pass it. The default momentum in our code is <code class="language-plaintext highlighter-rouge">0.1</code>.</p>
+
+<p><em>(<a href="https://www.youtube.com/watch?v=lAq96T8FkTw">6 minute video</a> with more info on EWMA)</em></p>
+
+<p><br>
+<strong>Results</strong></p>
+
+<p>Training on MNIST with CNN, Kaiming init, BatchNorm, 1 epoch:</p>
+
+<p><img src="/blog/images/fastai/Sun,%2022%20Mar%202020%20002505.png" alt="img"></p>
+
+<p>Working well. Means are all around 0 and the variances are all around 1.</p>
+
+<p><br>
+<strong>BatchNorm Deficiencies</strong></p>
+
+<p>BatchNorm works great in most places, but it can’t be applied to online learning tasks, where we learn after every item. The problem is that the variance of one data point is infinite. You could also get the same problem if a single batch of any size contained all the same values. BatchNorm doesn’t work well for small batch sizes (like 2). This prohibits people from exploring higher-capacity models that would be limited by memory. It also can’t be used with RNNs.</p>
+
+<p><em>tl;dr</em> We can’t use BatchNorm with small batchsizes or with RNNs.</p>
+
+<h3 id="layer-norm">
+<a class="anchor" href="#layer-norm" aria-hidden="true"><span class="octicon octicon-link"></span></a>Layer Norm</h3>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=6717">Jump_to lesson 10 video</a></em></p>
+
+<p>LayerNorm is just like BatchNorm except instead of averaging over <code class="language-plaintext highlighter-rouge">(0,2,3)</code> we average over <code class="language-plaintext highlighter-rouge">(1,2,3)</code>, and this doesn’t use the running average. <strong>Used in RNNs</strong>. It is not even nearly as good as BatchNorm, but for RNNs it is something we want to use because we can’t use BatchNorm.</p>
+
+<p>From <a href="https://arxiv.org/abs/1607.06450">the LayerNorm paper</a>: “<em>batch normalization cannot be applied to online learning tasks or to extremely large distributed models where the minibatches have to be small</em>”.</p>
+
+<p>The difference with BatchNorm is:</p>
+
+<ol>
+  <li>It doesn’t keep a moving average.</li>
+  <li>It doesn’t average over the batches dimension, but over the hidden/channel dimension, so it’s independent of the batch size.</li>
+</ol>
+
+<p>Code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">LayerNorm</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">__constants__</span> <span class="o">=</span> <span class="p">[</span><span class="s">'eps'</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">mult</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">add</span>  <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">mean</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">var</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">v</span><span class="o">+</span><span class="bp">self</span><span class="p">.</span><span class="n">eps</span><span class="p">).</span><span class="n">sqrt</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">*</span><span class="bp">self</span><span class="p">.</span><span class="n">mult</span> <span class="o">+</span> <span class="bp">self</span><span class="p">.</span><span class="n">add</span>
+</code></pre></div></div>
+
+<p><em>Thought experiment: can this distinguish foggy days from sunny days (assuming you’re using it before the first conv)?</em></p>
+
+<ul>
+  <li>Foggy days are less bright and have less contrast (lower variance).</li>
+  <li>LayerNorm would normalize the foggy and sunny days to have the same mean and variance.</li>
+  <li>Answer: <em>no you couldn’t.</em>
+</li>
+</ul>
+
+<h3 id="instance-norm">
+<a class="anchor" href="#instance-norm" aria-hidden="true"><span class="octicon octicon-link"></span></a>Instance Norm</h3>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=7114">Jump_to lesson 10 video</a></em></p>
+
+<p><a href="https://arxiv.org/pdf/1803.08494.pdf">Instance Norm paper</a></p>
+
+<p>The problem with LayerNorm is that it combines all channels into one. Instance Norm is a better version of LayerNorm where channels aren’t combined together. The key difference between <em>instance</em> and batch normalization is that the latter applies the normalization to a whole batch of images instead for single ones.</p>
+
+<p>Code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">InstanceNorm</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">__constants__</span> <span class="o">=</span> <span class="p">[</span><span class="s">'eps'</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">mults</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">ones</span> <span class="p">(</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">adds</span>  <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">mean</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">var</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">v</span><span class="o">+</span><span class="bp">self</span><span class="p">.</span><span class="n">eps</span><span class="p">).</span><span class="n">sqrt</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">*</span><span class="bp">self</span><span class="p">.</span><span class="n">mults</span> <span class="o">+</span> <span class="bp">self</span><span class="p">.</span><span class="n">adds</span>
+</code></pre></div></div>
+
+<p><strong>Used for Style transfer, not for classification.</strong> It’s included here as another example of normalization. You need to understand what it is doing in available to understand is it something that might work.</p>
+
+<h3 id="group-norm">
+<a class="anchor" href="#group-norm" aria-hidden="true"><span class="octicon octicon-link"></span></a>Group Norm</h3>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=7213">Jump_to lesson 10 video</a></em></p>
+
+<p>The <em>Group Norm</em> <a href="https://arxiv.org/pdf/1803.08494.pdf">paper</a> proposes a layer that divides channels into <em>groups</em> and normalizes the features within each group. GroupNorm is independent of batch sizes and it does not exploit the batch dimension, like how BatchNorm does. GroupNorm stays stable over a wide range of batch sizes. GroupNorm is supposed to solve the problem of BatchNorm with small batches.</p>
+
+<p>It gets close to BatchNorm performance for ‘normal’ batch sizes in image classification, and beats BatchNorm with smaller batch sizes. GroupNorm works very well in large memory tasks such as: object detection, segmentation, and high resolution images.</p>
+
+<p>It isn’t implemented in the lecture, but PyTorch has it already:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">GroupNorm</span><span class="p">(</span><span class="n">num_groups</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># Separate 6 channels into 3 groups
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">GroupNorm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># Separate 6 channels into 6 groups (equivalent with InstanceNorm)
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">GroupNorm</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># Put all 6 channels into a single group (equivalent with LayerNorm)
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">GroupNorm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># Activating the module
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">output</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p><em>(See this <a href="https://towardsdatascience.com/an-alternative-to-batch-normalization-2cee9051e8bc">blog post</a> for more details. This <a href="https://mlexplained.com/2018/11/30/an-overview-of-normalization-methods-in-deep-learning/">blog post</a> covers even more kinds of initialization.)</em></p>
+
+<h3 id="summary-of-the-norms-with-one-picture">
+<a class="anchor" href="#summary-of-the-norms-with-one-picture" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary of the Norms with One Picture</h3>
+
+<p><img src="/blog/images/fastai/1_h_lxoBQhpNDm-w7taHN0zA.png" alt="img"></p>
+
+<p><em>(<a href="https://arxiv.org/pdf/1803.08494.pdf">Source</a>)</em></p>
+
+<p>In this diagram the height and width dimensions are flattened to 1D, so a single image is a ‘column’ in this diagram.</p>
+
+<h3 id="running-batch-norm-fixing-small-batch-size-problem">
+<a class="anchor" href="#running-batch-norm-fixing-small-batch-size-problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running Batch Norm: Fixing Small Batch Size Problem</h3>
+
+<p><em><a href="https://youtu.be/HR0lt1hlR6U&amp;t=7516">Jump_to lesson 10 video</a></em></p>
+
+<p>The normalizations above are attempts to work around the problem that you can’t use small batch sizes or RNNs with BatchNorm. But none of them are as good as BatchNorm.</p>
+
+<p><em>Here Jeremy proposes a novel solution to solve the batch size problem, but not the RNN problem. This algorithm is called <strong>Running BatchNorm</strong>.</em></p>
+
+<p><br>
+<strong>Algorithm idea</strong>:</p>
+
+<ol>
+  <li>In the forward function, don’t divide by the batch standard deviation or subtract the batch mean, but instead use the moving average statistics <em>at training time</em> as well, not just at inference time.</li>
+  <li>Why does this help? Let’s say you have batch size of 2. Then from time to time you may get a batch where the items are very similar and the variance is very close to 0. But that’s fine, because you are only taking 0.1 of that, and 0.9 of what you had before.</li>
+</ol>
+
+<p><br>
+<strong>Code</strong>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">RunningBatchNorm</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">mom</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">mom</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">mom</span><span class="p">,</span><span class="n">eps</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">mults</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">ones</span> <span class="p">(</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">adds</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'sums'</span><span class="p">,</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'sqrs'</span><span class="p">,</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'batch'</span><span class="p">,</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'count'</span><span class="p">,</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'step'</span><span class="p">,</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">))</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s">'dbias'</span><span class="p">,</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">update_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">bs</span><span class="p">,</span><span class="n">nc</span><span class="p">,</span><span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">sums</span><span class="p">.</span><span class="n">detach_</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">sqrs</span><span class="p">.</span><span class="n">detach_</span><span class="p">()</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">).</span><span class="nb">sum</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">count</span><span class="p">.</span><span class="n">new_tensor</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="o">/</span><span class="n">nc</span><span class="p">)</span>
+        <span class="n">mom1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="p">.</span><span class="n">mom</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bs</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">mom1</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">dbias</span><span class="p">.</span><span class="n">new_tensor</span><span class="p">(</span><span class="n">mom1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">sums</span><span class="p">.</span><span class="n">lerp_</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">mom1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">sqrs</span><span class="p">.</span><span class="n">lerp_</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">mom1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">count</span><span class="p">.</span><span class="n">lerp_</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">mom1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">dbias</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">dbias</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="p">.</span><span class="n">mom1</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="p">.</span><span class="n">mom1</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">batch</span> <span class="o">+=</span> <span class="n">bs</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">training</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">update_stats</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">sums</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">sums</span>
+        <span class="n">sqrs</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">sqrs</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">count</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">step</span><span class="o">&lt;</span><span class="mi">100</span><span class="p">:</span>
+            <span class="n">sums</span> <span class="o">=</span> <span class="n">sums</span> <span class="o">/</span> <span class="bp">self</span><span class="p">.</span><span class="n">dbias</span>
+            <span class="n">sqrs</span> <span class="o">=</span> <span class="n">sqrs</span> <span class="o">/</span> <span class="bp">self</span><span class="p">.</span><span class="n">dbias</span>
+            <span class="n">c</span>    <span class="o">=</span> <span class="n">c</span>    <span class="o">/</span> <span class="bp">self</span><span class="p">.</span><span class="n">dbias</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="n">sums</span><span class="o">/</span><span class="n">c</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="p">(</span><span class="n">sqrs</span><span class="o">/</span><span class="n">c</span><span class="p">).</span><span class="n">sub_</span><span class="p">(</span><span class="n">means</span><span class="o">*</span><span class="n">means</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">batch</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">):</span> <span class="nb">vars</span><span class="p">.</span><span class="n">clamp_min_</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">means</span><span class="p">).</span><span class="n">div_</span><span class="p">((</span><span class="nb">vars</span><span class="p">.</span><span class="n">add_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">eps</span><span class="p">)).</span><span class="n">sqrt</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">.</span><span class="n">mul_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">mults</span><span class="p">).</span><span class="n">add_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">adds</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><br>
+<em>Let’s work through this code.</em></p>
+
+<ul>
+  <li>In normal BatchNorm we take the running average of the variance, but this doesn’t make sense - you can’t just average a bunch of variances. Particularly if the batch size isn’t constant. The way we want to calculate the variance is like this:</li>
+</ul>
+
+\[\mbox{E}[X^2] - \mbox{E}[X]^2\]
+
+<ul>
+  <li>
+    <p>Let’s instead keep track of the sums <code class="language-plaintext highlighter-rouge">sums</code> and the sums of the squares <code class="language-plaintext highlighter-rouge">sqrs</code>, that store the EWMA of them. From the above formula - to get the means and variances we need to divide them by the <code class="language-plaintext highlighter-rouge">count</code> (running average of <code class="language-plaintext highlighter-rouge">H*W*BS</code>), which we also store as an EWMA. This accounts for the possibility of different batch sizes.</p>
+  </li>
+  <li>
+    <p>We need to do something called <em>Debiasing</em> (aka bias correction). We want to make sure that no observation is weighted too highly. Normal way of doing EWMA gives the first point far too much weight. These first points are all zero, so the running averages are all biased low. Add a correction factor <code class="language-plaintext highlighter-rouge">dbias</code>: $x_i = x_i/(1 - \alpha^i)$. When $i$ is large this correction factor tends to 1 - it only pushes up the initial values. <em>(See <a href="http://www.ashukumar27.io/exponentially-weighted-average/">this post</a>).</em></p>
+  </li>
+  <li>
+    <p>Lastly, to avoid the unlucky case of having a first mini-batch where the variance is close to zero, we clamp the variance to 0.01 for the first 20 batches.</p>
+  </li>
+</ul>
+
+<p><br>
+<strong>Results</strong></p>
+
+<p>With a batchsize of 2 and learning rate of 0.4, it totally nails it with just 1 epoch:</p>
+
+<p><img src="/blog/images/fastai/image-20200322130921832.png" alt="image-20200322130921832"></p>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li>Lesson 10 <a href="https://youtu.be/HR0lt1hlR6U">lesson video</a>.</li>
+  <li>
+    <p>Lesson 10 notebooks: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/05a_foundations.ipynb">05a_foundations.ipynb</a>, <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/05b_early_stopping.ipynb">05b_early_stopping.ipynb</a>, <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/06_cuda_cnn_hooks_init.ipynb">06_cuda_cnn_hooks_init.ipynb</a>, <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/07_batchnorm.ipynb">07_batchnorm.ipynb</a>.</p>
+  </li>
+  <li>Laniken Lesson 10 notes: <a href="https://medium.com/@lankinen/fast-ai-lesson-10-notes-part-2-v3-aa733216b70d">https://medium.com/@lankinen/fast-ai-lesson-10-notes-part-2-v3-aa733216b70d</a>
+</li>
+  <li><a href="https://forums.fast.ai/t/the-colorful-dimension/42908">Interpreting the colorful histograms used in this lesson</a></li>
+  <li>Lecture on <a href="https://www.youtube.com/watch?v=QxfF_NrltxY">Bag-of-tricks for CNNs</a>. Loads of state-of-the-art tricks for training CNNs for image problems, which would be a great exercise to reimplement as callbacks.</li>
+  <li>Papers to read:
+    <ul>
+      <li><a href="https://arxiv.org/abs/1502.03167">Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift</a></li>
+      <li><a href="https://arxiv.org/abs/1607.06450">Layer Normalization</a></li>
+      <li><a href="https://arxiv.org/abs/1607.08022">Instance Normalization: The Missing Ingredient for Fast Stylization</a></li>
+      <li><a href="https://arxiv.org/abs/1803.08494">Group Normalization</a></li>
+      <li><a href="https://arxiv.org/abs/1804.07612">Revisiting Small Batch Training for Deep Neural Networks</a></li>
+    </ul>
+  </li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/03/24/fast-ai-lesson-10-notes-looking-inside-the-model.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
