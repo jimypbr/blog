@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai v3 Lesson 8 Notes: Backprop from the Foundations | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai v3 Lesson 8 Notes: Backprop from the Foundations" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes" />
+<meta property="og:description" content="My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-02-06T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 8 Notes: Backprop from the Foundations","dateModified":"2020-02-06T00:00:00-06:00","datePublished":"2020-02-06T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html"},"description":"My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai v3 Lesson 8 Notes: Backprop from the Foundations</h1><p class="page-description">My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-02-06T00:00:00-06:00" itemprop="datePublished">
+        Feb 6, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      21 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai-v3-notes">fastai-v3-notes</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview">Overview</a></li>
+<li class="toc-entry toc-h2"><a href="#different-matrix-multiplication-implementations">Different Matrix Multiplication Implementations</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#naive-matmul">Naive Matmul</a></li>
+<li class="toc-entry toc-h3"><a href="#elementwise-matmul">Elementwise Matmul</a></li>
+<li class="toc-entry toc-h3"><a href="#broadcasting-matmul">Broadcasting matmul</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#aside-proof-of-broadcasting-matmul">Aside: Proof of Broadcasting Matmul</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h3"><a href="#einstein-summation-matmul">Einstein Summation Matmul</a></li>
+<li class="toc-entry toc-h3"><a href="#pytorch-matmul-intrinsic">PyTorch Matmul Intrinsic</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#single-layer-network-forward-pass">Single Layer Network: Forward Pass</a></li>
+<li class="toc-entry toc-h2"><a href="#initialisation">Initialisation</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#aside-init-in-pytorch---sqrt5">Aside: Init in Pytorch - sqrt(5)??</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#gradients-and-backpropagation">Gradients and Backpropagation</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#backpropagation-graph-model">Backpropagation: Graph Model</a></li>
+<li class="toc-entry toc-h3"><a href="#gradients-of-vectors-or-matrices">Gradients of Vectors or Matrices</a></li>
+<li class="toc-entry toc-h3"><a href="#gradient-of-mse">Gradient of MSE</a></li>
+<li class="toc-entry toc-h3"><a href="#gradient-of-linear-layer">Gradient of Linear Layer</a></li>
+<li class="toc-entry toc-h3"><a href="#gradient-of-relu">Gradient of ReLU</a></li>
+<li class="toc-entry toc-h3"><a href="#putting-it-together-forwards-and-backwards">Putting it together: forwards and backwards</a></li>
+<li class="toc-entry toc-h3"><a href="#check-the-dimensions-how-does-batchsize-affect-things">Check the Dimensions. How does batchsize affect things?</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring">Refactoring</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview">
+<a class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>Part 2 of FastAI 2019 is ‘bottom-up’ - building the core of the FastAI library from scratch using PyTorch.</p>
+
+<p>This lesson implements matrix multiplication in pure Python, then refactors and optimizes it using broadcasting and einstein summation. Then this lesson starts to look at the initialization of neural networks. Finally the lesson covers handcoding the forward and backwards passes of a simple model with linear layers and ReLU, before refactoring the code to be more flexible and concise so that you can understand how PyTorch’s work.</p>
+
+<p>Lesson 8 <a href="https://youtu.be/4u8FxNEDUeg">lecture video</a>.</p>
+
+<h2 id="different-matrix-multiplication-implementations">
+<a class="anchor" href="#different-matrix-multiplication-implementations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Different Matrix Multiplication Implementations</h2>
+
+<h3 id="naive-matmul">
+<a class="anchor" href="#naive-matmul" aria-hidden="true"><span class="octicon octicon-link"></span></a>Naive Matmul</h3>
+
+<p>A baseline <strong>naive implementation</strong> in pure python code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="n">ar</span><span class="p">,</span><span class="n">ac</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">shape</span> <span class="c1"># n_rows * n_cols
+</span>    <span class="n">br</span><span class="p">,</span><span class="n">bc</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">shape</span>
+    <span class="k">assert</span> <span class="n">ac</span><span class="o">==</span><span class="n">br</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ar</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bc</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ac</span><span class="p">):</span> <span class="c1"># or br
+</span>                <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">c</span>
+</code></pre></div></div>
+
+<p>Time: <strong>3.26s</strong></p>
+
+<p><em>Doing loops in pure python and updating array elements one at a time is the bane of performance in python. There is almost always another way that gives better performance. (Though admittedly in some cases the faster way isn’t always obvious or more readable IMHO).</em></p>
+
+<h3 id="elementwise-matmul">
+<a class="anchor" href="#elementwise-matmul" aria-hidden="true"><span class="octicon octicon-link"></span></a>Elementwise Matmul</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="n">ar</span><span class="p">,</span><span class="n">ac</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">shape</span>
+    <span class="n">br</span><span class="p">,</span><span class="n">bc</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">shape</span>
+    <span class="k">assert</span> <span class="n">ac</span><span class="o">==</span><span class="n">br</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ar</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bc</span><span class="p">):</span>
+            <span class="c1"># Any trailing ",:" can be removed
+</span>            <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[:,</span><span class="n">j</span><span class="p">]).</span><span class="nb">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">c</span>
+</code></pre></div></div>
+
+<p>Time: <strong>4.84ms</strong></p>
+
+<p><em>The loop over <code class="language-plaintext highlighter-rouge">k</code> is replaced with a <code class="language-plaintext highlighter-rouge">sum()</code> over the elements of row slice in <code class="language-plaintext highlighter-rouge">a</code> times the column slice in <code class="language-plaintext highlighter-rouge">b</code>. This operation is outsourced to library calls in numpy which are likely compiled code written in C or Fortran, which gives the near 1000x speed-up.</em></p>
+
+<h3 id="broadcasting-matmul">
+<a class="anchor" href="#broadcasting-matmul" aria-hidden="true"><span class="octicon octicon-link"></span></a>Broadcasting matmul</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="n">ar</span><span class="p">,</span><span class="n">ac</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">shape</span>
+    <span class="n">br</span><span class="p">,</span><span class="n">bc</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">shape</span>
+    <span class="k">assert</span> <span class="n">ac</span><span class="o">==</span><span class="n">br</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ar</span><span class="p">):</span>
+        <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>   <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span>  <span class="p">].</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span><span class="p">).</span><span class="nb">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+      <span class="c1"># c[i]   = (a[i, :, None] * b).sum(dim=0) alternative
+</span>    <span class="k">return</span> <span class="n">c</span>
+</code></pre></div></div>
+
+<p>Time: <strong>1.11ms</strong></p>
+
+<p><em>WTH is this? As is almost always the case, optimizing code comes at the expense of code readability. Let’s work through this to convince ourselves that this is indeed doing a matmul.</em></p>
+
+<h4 id="aside-proof-of-broadcasting-matmul">
+<a class="anchor" href="#aside-proof-of-broadcasting-matmul" aria-hidden="true"><span class="octicon octicon-link"></span></a>Aside: Proof of Broadcasting Matmul</h4>
+
+<p>Matmul is just a bunch of dot products between the rows of one matrix and the columns of another: i.e. <code class="language-plaintext highlighter-rouge">c[i,j]</code> is the dot product of row <code class="language-plaintext highlighter-rouge">a[i, :]</code> and column <code class="language-plaintext highlighter-rouge">b[:, j]</code>.</p>
+
+<p>Let’s consider the case of 3x3 matrices. <code class="language-plaintext highlighter-rouge">a</code> is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tensor</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">b</code> is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tensor</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">6.</span><span class="p">,</span> <span class="mf">7.</span><span class="p">,</span> <span class="mf">8.</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s derive the code above looking purely through modifying the shape of <code class="language-plaintext highlighter-rouge">a</code>.</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">a</code> has shape <code class="language-plaintext highlighter-rouge">(3,3)</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">a[0]</code>, first row of <code class="language-plaintext highlighter-rouge">a</code>, has shape <code class="language-plaintext highlighter-rouge">(3,)</code> and val <code class="language-plaintext highlighter-rouge">[1, 1, 1]</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">a[i, :, None]</code> (or <code class="language-plaintext highlighter-rouge">a[i].unsqueeze(-1)</code>) has shape <code class="language-plaintext highlighter-rouge">(3,1)</code> and val <code class="language-plaintext highlighter-rouge">[[1], [1], [1]]</code>
+</li>
+</ol>
+
+<p>Now multiplying the result of 3 by the matrix <code class="language-plaintext highlighter-rouge">b</code> is represented by the expression (I have put brackets in to denote the array dimensions):</p>
+
+\[\left(\begin{matrix}(1)\\(1)\\(1)\end{matrix}\right) \times \left(\begin{matrix}(0&amp;1&amp;2)\\(3&amp;4&amp;5)\\(6&amp;7&amp;8)\end{matrix}\right)\]
+
+<p>From the rules of broadcasting, the $(1)$s on the left array are expanded to match the size of the rows on the right array (size 3). As such, the full expression computed effectively becomes:</p>
+
+\[\left(\begin{matrix}(1&amp;1&amp;1)\\(1&amp;1&amp;1)\\(1&amp;1&amp;1)\end{matrix}\right)
+\times
+\left(\begin{matrix}(0&amp;1&amp;2)\\(3&amp;4&amp;5)\\(6&amp;7&amp;8)\end{matrix}\right)
+=
+\left(\begin{matrix}(0&amp;1&amp;2)\\(3&amp;4&amp;5)\\(6&amp;7&amp;8)\end{matrix}\right)\]
+
+<p>The final step is to <code class="language-plaintext highlighter-rouge">sum(dim=0)</code>, which sums up all the rows leaving a vector of shape <code class="language-plaintext highlighter-rouge">(3,)</code>, value: <code class="language-plaintext highlighter-rouge">[ 9., 12., 15.]	</code>. That completes the dot product and forms the first row of matrix <code class="language-plaintext highlighter-rouge">c</code>. Simply repeat that for the remaining 2 rows of <code class="language-plaintext highlighter-rouge">a</code> and you get the final result of the matmul:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tensor</span><span class="p">([[</span> <span class="mf">9.</span><span class="p">,</span> <span class="mf">12.</span><span class="p">,</span> <span class="mf">15.</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">18.</span><span class="p">,</span> <span class="mf">24.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">27.</span><span class="p">,</span> <span class="mf">36.</span><span class="p">,</span> <span class="mf">45.</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="einstein-summation-matmul">
+<a class="anchor" href="#einstein-summation-matmul" aria-hidden="true"><span class="octicon octicon-link"></span></a>Einstein Summation Matmul</h3>
+
+<p>This will be familiar to anyone who studied Physics, like me! Einstein summation (<code class="language-plaintext highlighter-rouge">einsum</code>) is a compact representation for combining products and sums in a general way. From the numpy docs:</p>
+
+<p><em>“The subscripts string is a comma-separated list of subscript labels, where each label refers to a dimension of the corresponding operand.  Whenever a label is repeated it is summed, so <code class="language-plaintext highlighter-rouge">np.einsum('i,i', a, b)</code> is equivalent to <code class="language-plaintext highlighter-rouge">np.inner(a,b)</code>. If a label appears only once, it is not summed, so <code class="language-plaintext highlighter-rouge">np.einsum('i', a)</code> produces a view of a with no changes.”</em></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span> 
+    <span class="k">return</span> <span class="n">torch</span><span class="p">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">'ik,kj-&gt;ij'</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Time: <strong>172µs</strong></p>
+
+<p><em>This is super concise with great performance, but also kind of gross. It’s a bit  weird that <code class="language-plaintext highlighter-rouge">einsum</code> is a mini-language that we pass as a Python string. We get no linting or tab completion benefits that you would get if it were somehow a first class citizen in the language. I think <code class="language-plaintext highlighter-rouge">einsum</code> could certainly be great and quite readable in cases where you are doing summations on tensors with lots of dimensions.</em></p>
+
+<h3 id="pytorch-matmul-intrinsic">
+<a class="anchor" href="#pytorch-matmul-intrinsic" aria-hidden="true"><span class="octicon octicon-link"></span></a>PyTorch Matmul Intrinsic</h3>
+
+<p>Matmul is already provided by PyTorch (or Numpy) using the <code class="language-plaintext highlighter-rouge">@</code> operator:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">@</span><span class="n">b</span>
+</code></pre></div></div>
+
+<p>Time: <strong>31.2µs</strong></p>
+
+<p><em>The best performance is, unsuprisingly, provided by the library implementation. This operation will drop down to an ultra optimized library like BLAS or cuBLAS, written by low-level coding warrior-monks working at Intel or Nvidia who have have spent years hand optimizing linear algebra code in C and assembly. (The matrix multiply algorithm is actually a very complicated topic, and no one knows what the fastest possible algorithm for it is. See <a href="https://en.wikipedia.org/wiki/Matrix_multiplication_algorithm">this wikipedia page</a> for more). So basically in the real world, you should probably avoid writing your own matmal!</em></p>
+
+<h2 id="single-layer-network-forward-pass">
+<a class="anchor" href="#single-layer-network-forward-pass" aria-hidden="true"><span class="octicon octicon-link"></span></a>Single Layer Network: Forward Pass</h2>
+
+<p>Work through the Jupyter notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/02_fully_connected.ipynb">02_fully_connected.ipynb</a></p>
+
+<p>Create simple network for MNIST.  One hidden layer and one output layer, parameters:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">n</span> <span class="o">=</span> <span class="mi">50000</span> 
+<span class="n">m</span> <span class="o">=</span> <span class="mi">784</span>
+<span class="n">nout</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># just for teaching purposes here, should be 10
+</span><span class="n">nh</span> <span class="o">=</span> <span class="mi">50</span>
+</code></pre></div></div>
+
+<p>The model will look like this:</p>
+
+\[X \rightarrow \mbox{Lin}(W_1, b_1) \rightarrow \mbox{ReLU} \rightarrow \mbox{Lin2}(W_2, b_2) \rightarrow \mbox{MSE} \rightarrow L\]
+
+<p><strong>Linear</strong> activation function:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">@</span><span class="n">w</span> <span class="o">+</span> <span class="n">b</span>
+</code></pre></div></div>
+
+<p><strong>ReLU</strong> activation function:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">relu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><strong>Loss function</strong> we’ll use here is the <em>Mean Squared Error (MSE)</em>. This doesn’t quite fit for a classification task, but it’s used as a pedgogical tool for teaching the concepts of loss and backpropagation.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">mse</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">output</span><span class="p">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">targ</span><span class="p">).</span><span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><strong>Forward Pass</strong> of model:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">xb</span><span class="p">):</span>
+    <span class="n">l1</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">xb</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+    <span class="n">l3</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">l3</span>
+
+<span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">mse</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s go over the tensor dimensions to review how the forward pass works:</p>
+
+<ul>
+  <li>Input $X$ is a batch of vectors of size 784,  <code class="language-plaintext highlighter-rouge">shape=[N, 784]</code>
+</li>
+  <li>Hidden layer is of size 50 and has an input of <code class="language-plaintext highlighter-rouge">shape=[N, 784]</code> =&gt;  $W_1$: <code class="language-plaintext highlighter-rouge">shape=[784, 50]</code>,  $b_1$: <code class="language-plaintext highlighter-rouge">shape=[50]</code>, output: <code class="language-plaintext highlighter-rouge">shape=[N, 50]</code>
+</li>
+  <li>Output layer has size 1 and input of <code class="language-plaintext highlighter-rouge">shape=[N, 50]</code> =&gt; $W_2$: <code class="language-plaintext highlighter-rouge">shape=[50, 1]</code>, $b_2$: <code class="language-plaintext highlighter-rouge">shape=[1]</code>, output: <code class="language-plaintext highlighter-rouge">shape=[N, 1]</code>
+</li>
+</ul>
+
+<h2 id="initialisation">
+<a class="anchor" href="#initialisation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Initialisation</h2>
+
+<p>Recent research shows that weight initialisation in NNs is actually super important. If the network isn’t initialised well, then after one pass through the network the output can sometimes become vanishingly small or even explode, which doesn’t bode well for when we do backpropagation.</p>
+
+<p>A rule of thumb to prevent this is:</p>
+
+<ol>
+  <li>The <em>mean</em> of the activations should be zero</li>
+  <li>The <em>variance</em> of the activations should stay close to 1 across every layer.</li>
+</ol>
+
+<p>Let’s try Normal initialisation with a linear layer:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">b2</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x_valid</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">x_valid</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.0059</span><span class="p">),</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.9924</span><span class="p">))</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">t</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+<span class="n">t</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">t</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span>	<span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">1.7731</span><span class="p">),</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">27.4169</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>After one layer, it’s already in the rough.</p>
+
+<p>A better initialisation is Kaiming/He initialisation (<a href="https://arxiv.org/abs/1502.01852">paper</a>). For a linear activation you simply divide by the square root of the number of inputs to the layer.:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">b2</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Test:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">t</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+<span class="n">t</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">t</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="mf">0.0589</span><span class="p">),</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">1.0277</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>The initialisation used <strong>depends on the activation function used</strong>. If we instead use a ReLU layer then we have to do something different from the linear.</p>
+
+<p>If you have a normal distribution with mean 0 with std 1, but then clamp it at 0, then obviously the resulting distribution will no longer have mean 0 and std 1.</p>
+
+<blockquote>
+  <p>From pytorch docs: <code class="language-plaintext highlighter-rouge">a: the negative slope of the rectifier used after this layer (0 for ReLU by default)</code></p>
+
+\[\text{std} = \sqrt{\frac{2}{(1 + a^2) \times \text{fan_in}}}\]
+
+  <p>This was introduced in the paper that described the Imagenet-winning approach from <em>He et al</em>: <a href="https://arxiv.org/abs/1502.01852">Delving Deep into Rectifiers</a>, which was also the first paper that claimed “super-human performance” on Imagenet (and, most importantly, it introduced resnets!)</p>
+</blockquote>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">m</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Test:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">t</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">))</span>
+<span class="n">t</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">t</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.5854</span><span class="p">),</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.8706</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>The function that does this in the Pytorch library is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">init</span>
+
+<span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">init</span><span class="p">.</span><span class="n">kaiming_normal_</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">'fan_out'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">'fan_out'</code> means that we divide by <code class="language-plaintext highlighter-rouge">m</code>, while <code class="language-plaintext highlighter-rouge">'fan_in'</code> would mean we divide by <code class="language-plaintext highlighter-rouge">nh</code>. <em>This bit here is confusing because we are using the opposite convention to PyTorch has. PyTorch Linear layer  stores the matrix as <code class="language-plaintext highlighter-rouge">(nh, m)</code>, where our implementation is <code class="language-plaintext highlighter-rouge">(m, nh)</code>. Looking inside the forward pass of linear in PyTorch the weight matrix is transposed before being multiplied. This means that for this special case here we swap ‘fan_out’ and ‘fan_in’. If we were using PyTorch’s linear layer we’d initialize with ‘fan_in’.</em></p>
+
+<p>Let’s get a better view of the means and standard deviations of the model with Kaiming initialization by running the forward pass a few thousand times and looking at the distributions.</p>
+
+<p><em>(Update, 8/2/20: Old plots were buggy. Fixed plots, added code, and added plots with Linear-ReLU model).</em></p>
+
+<p><strong>Linear-ReLU Model, Kaiming Init</strong></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">model_dist</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+    
+    <span class="n">l1</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">l2</span><span class="p">.</span><span class="n">detach</span><span class="p">().</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">l2</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">l2</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">model_dist</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3000</span><span class="p">)])</span>
+<span class="n">means</span><span class="p">,</span> <span class="n">stds</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Mean and standard deviations of the outputs with Kaiming Initialization:</p>
+
+<p><img src="/blog/images/fastai/Sat,%2008%20Feb%202020%20163946.png" alt="img"></p>
+
+<p><img src="/blog/images/fastai/Sat,%2008%20Feb%202020%20164020.png" alt="img"></p>
+
+<p>The means and standard deviations of the output have Gaussian distributions. The mean of the means is 0.55 and the mean of the standard deviations is 0.82. The mean is shifted to be positive because the ReLU has set all the negative values to 0. The typical standard deviation we get with Kaiming initialization is quite close to 1, which is what we want.</p>
+
+<p><strong>Full Model, Kaiming Init</strong></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">model_dist</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+    <span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="n">nout</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+    <span class="n">b2</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span>
+    
+    <span class="n">l1</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+    <span class="n">l3</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+    <span class="n">l3</span> <span class="o">=</span> <span class="n">l3</span><span class="p">.</span><span class="n">detach</span><span class="p">().</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">l3</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">l3</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">model_dist</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3000</span><span class="p">)])</span>
+<span class="n">means</span><span class="p">,</span> <span class="n">stds</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><img src="/blog/images/fastai/Sat,%2008%20Feb%202020%20163550.png" alt="img"></p>
+
+<p><img src="/blog/images/fastai/Sat,%2008%20Feb%202020%20163615.png" alt="img"></p>
+
+<p>The means have a clearly Gaussian distribution with mean value 0.01. The standard deviations have a slightly skewed distribution, but the mean value is 0.71.  We see empirically that the expected output values of the model after Kaiming initialisation are approximately mean 0, standard deviation near to 1, so it seems to be working well.</p>
+
+<h3 id="aside-init-in-pytorch---sqrt5">
+<a class="anchor" href="#aside-init-in-pytorch---sqrt5" aria-hidden="true"><span class="octicon octicon-link"></span></a>Aside: Init in Pytorch - sqrt(5)??</h3>
+
+<p>In <code class="language-plaintext highlighter-rouge">torch.nn.modules.conv._ConvNd.reset_parameters</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">init</span><span class="p">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fan_in</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init</span><span class="p">.</span><span class="n">_calculate_fan_in_and_fan_out</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">bound</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">math</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">fan_in</span><span class="p">)</span>
+        <span class="n">init</span><span class="p">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">bias</span><span class="p">,</span> <span class="o">-</span><span class="n">bound</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>A few differences here:</p>
+
+<ol>
+  <li>Uses Uniform distribution instead of a Normal distribution. This just seems to be convention the PyTorch authors have chosen to use. Not an issue and it is centred around zero anyway.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">sqrt(5)</code> is probably a bug, according to Jeremy.</li>
+</ol>
+
+<p>The initialization for the linear layer is similar.</p>
+
+<p>From the documentation on parameter <code class="language-plaintext highlighter-rouge">a</code>:</p>
+
+<blockquote>
+  <p>a: the negative slope of the rectifier used after this layer (0 for ReLU
+            by default)</p>
+</blockquote>
+
+<p>For ReLU it should be 0, but here it is hard-coded to <code class="language-plaintext highlighter-rouge">sqrt(5)</code>. So for ReLU activations in Conv layers, the initialization of some layers in PyTorch is suboptimal by default.</p>
+
+<p><em>(Update 8/2/20)</em>. We can look at the distribution of the outputs of our model using PyTorch’s default init:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">model_dist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">):</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span> <span class="n">nh</span><span class="p">),</span>
+              <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span>
+              <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="n">n_out</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="n">detach</span><span class="p">().</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">x</span><span class="p">.</span><span class="n">std</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="/blog/images/fastai/Sat,%2008%20Feb%202020%20171554.png" alt="img"></p>
+
+<p><img src="/blog/images/fastai/Sat,%2008%20Feb%202020%20171613.png" alt="img"></p>
+
+<p>Mean value is approximately 0.0 and the standard deviation is 0.16. This isn’t great - we have lost so much variation after just two layers. The course investigates this more in the notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/02a_why_sqrt5.ipynb">02a_why_sqrt5.ipynb</a>.</p>
+
+<p><em>(Update: Here is a link to the issue in PyTorch, still open (2020-2-13), <a href="https://github.com/pytorch/pytorch/issues/18182">https://github.com/pytorch/pytorch/issues/18182</a>)</em></p>
+
+<h2 id="gradients-and-backpropagation">
+<a class="anchor" href="#gradients-and-backpropagation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Gradients and Backpropagation</h2>
+
+<p>To understand backpropagation we need to first understand the chain rule from calculus. The model looks like this:</p>
+
+\[x \rightarrow \mbox{Lin1} \rightarrow \mbox{ReLU} \rightarrow \mbox{Lin2} \rightarrow \mbox{MSE} \rightarrow L\]
+
+<p>Where $L$ denotes the loss. We can also write this as:</p>
+
+\[L = \mbox{MSE}(\mbox{Lin2}(\mbox{ReLU}(\mbox{Lin1(x)})), y)\]
+
+<p>Or fully expanded:</p>
+
+\[\begin{align}
+L &amp;= \frac{1}{N}\sum_n^N\left((\mbox{max}(0, X_nW^{(1)} + b^{(1)})W^{(2)} + b^{(2)}) - y_n\right)^2
+\end{align}\]
+
+<p>In order to update the parameters of the model, we need to know what is the gradient of $L$ with respect to (wrt) the parameters of the model. What are the parameters of this model? They are: $W_{ij}^{(1)}$,  $W^{(2)}_{ij}$, $b^{(1)}_i$, $b^{(2)}_i$ (including indices to remind you of the tensor rank of the parameters). The partial derivatives of the parameters we want to calculate are:</p>
+
+\[\frac{\partial L}{\partial W^{(1)}_{ij}}, \frac{\partial L}{\partial W^{(2)}_{ij}}, \frac{\partial L}{\partial b^{(1)}_{i}}, \;\mbox{and}\; \frac{\partial L}{\partial b^{(2)}_{i}}\]
+
+<p>On first sight, looking at the highly nested function of $L$ finding the derivative of it wrt to matrices and vectors looks like a brutal task. However the cognitive burden is greatly decreased thanks to <a href="https://en.wikipedia.org/wiki/Chain_rule"><em>the chain rule</em></a>.</p>
+
+<p>When you have a nested function, such as:</p>
+
+\[f(x,y,z) = q(x, y)z \\
+q(x,y) = x+y\]
+
+<p>The chain rule tells you that the derivative of $f$ wrt to $x$ is:</p>
+
+\[\frac{\partial f}{\partial x} = \frac{\partial f}{\partial q}\frac{\partial q}{\partial x} = (z)\cdot(1) = z\]
+
+<p>A helpful mnemonic is to picture the $\partial q$’s ‘cancelling out’.</p>
+
+<h3 id="backpropagation-graph-model">
+<a class="anchor" href="#backpropagation-graph-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Backpropagation: Graph Model</h3>
+
+<p>How does this fit into backpropagation? Things become clearer when the model is represented as a computational graph, instead of as equations.</p>
+
+<p>Imagine some neuron $f$ in the middle of a bigger network. In the forward pass, data $x$ and $y$ flows from left to right through the neuron $f$, outputting $z$,  then calculating the loss $L$. Then we want the gradients of all the variables wrt the loss. Here is a diagram taken from <a href="http://cs231n.stanford.edu/">CS231 course</a> :</p>
+
+<p><img src="/images/fastai/image-20200205212902584.png" alt="image-20200205212902584"></p>
+
+<p><em>(<a href="http://cs231n.stanford.edu/slides/2019/cs231n_2019_lecture04.pdf">Source</a>: brilliant CS231 course from Stanford. This lecture made backpropagation ‘click’ for me: <a href="https://youtu.be/GZTvxoSHZIo">video</a>, <a href="http://cs231n.github.io/optimization-2/">notes</a>).</em></p>
+
+<p>Calculate the gradients of the variables backwards from right to left. We have the gradient $\frac{\partial L}{\partial z}$ coming from ‘upstream’.  To calculate $\frac{\partial L}{\partial x}$, we use the chain rule:</p>
+
+\[\frac{\partial L}{\partial x} = \frac{\partial L}{\partial z} \frac{\partial z}{\partial x}\]
+
+<p>The <strong>gradient = upstream gradient $\times$ local gradient</strong>. This relation recurses back through the rest of the network, so a neuron directly before $x$ would receive the upstream gradient $\frac{\partial L}{\partial x}$. The beauty of the chain rule is that it enables us to break up the model into its constituent operations/layers, compute their local gradients, then multiply by the gradient coming from upstream, then <em>propagate the gradient backwards</em>, repeating the process.</p>
+
+<p>Coming back to our model - $\mbox{MSE}(\mbox{Lin2}(\mbox{ReLU}(\mbox{Lin1(x)})), y)$ - to compute the backward pass we just need to compute the expressions for the derivatives of MSE, Linear layer, and ReLU layer.</p>
+
+<h3 id="gradients-of-vectors-or-matrices">
+<a class="anchor" href="#gradients-of-vectors-or-matrices" aria-hidden="true"><span class="octicon octicon-link"></span></a>Gradients of Vectors or Matrices</h3>
+
+<p>What happens when $z$, $x$, and $y$ aren’t scalar, but are vectors or matrices? Nothing changes with how backpropagation works - just the maths for computing the local gradients gets a bit hairier.</p>
+
+<p>If the loss $L$ is a scalar and $\mathbf{z}$ is a vector then the derivative would be <strong>vector</strong>:</p>
+
+\[\frac{\partial L}{\partial \mathbf{z}} = \left(\frac{\partial L}{\partial z_1}, \frac{\partial L}{\partial z_2}, ...,\frac{\partial L}{\partial z_n}, \right)\]
+
+<p>Think: <em>“For each element of $\mathbf{z}$, if it changes by a small amount how much will $L$ change?”</em></p>
+
+<p>If $\mathbf{x}$ and $\mathbf{z}$ are both vectors then the derivative would be a <strong>Jacobian matrix</strong>:</p>
+
+\[\mathbf{\frac{\partial \mathbf{z}}{\partial \mathbf{x}}} = 
+\left[\begin{array}{ccc}
+\frac{\partial z_1}{\partial x_1} &amp; \frac{\partial z_1}{\partial x_2} &amp; ... &amp; \frac{\partial z_1}{\partial x_m} \\
+    \frac{\partial z_2}{\partial x_1} &amp; \frac{\partial z_2}{\partial x_2} &amp; ... &amp; \frac{\partial z_2}{\partial x_m} \\
+    ... &amp; ... &amp; ... &amp; ...\\
+    \frac{\partial z_n}{\partial x_1} &amp; \frac{\partial z_n}{\partial x_2} &amp; ... &amp; \frac{\partial z_n}{\partial x_m}
+\end{array}\right]\]
+
+<p>Think: <em>“For each element of $\mathbf{x}$”, if it changes by a small amount then how much will each element of $\mathbf{y}$ change?</em></p>
+
+<p>Summary, again taken from <a href="http://cs231n.stanford.edu/slides/2019/cs231n_2019_lecture04.pdf">CS231n</a>:</p>
+
+<p><img src="/blog/images/fastai/image-20200206010837769.png" alt="image-20200206010837769"></p>
+
+<p><strong>More info</strong>: a full tutorial on matrix calculus is provided here: <a href="https://explained.ai/matrix-calculus/">Matrix Calculus You Need For Deep Learning</a>.</p>
+
+<h3 id="gradient-of-mse">
+<a class="anchor" href="#gradient-of-mse" aria-hidden="true"><span class="octicon octicon-link"></span></a>Gradient of MSE</h3>
+
+<p>The mean squared error:</p>
+
+\[L = \frac{1}{N} \sum_i^N (z_i - y_i)^2\]
+
+<p>Where $N$ is the batch size, $z_i$ is the output of the model for data point $i$, and $y_i$ is the target value of $i$. The loss is the average of the squared error in a batch. $\mathbf{z}$ is a vector here. The derivative of scalar $L$ wrt a vector will be vector.</p>
+
+\[\begin{align}
+\frac{\partial L}{\partial z_i} &amp;= \frac{\partial}{\partial z_i}\left(\frac{1}{N}\sum_j^N (z_j - y_j)^2\right) \\
+&amp;= \frac{\partial}{\partial z_i} \frac{1}{N} (z_i - y_i)^2 \\
+&amp;= \frac{2}{N}(z_i - y_i)
+\end{align}\]
+
+<p>All the other terms in the sum go to zero because they don’t depend on $z_i$. Notice also how $L$ doesn’t appear in the gradient - we don’t actually need the value of the loss in the backwards step!</p>
+
+<p>In Python code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">mse_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="c1"># inp from last layer of model, shape=(N,1)
+</span>    <span class="c1"># targ targets, shape=(N)
+</span>    <span class="c1"># want: grad of MSE wrt inp, shape=(N, 1)
+</span>    <span class="n">grad</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="n">inp</span><span class="p">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">targ</span><span class="p">).</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">inp</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">inp</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">grad</span>
+</code></pre></div></div>
+
+<h3 id="gradient-of-linear-layer">
+<a class="anchor" href="#gradient-of-linear-layer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Gradient of Linear Layer</h3>
+
+<p>Linear layer:</p>
+
+\[Y = XW + b\]
+
+<p>Need to know:</p>
+
+\[\frac{\partial L}{\partial X}, \frac{\partial L}{\partial W}, \frac{\partial L}{\partial b}\]
+
+<p>Where $X$, and $W$ are matrices and $b$ is a vector. We already know $\frac{\partial L}{\partial Y}$ - it’s the <em>upstream gradient</em> (remember it’s a tensor, not necessarily a single number).</p>
+
+<p>Here is where the maths gets a bit hairier. It’s not worth redoing the derivations of the gradients here, which can be found in these two sources: <a href="https://explained.ai/matrix-calculus">matrix calculus for deep learning</a>,  <a href="http://cs231n.stanford.edu/handouts/linear-backprop.pdf">linear backpropagation</a>.</p>
+
+<p>The results:</p>
+
+\[\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y}W^T \\
+\frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Y} \\
+\frac{\partial L}{\partial b_i} = \sum_j^M \frac{\partial L}{\partial y_{ij}}\]
+
+<p>In Python:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">lin_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="c1"># inp - incoming data (x)
+</span>    <span class="c1"># out - upstream data 
+</span>    <span class="c1"># w - weight matrix
+</span>    <span class="c1"># b - bias
+</span>    <span class="n">inp</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span> <span class="o">@</span> <span class="n">w</span><span class="p">.</span><span class="n">t</span><span class="p">()</span>
+    <span class="n">w</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">inp</span><span class="p">.</span><span class="n">t</span><span class="p">()</span> <span class="o">@</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span>
+    <span class="n">b</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="gradient-of-relu">
+<a class="anchor" href="#gradient-of-relu" aria-hidden="true"><span class="octicon octicon-link"></span></a>Gradient of ReLU</h3>
+
+<p>Gradient of ReLU is easy. For the local gradient - if the input is less than 0, gradient is 0, otherwise it’s 1. In Python</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">relu_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="c1"># inp - input (x)
+</span>    <span class="c1"># out - upstream data
+</span>    <span class="n">inp</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">).</span><span class="nb">float</span><span class="p">()</span> <span class="o">*</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span>
+</code></pre></div></div>
+
+<h3 id="putting-it-together-forwards-and-backwards">
+<a class="anchor" href="#putting-it-together-forwards-and-backwards" aria-hidden="true"><span class="octicon octicon-link"></span></a>Putting it together: forwards and backwards</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">forwards_and_backwards</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="c1"># forward pass
+</span>    <span class="n">l1</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">mse</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
+    
+    <span class="c1"># backward pass
+</span>    <span class="n">mse_grad</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
+    <span class="n">lin_grad</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+    <span class="n">relu_grad</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span>
+    <span class="n">lin_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="check-the-dimensions-how-does-batchsize-affect-things">
+<a class="anchor" href="#check-the-dimensions-how-does-batchsize-affect-things" aria-hidden="true"><span class="octicon octicon-link"></span></a>Check the Dimensions. How does batchsize affect things?</h3>
+
+<p><em>(Added 17-03-2020)</em></p>
+
+<p>What do the dimensions of the gradients look like? The loss $L$ is a scalar and the parameters are tensors so remembering the rules above the derivative of $L$ wrt any parameter will have the same dimensionality as that parameter. <em>The gradients of the parameters have the same shape as the parameters</em>, which makes intuitive sense.</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">w1.g.shape</code> =&gt; <code class="language-plaintext highlighter-rouge">[784, 50]</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">b1.g.shape</code> =&gt; <code class="language-plaintext highlighter-rouge">[50]</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">w2.g.shape</code> =&gt; <code class="language-plaintext highlighter-rouge">[50, 1]</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">b2.g.shape</code> =&gt; <code class="language-plaintext highlighter-rouge">[1]</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">loss.shape</code> =&gt; <code class="language-plaintext highlighter-rouge">[]</code> (scalar)</li>
+</ul>
+
+<p>Notice how the batch size doesn’t appear in the gradients. That’s not to say it doesn’t matter - the batch size is there behind the scenes in the gradient calculation: the loss is an average of the individual losses in a batch, and also as a dimension multiplied out in the matrix multiplies of the gradient calculations.</p>
+
+<p>To be even more explicit with the dimensions:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">inp</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span> <span class="o">@</span> <span class="bp">self</span><span class="p">.</span><span class="n">w</span><span class="p">.</span><span class="n">t</span><span class="p">()</span>		<span class="c1"># [N, 784] = [N, 50] @ [50, 784]
+</span><span class="bp">self</span><span class="p">.</span><span class="n">w</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">inp</span><span class="p">.</span><span class="n">t</span><span class="p">()</span> <span class="o">@</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span>		<span class="c1"># [784, 50] = [784, N] @ [N, 50]
+</span><span class="bp">self</span><span class="p">.</span><span class="n">b</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>			<span class="c1"># [50] = [N, 50].sum(0)
+</span>
+<span class="n">inp</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span> <span class="o">@</span> <span class="bp">self</span><span class="p">.</span><span class="n">w</span><span class="p">.</span><span class="n">t</span><span class="p">()</span>		<span class="c1"># [N, 50] = [N, 1] @ [1, 50]
+</span><span class="bp">self</span><span class="p">.</span><span class="n">w</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">inp</span><span class="p">.</span><span class="n">t</span><span class="p">()</span> <span class="o">@</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span>		<span class="c1"># [50, 1] = [50, N] @ [N, 1]
+</span><span class="bp">self</span><span class="p">.</span><span class="n">b</span><span class="p">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="p">.</span><span class="n">g</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>			<span class="c1"># [1] = [N, 1].sum(0)
+</span></code></pre></div></div>
+
+<p>With bigger batch size you are accumulating more gradients because it is basically doing more dot products.  If you could hack the loss so its gradient is constant and increase the batch size then these gradients would get  correspondingly larger (in absolute size).</p>
+
+<p>In reality this is cancelled out because the <em>larger the batch size the smaller the gradient</em>. You can see this by look at the gradient calculation for MSE: it is divided by the batch size.</p>
+
+<p>Let’s vary the batchsize and plot the  average gradients of the parameters W1 and W2, alongside the loss and loss gradient:</p>
+
+<p><img src="/blog/images/fastai/Tue,%2017%20Mar%202020%20230947.png" alt="img"></p>
+
+<p>The average gradient of the loss gets smaller with increasing batchsize, while the other gradients and the loss pretty much settle towards some value.</p>
+
+<h3 id="refactoring">
+<a class="anchor" href="#refactoring" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring</h3>
+
+<p><em>(Updated 17-03-2020)</em></p>
+
+<p>The rest of the notebook - <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/02_fully_connected.ipynb">02_fully_connected.ipynb</a> - is spent refactoring this code using classes so we understand how PyTorch’s classes are constructed. I won’t reproduce it all here. If you want to reproduce it yourself you need to create a base <code class="language-plaintext highlighter-rouge">Module</code> that all your layer inherit from, which remembers the inputs it was called with (so it can do gradient calculations):</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Module</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">out</span>
+    
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">'not implemented'</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="bp">self</span><span class="p">.</span><span class="n">bwd</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">out</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="p">.</span><span class="n">args</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The different layers (linear, ReLU, MSE) need to subclass <code class="language-plaintext highlighter-rouge">Module</code> and implement <code class="language-plaintext highlighter-rouge">forward</code> and <code class="language-plaintext highlighter-rouge">bwd</code> methods.</p>
+
+<p>The end result of this gives an equivalent implementation of PyTorch’s <code class="language-plaintext highlighter-rouge">nn.Module</code>.  The equivalent with PyTorch classes, which we can now use, is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+
+<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span> <span class="n">nh</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="n">n_out</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">mse</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">targ</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now that we understand how backprop works, we luckily don’t have to derive anymore derivatives of tensors, we can instead from now on harness PyTorch’s autograd to do all the work for us!</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">()</span> <span class="c1"># do the backward pass!
+</span></code></pre></div></div>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li>
+    <p>Lesson 8 <a href="https://youtu.be/4u8FxNEDUeg">lecture video</a>.</p>
+  </li>
+  <li>
+    <p><a href="https://medium.com/@lankinen/fast-ai-lesson-8-notes-part-2-v3-8965a6532f51">Lesson notes from Laniken</a> provide a transcription of the lesson.</p>
+  </li>
+  <li>
+    <p>Broadcasting tutorial from Jake Vanderplas: <a href="https://jakevdp.github.io/PythonDataScienceHandbook/02.05-computation-on-arrays-broadcasting.html">Computation on Arrays: Broadcasting</a>.</p>
+  </li>
+  <li>
+    <p>Deeplearning.ai notes on initialisation with nice demos of different initialisations and their effects: <a href="https://www.deeplearning.ai/ai-notes/initialization/">deeplearning.ai</a></p>
+  </li>
+  <li>
+    <p>Kaiming He paper on initialization with ReLu activations (<strong>assignment</strong>: read section 2.2 of this paper): <a href="https://arxiv.org/abs/1502.01852">Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification</a></p>
+  </li>
+  <li>
+    <p>Fixup Initialization: <a href="https://arxiv.org/abs/1901.09321">paper</a> where they trained a 10,000 layer NN with no normalization layers through careful initialization.</p>
+  </li>
+  <li>
+    <p>Things that made Backprop ‘click’ for me:</p>
+
+    <ul>
+      <li>CS231: backpropagation explained using the a circuit model: <a href="http://cs231n.github.io/optimization-2/">http://cs231n.github.io/optimization-2/</a>
+</li>
+      <li>
+<a href="https://youtu.be/i94OvYb6noo">CS231: backpropagation lecture (Andrej Karpathy)</a>, <a href="http://cs231n.stanford.edu/slides/2019/cs231n_2019_lecture04.pdf">slides</a>.</li>
+      <li>
+<a href="https://amva4newphysics.wordpress.com/2017/03/28/understanding-neural-networks-part-ii-back-propagation/">Blog post</a> with worked examples of backpropagation on simple calculations.</li>
+      <li><a href="https://colah.github.io/posts/2015-08-Backprop/">Calculus on Computational Graphs, Chris Olah.</a></li>
+    </ul>
+  </li>
+  <li>
+    <p>StackExchange: <a href="https://stats.stackexchange.com/questions/164876/tradeoff-batch-size-vs-number-of-iterations-to-train-a-neural-network">Tradeoff batch size vs. number of iterations to train a neural network</a> - worth reading about somewhat unintuitive effect batchsize has on training performance and speed.</p>
+  </li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
