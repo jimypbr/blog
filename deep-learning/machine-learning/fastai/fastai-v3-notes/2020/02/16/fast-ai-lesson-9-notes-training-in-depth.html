@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai v3 Lesson 9 Notes: Training in Depth | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai v3 Lesson 9 Notes: Training in Depth" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 9 of part 2 of fast.ai v3 - Loss functions, optimizers, and the training loop" />
+<meta property="og:description" content="My personal notes on Lesson 9 of part 2 of fast.ai v3 - Loss functions, optimizers, and the training loop" />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/16/fast-ai-lesson-9-notes-training-in-depth.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/16/fast-ai-lesson-9-notes-training-in-depth.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-02-16T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/16/fast-ai-lesson-9-notes-training-in-depth.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 9 Notes: Training in Depth","dateModified":"2020-02-16T00:00:00-06:00","datePublished":"2020-02-16T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/16/fast-ai-lesson-9-notes-training-in-depth.html"},"description":"My personal notes on Lesson 9 of part 2 of fast.ai v3 - Loss functions, optimizers, and the training loop","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai v3 Lesson 9 Notes: Training in Depth</h1><p class="page-description">My personal notes on Lesson 9 of part 2 of fast.ai v3 - Loss functions, optimizers, and the training loop</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-02-16T00:00:00-06:00" itemprop="datePublished">
+        Feb 16, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      25 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai-v3-notes">fastai-v3-notes</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview">Overview</a></li>
+<li class="toc-entry toc-h2"><a href="#classification-loss-function">Classification Loss Function</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#cross-entropy-loss">Cross-Entropy Loss</a></li>
+<li class="toc-entry toc-h3"><a href="#log-softmax-layer-naive-implementation">Log-Softmax Layer: Naive Implementation</a></li>
+<li class="toc-entry toc-h3"><a href="#exponentials-logs-and-floating-point-hell">Exponentials, Logs, and Floating Point Hell…</a></li>
+<li class="toc-entry toc-h3"><a href="#log-softmax-layer-better-implementation">Log-Softmax Layer: Better Implementation</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#mini-batch-training">Mini-Batch Training</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#basic-training-loop">Basic Training Loop</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring-1">Refactoring 1</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring-2">Refactoring 2</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring-3">Refactoring 3</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring-4---dataset">Refactoring 4 - Dataset</a></li>
+<li class="toc-entry toc-h3"><a href="#refactoring-5---dataloader">Refactoring 5 - DataLoader</a></li>
+<li class="toc-entry toc-h3"><a href="#random-sampling">Random Sampling</a></li>
+<li class="toc-entry toc-h3"><a href="#training-loop-implemented-with-pytorch-classes">Training Loop Implemented with PyTorch Classes</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#infinitely-customizable-training-loop">Infinitely Customizable Training Loop</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#training-loop-landmarks">Training Loop Landmarks</a></li>
+<li class="toc-entry toc-h3"><a href="#callback-class--callback-handler-version-1">Callback Class + Callback Handler (Version 1)</a></li>
+<li class="toc-entry toc-h3"><a href="#alternative-design-runner-class">Alternative Design: Runner Class</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#callbacks-applied-annealing">Callbacks Applied: Annealing</a></li>
+<li class="toc-entry toc-h2"><a href="#q--a">Q &amp; A</a></li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><h2 id="overview">
+<a class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>This lesson continues with the development of the MNIST model from the last lesson. It introduces and implements a Cross-entropy loss for MNIST, then takes a deep dive refactoring the model and the training loop, where it builds the equivalent classes from PyTorch from scratch, which provides a great foundation for understanding the main PyTorch classes. In the second half, the lesson moves onto the implementation of Callbacks and how they are integrated into the training loop in the FastAI library. Then it shows how to implement <em>one-cycle</em> training using the callback infrastructure that was built.</p>
+
+<p>Lesson 9 <a href="https://youtu.be/AcA8HAYh7IE">lecture video</a></p>
+
+<p><em>I found the second half of this lesson hard to make notes for because it is so code heavy. I didn’t want to just reproduce the jupyter notebooks here. I instead opted to provide a companion to the notebooks, providing extra explanation and also motivation for the design decisions. I tried to write it such that they could be used as guide for implementing the main parts yourself from scratch, which is how I practice this course. Enjoy!</em></p>
+
+<h2 id="classification-loss-function">
+<a class="anchor" href="#classification-loss-function" aria-hidden="true"><span class="octicon octicon-link"></span></a>Classification Loss Function</h2>
+
+<p>From the last lesson the model so far is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">nh</span><span class="p">,</span> <span class="n">n_out</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span><span class="n">nh</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="n">n_out</span><span class="p">)]</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">layers</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></div>
+
+<p>Recall we were using the MSE as the loss function, which doesn’t make sense for a multi-classification problem, but was convenient as a teaching tool. Let’s continue with this and use an appropriate loss function.</p>
+
+<p><em>This follows the notebook: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/03_minibatch_training.ipynb">03_minibatch_training.ipynb</a></em></p>
+
+<h3 id="cross-entropy-loss">
+<a class="anchor" href="#cross-entropy-loss" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross-Entropy Loss</h3>
+
+<p>We need a proper loss function for MNIST. This is a multi-class classification problem so we use <em>Cross-entropy loss</em>. Cross-entropy loss is calculated using a function called the <strong>Softmax function</strong>:</p>
+
+\[p(z_i) = \hbox{softmax(z)}_{i} = \frac{e^{z_{i}}}{\sum_{0 \leq j \leq n-1} e^{z_{j}}}\]
+
+<p>Where $z_i$ are the real-valued outputs of the model. Softmax takes in a vector of $K$ real numbers, and normalizes it into a probability distribution of $K$ probabilities proportional to the exponentials of the input numbers. These collectively sum to 1, and each have values between 0 and 1 (this is also called a <em>Categorical distribution</em>).</p>
+
+<p>We now have a probability vector (length 10), $p(z_i)$, that the model thinks that a given input has label $i$ (i.e. 0-9). This could look like:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pz</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> 
+      <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>When training know what the target value is. If this is represented as a categorical distribution like $z$, we would get the vector $x$:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span>
+     <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>We know <em>for certain</em> what the target value is, so the probability for that label is 1 and the rest are 0. So we could think of this as a distribution, or just as a <em>one-hot encoded</em> vector for the target label.</p>
+
+<p><strong>Cross-entropy</strong> is a function commonly used to quantify the difference between two probability distributions, this is why we can use it as our loss function. If we have the ‘true’ distribution, $x_i$, and the estimated distribution, $p(z_i)$, the cross-entropy loss is defined as:</p>
+
+\[L =-\sum_i x_i \log p(z_i)\]
+
+<p>This has a minimal value when the estimated distribution matches the true distribution. You can see this in the plot of the cross entropy with varying $p(z)$:</p>
+
+<p><img src="/blog/images/fastai/Fri,%2014%20Feb%202020%20223315.png" alt="img"></p>
+
+<p>Another name for cross entropy is the <em>negative log likelihood</em>.</p>
+
+<p>Since $x$ is a one-hot encoded vector, all the 0 entries will be masked out leaving the cross entropy as just:</p>
+
+\[L = -\log p(z_i) = -\log (\mbox{softmax}(\mathbf{z})_i)\]
+
+<p>Where $i$ is the index of the target label. We can therefore code the cross-entropy loss for multi-class as an <em>array lookup</em>. The code for the cross-entropy, or negative log likelihood, is therefore:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">nll</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span> 
+    <span class="c1"># input is log(softmax(z))
+</span>    <span class="c1"># x is 1-hot encoded target, so this simplifies to array lookup.
+</span>    <span class="k">return</span> <span class="o">-</span><span class="nb">input</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">target</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">target</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>The total loss is just the average of the negative log likelihood’s of all the training examples (in a batch). Next we need to implement a log-Softmax function to calculate the input to <code class="language-plaintext highlighter-rouge">nll</code>.</p>
+
+<h3 id="log-softmax-layer-naive-implementation">
+<a class="anchor" href="#log-softmax-layer-naive-implementation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Log-Softmax Layer: Naive Implementation</h3>
+
+<p>First implementation: let’s code up the formula for Softmax then take the log of it:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">log_softmax</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># naive implementation
+</span>    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">/</span> <span class="n">x</span><span class="p">.</span><span class="n">exp</span><span class="p">().</span><span class="nb">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="bp">True</span><span class="p">)).</span><span class="n">log</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>On paper, the maths works out and we can just convert the formula to code like above.  However, this implementation has several <em>big</em> problems that mean this code <em>will not work in practice</em>.</p>
+
+<h3 id="exponentials-logs-and-floating-point-hell">
+<a class="anchor" href="#exponentials-logs-and-floating-point-hell" aria-hidden="true"><span class="octicon octicon-link"></span></a>Exponentials, Logs, and Floating Point Hell…</h3>
+
+<p>Working with exponentials on a computer requires care - these numbers can get <em>very big</em> or <em>very small</em>, fast. Floating point numbers are finite approximation of real numbers; for most of the time we can pretend that they behave like real numbers, but when we start to get into extreme values this thinking breaks down and we are confronted with the limitations of floats.</p>
+
+<p>If a float gets too big it will <em>overflow</em>, that is it will go to <code class="language-plaintext highlighter-rouge">INF</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">2.718281828459045</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">22026.465794806718</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">2.6881171418161356e+43</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">1.4035922178528375e+217</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">inf</span> <span class="c1"># oops...
+</span></code></pre></div></div>
+
+<p>On the other hand, if a float gets too small it will <em>underflow</em>, that is it will go to zero:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">0.36787944117144233</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">4.5399929762484854e-05</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">3.720075976020836e-44</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">500</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">7.124576406741286e-218</span>
+<span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="mf">0.0</span> <span class="c1"># oops...
+</span></code></pre></div></div>
+
+<p>The input to exponential doesn’t even have to that big to get under/overflow. Therefore we can’t really trust the naive softmax not to break because of this.</p>
+
+<p>Another less obvious issue is that when doing operations on floats with extreme values, arithmetic can stop working:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span> <span class="c1"># wut
+</span><span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="c1"># wut?
+</span></code></pre></div></div>
+
+<p>Operations between floats are performed and then <em>rounded</em>. The difference in value between the numbers here is so massive that the smaller one gets rounded away and disappears - <em>loss of precision</em>. This is a big problem for the sum of exponentials in the denominator of the softmax formula.</p>
+
+<p>The solution to dealing with extreme numbers is to transform everything into <strong>log space</strong>, where things are more stable. A lot of numerical code is implemented in log space and there are many formulae/tricks for transforming operations into log space. The easy ones are:</p>
+
+\[\begin{align}
+\log e^x &amp;= x \\
+\log b^a &amp;= a \log b \\
+\log (ab) &amp;= \log a + \log b \\
+\log \left ( \frac{a}{b} \right ) &amp;= \log(a) - \log(b)
+\end{align}\]
+
+<p>How to transform the sum of exponentials in softmax? There is no nice formula for the log of a sum, so we’d have to leave log space, compute the sum, and then take the log of it. Leaving log space would give us all the headaches described above. However there is trick to computing the log of a sum stably called the <a href="https://en.wikipedia.org/wiki/LogSumExp">LogSumExp trick</a>. The idea is to use the following formula:</p>
+
+\[\log \left ( \sum_{j=1}^{n} e^{x_{j}} \right ) = \log \left ( e^{m} \sum_{j=1}^{n} e^{x_{j}-m} \right ) = m + \log \left ( \sum_{j=1}^{n} e^{x_{j}-m} \right )\]
+
+<p>Where $m$ is the maximum of the $x_{j}$. The subtraction of $m$ is to bring the numbers down to a size that’s safe to leave log land to perform the sum.</p>
+
+<p><em>(<strong>Nerdy extras</strong>: even if a float isn’t so small that it underflows, if it gets small enough it becomes ‘denormalized’. Denormal numbers extend floats to get some extra values very close to zero. They are handled differently from normal floats by the CPU and their performance is <strong>terrible</strong>, slowing your code right down. See this <a href="https://stackoverflow.com/questions/9314534/why-does-changing-0-1f-to-0-slow-down-performance-by-10x">classic stackoverflow question</a> for more on this).</em></p>
+
+<h3 id="log-softmax-layer-better-implementation">
+<a class="anchor" href="#log-softmax-layer-better-implementation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Log-Softmax Layer: Better Implementation</h3>
+
+<p>Implement LogSumExp in Python:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="p">.</span><span class="nb">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">m</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">m</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)).</span><span class="n">exp</span><span class="p">().</span><span class="nb">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">).</span><span class="n">log</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>PyTorch already has this: <code class="language-plaintext highlighter-rouge">x.logsumexp()</code>.</p>
+
+<p>We can now implement <code class="language-plaintext highlighter-rouge">log_softmax</code> and <code class="language-plaintext highlighter-rouge">cross_entropy_loss</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">log_softmax</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># return x - x.logsumexp(-1,keepdim=True) # pytorch version
+</span>    <span class="k">return</span> <span class="n">x</span> <span class="o">-</span> <span class="n">logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">cross_entropy_loss</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nll</span><span class="p">(</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="n">target</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now we’ve implemented cross entropy from scratch we may use PyTorch’s versions of the functions:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">test_near</span><span class="p">(</span><span class="n">F</span><span class="p">.</span><span class="n">nll_loss</span><span class="p">(</span><span class="n">F</span><span class="p">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">y_train</span><span class="p">),</span> <span class="n">loss</span><span class="p">)</span>
+
+<span class="n">test_near</span><span class="p">(</span><span class="n">F</span><span class="p">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="n">loss</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="mini-batch-training">
+<a class="anchor" href="#mini-batch-training" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mini-Batch Training</h2>
+
+<h3 id="basic-training-loop">
+<a class="anchor" href="#basic-training-loop" aria-hidden="true"><span class="octicon octicon-link"></span></a>Basic Training Loop</h3>
+
+<p>Now we have the loss function done, next we need a performance metric. For a classification problem we can use accuracy:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">accuracy</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">targ</span><span class="p">).</span><span class="nb">float</span><span class="p">().</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Now we built a training loop. (Recall the training loop from <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson2-sgd.ipynb">Fast.ai part 1</a>).</p>
+
+<p>The basic training loop repeats over the following:</p>
+
+<ol>
+  <li>Get the output of model on a batch of inputs</li>
+  <li>Compare the output with the target and compute the loss</li>
+  <li>Calculate the gradients of the loss wrt every parameter of the model</li>
+  <li>Update the parameters using those gradients to make them a little bit better</li>
+</ol>
+
+<p>In Python with our current model this is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">bs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">start_i</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">bs</span>
+        <span class="n">end_i</span> <span class="o">=</span> <span class="n">start_i</span><span class="o">+</span><span class="n">bs</span>
+        <span class="n">xb</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]</span>
+        <span class="n">yb</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">xb</span><span class="p">),</span> <span class="n">yb</span><span class="p">)</span>
+
+        <span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">model</span><span class="p">.</span><span class="n">layers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="s">'weight'</span><span class="p">):</span>
+                    <span class="n">l</span><span class="p">.</span><span class="n">weight</span> <span class="o">-=</span> <span class="n">l</span><span class="p">.</span><span class="n">weight</span><span class="p">.</span><span class="n">grad</span> <span class="o">*</span> <span class="n">lr</span>
+                    <span class="n">l</span><span class="p">.</span><span class="n">bias</span>   <span class="o">-=</span> <span class="n">l</span><span class="p">.</span><span class="n">bias</span><span class="p">.</span><span class="n">grad</span>   <span class="o">*</span> <span class="n">lr</span>
+                    <span class="n">l</span><span class="p">.</span><span class="n">weight</span><span class="p">.</span><span class="n">grad</span><span class="p">.</span><span class="n">zero_</span><span class="p">()</span>
+                    <span class="n">l</span><span class="p">.</span><span class="n">bias</span>  <span class="p">.</span><span class="n">grad</span><span class="p">.</span><span class="n">zero_</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>What it does:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">loss.backward()</code> computes the gradient of the loss wrt the parameters of the model using Pytorch’s autograd.</li>
+  <li>The updating of the parameters is done inside of <code class="language-plaintext highlighter-rouge">torch.no_grad()</code> because this is not part of the gradient calculation, it’s the result of it.</li>
+  <li>It loops through the layers and checks if they have attribute ‘weight’.</li>
+  <li>After updating the parameters it zeros the gradients so that the old values don’t persist into the next iteration.</li>
+</ul>
+
+<p><em>The next part of the lesson works on refactoring this loop until we end up with an implementation equivalent to the one in PyTorch. I think it’s a good exercise to try and reproduce this yourself after watching this part of the lecture. Rather than just copy the notebook, I will structure this section as hints/descriptions of what you need to do, followed by the solution code from the <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/03_minibatch_training.ipynb">notebook</a>.</em></p>
+
+<h3 id="refactoring-1">
+<a class="anchor" href="#refactoring-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring 1</h3>
+
+<p>Currently when we update the parameters we have to loop through the layers and then check to see if they have parameter ‘weight’ and then update the weight and bias of that layer. This is long winded and it exposes the implementation too much.</p>
+
+<p>We want instead to be able to loop through all the parameters in the model in a cleaner way:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">...</span>
+            <span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">.</span><span class="n">parameters</span><span class="p">():</span> 
+                    <span class="n">p</span> <span class="o">-=</span> <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">*</span> <span class="n">lr</span>
+                <span class="n">model</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><strong>Hint</strong>: Our model already is a subclass of <code class="language-plaintext highlighter-rouge">nn.Module</code>, which has a special way of handling its attributes (<code class="language-plaintext highlighter-rouge">__setattr__</code>) that we can take advantage of if we change the way the layers are declared. Doing it this way will enable the use of <code class="language-plaintext highlighter-rouge">nn.Module</code> methods <code class="language-plaintext highlighter-rouge">.parameters</code> and <code class="language-plaintext highlighter-rouge">.zero_grad</code>…</p>
+
+<hr>
+
+<p><strong>Solution</strong>:</p>
+
+<details><summary class="btn btn-sm" data-open="Hide Output" data-close="Show Output">Click to reveal code…</summary>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">nh</span><span class="p">,</span> <span class="n">n_out</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">l1</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">l2</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">l3</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="n">n_out</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">l3</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">l2</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">l1</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+</code></pre></div></div>
+
+<p>Set the layers as attributes rather than storing a list of them. Doing things this way enables <code class="language-plaintext highlighter-rouge">nn.Module</code> to do some magic in the background. Look at the string representation of our model now:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">model</span>
+<span class="n">Model</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">l1</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">784</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">l2</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">()</span>
+  <span class="p">(</span><span class="n">l3</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>It somehow knows about the layers we set as attributes. Looping through <code class="language-plaintext highlighter-rouge">.parameters</code> now returns the weight and bias matrices of the layers too.</p>
+
+<p>What’s actually going on is <code class="language-plaintext highlighter-rouge">nn.Module</code> class overrides <code class="language-plaintext highlighter-rouge">__setattr__</code>, so every time we set an attribute that’s a PyTorch layer it registers that to an internal list. Methods like <code class="language-plaintext highlighter-rouge">.parameters</code> and <code class="language-plaintext highlighter-rouge">.zero_grad</code> then iterate through that list.</p>
+
+<p>This internal list is stored as <code class="language-plaintext highlighter-rouge">self._modules</code>, we can take a peek at it:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="p">.</span><span class="n">_modules</span>
+<span class="n">OrderedDict</span><span class="p">([(</span><span class="s">'l1'</span><span class="p">,</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">784</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)),</span>
+             <span class="p">(</span><span class="s">'l2'</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">()),</span>
+             <span class="p">(</span><span class="s">'l3'</span><span class="p">,</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">))])</span>
+</code></pre></div></div>
+</details>
+
+<h3 id="refactoring-2">
+<a class="anchor" href="#refactoring-2" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring 2</h3>
+
+<p>It’s more convenient now, but it’s not convenient enough. It’s not nice having to write attributes for every layer - what if we had 50 layers? The forward pass is also inconvenient to write, it was better when we could just loop through the layers.</p>
+
+<p>It would be nice if we could make the old implementation that had a list of layers work while getting the <code class="language-plaintext highlighter-rouge">__setattr__</code> goodness too.</p>
+
+<p><strong>Hint:</strong> checkout <code class="language-plaintext highlighter-rouge">nn.ModuleList</code></p>
+
+<hr>
+
+<p><strong>Solution</strong>:</p>
+
+<details><summary class="btn btn-sm" data-open="Hide Output" data-close="Show Output">Click to reveal code…</summary>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">SequentialModel</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">().</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></div>
+
+<p>``nn.ModuleList` gives us the list model, but also registers the layers in the list so we retain the nice features from before:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">model</span>
+<span class="n">SequentialModel</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">layers</span><span class="p">):</span> <span class="n">ModuleList</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">784</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ReLU</span><span class="p">()</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+</details>
+
+<p>We have implemented the equivalent to <code class="language-plaintext highlighter-rouge">nn.Sequential</code>, which we now may use.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="n">nout</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Checkout the source code for this and see how similar the code is to our version: <a href="https://pytorch.org/docs/stable/_modules/torch/nn/modules/container.html#Sequential"><code class="language-plaintext highlighter-rouge">nn.Sequential??</code></a>.</p>
+
+<h3 id="refactoring-3">
+<a class="anchor" href="#refactoring-3" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring 3</h3>
+
+<p>That’s the model refactored. What about the optimization step? Let’s replace our previous manually coded optimization step:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">.</span><span class="n">parameters</span><span class="p">():</span> <span class="n">p</span> <span class="o">-=</span> <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">*</span> <span class="n">lr</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>and instead use just:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">opt</span><span class="p">.</span><span class="n">step</span><span class="p">()</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>This abstracts away the optimization algorithm and implementation and lets us swap things out in future.</p>
+
+<p><strong>Hint</strong>: Let’s create a class <code class="language-plaintext highlighter-rouge">Optimizer</code> to do this. It should take the parameters and the learning rate and implement the <code class="language-plaintext highlighter-rouge">step</code> and <code class="language-plaintext highlighter-rouge">zero_grad</code> methods.</p>
+
+<hr>
+
+<p><strong>Solution</strong>:</p>
+
+<details><summary class="btn btn-sm" data-open="Hide Output" data-close="Show Output">Click to reveal code…</summary>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Optimizer</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span>
+    
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">params</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">-=</span> <span class="n">p</span><span class="p">.</span><span class="n">grad</span> <span class="o">*</span> <span class="bp">self</span><span class="p">.</span><span class="n">lr</span>
+    
+    <span class="k">def</span> <span class="nf">zero_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">.</span><span class="n">grad</span><span class="p">.</span><span class="n">zero_</span><span class="p">()</span>
+</code></pre></div></div>
+</details>
+
+<p>Training loop is now:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">opt</span> <span class="o">=</span> <span class="n">Optimizer</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">parameters</span><span class="p">())</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">bs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">start_i</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">bs</span>
+        <span class="n">end_i</span> <span class="o">=</span> <span class="n">start_i</span><span class="o">+</span><span class="n">bs</span>
+        <span class="n">xb</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]</span>
+        <span class="n">yb</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+
+        <span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">opt</span><span class="p">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="n">opt</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>We now implemented an equivalent of PyTorch’s <code class="language-plaintext highlighter-rouge">optim.SGD</code>, which we may now use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">optim</span>
+
+<span class="n">opt</span> <span class="o">=</span> <span class="n">optim</span><span class="p">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="refactoring-4---dataset">
+<a class="anchor" href="#refactoring-4---dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring 4 - Dataset</h3>
+
+<p>Let’s refactor how the data is retrieved and grouped into batches.</p>
+
+<p>It’s clunky to iterate through minibatches of x and y values separately:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">xb</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]</span>
+<span class="n">yb</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Instead, let’s do these two steps together, by introducing a <code class="language-plaintext highlighter-rouge">Dataset</code> class:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">train_ds</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">bs</span> <span class="p">:</span> <span class="n">i</span><span class="o">*</span><span class="n">bs</span><span class="o">+</span><span class="n">bs</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><strong>Hint</strong>: your class needs to override <code class="language-plaintext highlighter-rouge">__getitem__</code>.</p>
+
+<hr>
+
+<p><strong>Solution</strong>:</p>
+
+<details><summary class="btn btn-sm" data-open="Hide Output" data-close="Show Output">Click to reveal code…</summary>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Dataset</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="p">.</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">train_ds</span><span class="p">,</span><span class="n">valid_ds</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span><span class="n">Dataset</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)</span>
+</code></pre></div></div>
+</details>
+
+<h3 id="refactoring-5---dataloader">
+<a class="anchor" href="#refactoring-5---dataloader" aria-hidden="true"><span class="octicon octicon-link"></span></a>Refactoring 5 - DataLoader</h3>
+
+<p>Previously, our loop iterated over batches <code class="language-plaintext highlighter-rouge">(xb, yb)</code> like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">bs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">xb</span><span class="p">,</span><span class="n">yb</span> <span class="o">=</span> <span class="n">train_ds</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">bs</span> <span class="p">:</span> <span class="n">i</span><span class="o">*</span><span class="n">bs</span><span class="o">+</span><span class="n">bs</span><span class="p">]</span>
+    <span class="p">...</span>
+</code></pre></div></div>
+
+<p>Let’s make our loop much cleaner, using a data loader:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">xb</span><span class="p">,</span><span class="n">yb</span> <span class="ow">in</span> <span class="n">train_dl</span><span class="p">:</span>
+    <span class="p">...</span>
+</code></pre></div></div>
+
+<p><strong>Hint</strong>: you need to override <code class="language-plaintext highlighter-rouge">__iter__</code> and use <code class="language-plaintext highlighter-rouge">yield</code>.</p>
+
+<hr>
+
+<p><strong>Solution</strong>:</p>
+
+<details><summary class="btn btn-sm" data-open="Hide Output" data-close="Show Output">Click to reveal code…</summary>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">DataLoader</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">ds</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">bs</span> <span class="o">=</span> <span class="n">ds</span><span class="p">,</span><span class="n">bs</span>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">ds</span><span class="p">),</span> <span class="bp">self</span><span class="p">.</span><span class="n">bs</span><span class="p">):</span> 
+            <span class="k">yield</span> <span class="bp">self</span><span class="p">.</span><span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="bp">self</span><span class="p">.</span><span class="n">bs</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Use, training and validation data loaders:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">train_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">)</span>
+<span class="n">valid_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">valid_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">)</span>
+</code></pre></div></div>
+</details>
+
+<p>After all this refactoring the training loop now looks like:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">fit</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">xb</span><span class="p">,</span><span class="n">yb</span> <span class="ow">in</span> <span class="n">train_dl</span><span class="p">:</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+            <span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="n">opt</span><span class="p">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="n">opt</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Much smaller and very readable.</p>
+
+<h3 id="random-sampling">
+<a class="anchor" href="#random-sampling" aria-hidden="true"><span class="octicon octicon-link"></span></a>Random Sampling</h3>
+
+<p>We want our training set to be in a random order, and that order should differ each iteration. But the validation set shouldn’t be randomized.</p>
+
+<p>As we did with <code class="language-plaintext highlighter-rouge">DataLoader</code> we can implement this as a class that takes a <code class="language-plaintext highlighter-rouge">Dataset</code> and batch size, then overrides <code class="language-plaintext highlighter-rouge">_iter__</code> so that it <code class="language-plaintext highlighter-rouge">yields</code> the indices of the dataset in a random order.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Sampler</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">bs</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">),</span><span class="n">bs</span><span class="p">,</span><span class="n">shuffle</span>
+        
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">randperm</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">shuffle</span> <span class="k">else</span> <span class="n">torch</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">bs</span><span class="p">):</span> 
+            <span class="k">yield</span> <span class="bp">self</span><span class="p">.</span><span class="n">idxs</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="bp">self</span><span class="p">.</span><span class="n">bs</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">s</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">(</span><span class="n">small_ds</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
+<span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>We can then update our <code class="language-plaintext highlighter-rouge">DataLoader</code> class so that it takes a <code class="language-plaintext highlighter-rouge">Sampler</code> and can return items in a random order.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">collate</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+    <span class="n">xs</span><span class="p">,</span><span class="n">ys</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="p">.</span><span class="n">stack</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span><span class="n">torch</span><span class="p">.</span><span class="n">stack</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">DataLoader</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">sampler</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">ds</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">sampler</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">collate_fn</span> <span class="o">=</span> <span class="n">ds</span><span class="p">,</span><span class="n">sampler</span><span class="p">,</span><span class="n">collate_fn</span>
+        
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">sampler</span><span class="p">:</span> 
+            <span class="k">yield</span> <span class="bp">self</span><span class="p">.</span><span class="n">collate_fn</span><span class="p">([</span><span class="bp">self</span><span class="p">.</span><span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">collate</code> function is for gathering up the data in the batch. In this case <code class="language-plaintext highlighter-rouge">[self.ds[i] for i in s]</code> returns a list of (x,y) tuples. We want these to be instead be two tensors <code class="language-plaintext highlighter-rouge">xs</code> and <code class="language-plaintext highlighter-rouge">ys</code>, which is what the function <code class="language-plaintext highlighter-rouge">collate</code> does.</p>
+
+<p>Use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">train_samp</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">(</span><span class="n">train_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">valid_samp</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">(</span><span class="n">valid_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">train_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_ds</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">train_samp</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate</span><span class="p">)</span>
+<span class="n">valid_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">valid_ds</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">valid_samp</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="training-loop-implemented-with-pytorch-classes">
+<a class="anchor" href="#training-loop-implemented-with-pytorch-classes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training Loop Implemented with PyTorch Classes</h3>
+
+<p>At this point we have implemented the equivalents of the PyTorch classes: <code class="language-plaintext highlighter-rouge">DataLoader</code>, <code class="language-plaintext highlighter-rouge">SequentialSampler</code>, and <code class="language-plaintext highlighter-rouge">RandomSampler</code>, so we may use them from now on.</p>
+
+<p>The PyTorch code that does everything we have implemented so far would be:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span> <span class="nn">torch.functional</span> <span class="k">as</span> <span class="n">F</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">optim</span>
+
+
+<span class="n">train_ds</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">valid_ds</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)</span>
+<span class="n">train_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">drop_last</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">valid_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">valid_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="n">cross_entropy</span>
+
+
+<span class="k">def</span> <span class="nf">get_model</span><span class="p">():</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span><span class="p">),</span> <span class="n">nn</span><span class="p">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">optim</span><span class="p">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">opt</span>
+
+
+<span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">train_dl</span><span class="p">,</span> <span class="n">valid_dl</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="c1"># train
+</span>        <span class="n">model</span><span class="p">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="n">train_dl</span><span class="p">:</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">xb</span><span class="p">),</span> <span class="n">yb</span><span class="p">)</span>
+            <span class="n">loss</span><span class="p">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="n">opt</span><span class="p">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="n">opt</span><span class="p">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            
+        <span class="c1"># validate
+</span>        <span class="n">model</span><span class="p">.</span><span class="nb">eval</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="p">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">total_loss</span><span class="p">,</span> <span class="n">total_acc</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="n">valid_dl</span><span class="p">:</span>
+                <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+                <span class="n">total_loss</span> <span class="o">+=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+                <span class="n">total_acc</span> <span class="o">+=</span> <span class="n">accuracy</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+        <span class="n">nv</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_dl</span><span class="p">)</span>
+        <span class="c1"># NB these averages are incorrect if the 
+</span>        <span class="c1"># batch size varies...
+</span>        <span class="k">print</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">total_loss</span><span class="o">/</span><span class="n">nv</span><span class="p">,</span> <span class="n">total_acc</span><span class="o">/</span><span class="n">nv</span><span class="p">)</span>
+
+<span class="n">fit</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">train_dl</span><span class="p">,</span> <span class="n">valid_dl</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This training loop also includes validation. We calculate and print the validation loss at the end of each epoch.</p>
+
+<p>Note that we always call <code class="language-plaintext highlighter-rouge">model.train()</code> before training, and <code class="language-plaintext highlighter-rouge">model.eval()</code> before inference, because these are used by layers such as <code class="language-plaintext highlighter-rouge">nn.BatchNorm2d</code> and <code class="language-plaintext highlighter-rouge">nn.Dropout</code> to ensure appropriate behaviour for these different phases.</p>
+
+<h2 id="infinitely-customizable-training-loop">
+<a class="anchor" href="#infinitely-customizable-training-loop" aria-hidden="true"><span class="octicon octicon-link"></span></a>Infinitely Customizable Training Loop</h2>
+
+<p><a href="https://youtu.be/AcA8HAYh7IE?t=4976"><em>(Time in Lesson 9)</em></a></p>
+
+<p>Our train loop so far is in the function <code class="language-plaintext highlighter-rouge">fit</code> above. We need a code design where users can infinitely customize this loop to add whatever they want, like fancy progress bars, different optimizers, tensorboard integration, regularization etc. The library design would need to be open and flexible enough to handle any unforeseen extensions. There is a good way to build something that can handle this - <strong>Callbacks</strong>.</p>
+
+<p><img src="/blog/images/fastai/image-20200215165056610.png" alt="image-20200215165056610"></p>
+
+<p>FastAI’s callbacks not only let you look at, but fully customize every single part of the training loop. The training loop contains all the parts of the code we wrote above, but in between these parts are slots for callbacks. Like <code class="language-plaintext highlighter-rouge">on_epoch_begin</code>, <code class="language-plaintext highlighter-rouge">on_batch_begin</code>, <code class="language-plaintext highlighter-rouge">on_batch_end</code>, <code class="language-plaintext highlighter-rouge">on_loss_begin</code>… and so on. <em>Screen grab from lecture:</em></p>
+
+<p><img src="/blog/images/fastai/image-20200215165508912.png" alt="image-20200215165508912"></p>
+
+<p>These updates can be new values, or flags that skip steps or stop the training.</p>
+
+<p>With this we can create all kinds of useful stuff in FastAI like learning rate schedulers, early stopping, parallelism, or gradient clipping. You can also mix them all together.</p>
+
+<p><em>This next part of the lesson builds the framework for handling callbacks. It’s  hard to write as notes because it is very code heavy. I will make some general descriptions of the design decisions. Then I will move onto the implementations of Callbacks used within this framework. I recommend just watching the <a href="https://youtu.be/AcA8HAYh7IE?t=4976">lesson</a> and working through the <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/04_callbacks.ipynb">notebook</a>.</em></p>
+
+<h3 id="training-loop-landmarks">
+<a class="anchor" href="#training-loop-landmarks" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training Loop Landmarks</h3>
+
+<p>The training loop has several key points or landmarks just before or just after important parts of the training loop and we may want to inject some functionality/code into those points. In running order these are:</p>
+
+<ol>
+  <li>The start of the training: <code class="language-plaintext highlighter-rouge">begin_fit</code>
+</li>
+  <li>The end of the training: <code class="language-plaintext highlighter-rouge">after_fit</code>
+</li>
+  <li>The start of each epoch: <code class="language-plaintext highlighter-rouge">begin_epoch</code>
+</li>
+  <li>The start of a batch: <code class="language-plaintext highlighter-rouge">begin_batch</code>
+</li>
+  <li>After the loss is calculated: <code class="language-plaintext highlighter-rouge">after_loss</code>
+</li>
+  <li>After the backward pass is performed: <code class="language-plaintext highlighter-rouge">after_backward</code>
+</li>
+  <li>After the optimizer has performed a step: <code class="language-plaintext highlighter-rouge">after_step</code>
+</li>
+  <li>After all the batches and before validation: <code class="language-plaintext highlighter-rouge">begin_validate</code>
+</li>
+  <li>The end of each epoch: <code class="language-plaintext highlighter-rouge">after_epoch</code>
+</li>
+  <li>The end of the training: <code class="language-plaintext highlighter-rouge">after_fit</code>
+</li>
+  <li>Also after every batch or epoch we may want to halt everything: <code class="language-plaintext highlighter-rouge">do_stop</code>
+</li>
+</ol>
+
+<h3 id="callback-class--callback-handler-version-1">
+<a class="anchor" href="#callback-class--callback-handler-version-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Callback Class + Callback Handler (Version 1)</h3>
+
+<p>A sensible design option when faced with this would be to define an abstract base class that has methods corresponding to all the landmarks (+ method names) above. Every one of these methods should return True or False to indicate success/failure or some other stopping condition. At each of the landmarks in the training loop these booleans will be checked to see if the training loop should continue or not.</p>
+
+<p>What the <code class="language-plaintext highlighter-rouge">Callback</code> base class could look like:</p>
+
+<p><img src="/blog/images/fastai/image-20200216132402665.png" alt="image-20200216132402665"></p>
+
+<p>We want to be able to pass multiple callbacks to the training loop so we’d need an addition class to handle collections of callbacks called <code class="language-plaintext highlighter-rouge">CallbackHandler</code>. It would have a collection of <code class="language-plaintext highlighter-rouge">Callback</code> objects and the same methods as <code class="language-plaintext highlighter-rouge">Callback</code> except it loops through all of its callback objects and return a boolean indicated if all the callbacks were successful or if any failed.</p>
+
+<p>Here is a snippet of a potential <code class="language-plaintext highlighter-rouge">CallbackHandler</code> class:</p>
+
+<p><img src="/blog/images/fastai/image-20200216133501171.png" alt="image-20200216133501171"></p>
+
+<h3 id="alternative-design-runner-class">
+<a class="anchor" href="#alternative-design-runner-class" aria-hidden="true"><span class="octicon octicon-link"></span></a>Alternative Design: Runner Class</h3>
+
+<p>The last design could lead to some code smell as seen here:</p>
+
+<p><img src="/blog/images/fastai/image-20200216133844157.png" alt="image-20200216133844157"></p>
+
+<p>Callbacks <code class="language-plaintext highlighter-rouge">cb</code> are passed as the argument of every function in the training loop. This suggests that these functions should be part of a class and <code class="language-plaintext highlighter-rouge">cb</code> should be an instance attribute in that class.</p>
+
+<p>We create a new class <code class="language-plaintext highlighter-rouge">Runner</code> (I won’t list here), which contains <code class="language-plaintext highlighter-rouge">one_batch</code>, <code class="language-plaintext highlighter-rouge">all_batches</code>, and <code class="language-plaintext highlighter-rouge">fit</code> methods from the training loop, takes a list of <code class="language-plaintext highlighter-rouge">Callback</code> objects in the constructor, while also integrating the logic of the the previous <code class="language-plaintext highlighter-rouge">CallbackHandler</code> class.</p>
+
+<p>It has some clever refactoring so that the looping through the callbacks is handled by overriding <code class="language-plaintext highlighter-rouge">__call__</code>, finding all the callbacks in its collection that have the required method name (e.g. ‘<code class="language-plaintext highlighter-rouge">begin_epoch</code>’) and calling them. The boolean logic of starting and stopping is handled by this method too, which means the <code class="language-plaintext highlighter-rouge">Callback</code> subclasses no longer need to return booleans - they can just do their job without needing to know the context within which they are used. Here is an example of a <code class="language-plaintext highlighter-rouge">Callback</code> in this implementation:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">ChattyCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'begin_epoch...'</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">after_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'after epoch...'</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'begin_fit...'</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">begin_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'begin_validate...'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">run</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">cbs</span><span class="o">=</span><span class="p">[</span><span class="n">ChattyCallback</span><span class="p">()])</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">run</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+<span class="n">begin_fit</span><span class="p">...</span>
+<span class="n">begin_epoch</span><span class="p">...</span>
+<span class="n">begin_validate</span><span class="p">...</span>
+<span class="n">after</span> <span class="n">epoch</span><span class="p">...</span>
+<span class="n">begin_epoch</span><span class="p">...</span>
+<span class="n">begin_validate</span><span class="p">...</span>
+<span class="n">after</span> <span class="n">epoch</span><span class="p">...</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">Runner</code> design decouples the training loop from the callbacks such that even the different logic required for training and validation parts of the training loop can be implemented as a <code class="language-plaintext highlighter-rouge">Callback</code> which is hard coded into the <code class="language-plaintext highlighter-rouge">Runner</code> class:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TrainEvalCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_epochs</span><span class="o">=</span><span class="mf">0.</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_iter</span><span class="o">=</span><span class="mi">0</span>
+    
+    <span class="k">def</span> <span class="nf">after_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_epochs</span> <span class="o">+=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="p">.</span><span class="n">iters</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_iter</span>   <span class="o">+=</span> <span class="mi">1</span>
+        
+    <span class="k">def</span> <span class="nf">begin_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">n_epochs</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">epoch</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">model</span><span class="p">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">in_train</span><span class="o">=</span><span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">begin_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">model</span><span class="p">.</span><span class="nb">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">run</span><span class="p">.</span><span class="n">in_train</span><span class="o">=</span><span class="bp">False</span>
+</code></pre></div></div>
+
+<p><em>(IMHO: The <code class="language-plaintext highlighter-rouge">Runner</code> code is quite hard to understand, but it’s not important in the rest of the course. This is an experimental class and it doesn’t end up even in the FastAI2 library. Looking at the state of the library (2/2020), ideas from this class do appear in the  new <code class="language-plaintext highlighter-rouge">Learner</code> class. It’s better just to know what you need to  write callbacks).</em></p>
+
+<p>Things to note for all the <code class="language-plaintext highlighter-rouge">Callbacks</code> implemented in the next section:</p>
+
+<ul>
+  <li>They assume the existence of <code class="language-plaintext highlighter-rouge">self.in_train</code>, denoting if we are in training or validation. This variable is set by <code class="language-plaintext highlighter-rouge">TrainEvalCallback</code>.</li>
+  <li>They also have access to variables in the <code class="language-plaintext highlighter-rouge">Runner</code> class such as: <code class="language-plaintext highlighter-rouge">self.opt</code>, <code class="language-plaintext highlighter-rouge">self.model</code>, <code class="language-plaintext highlighter-rouge">self.loss_func</code>, <code class="language-plaintext highlighter-rouge">self.data</code>, <code class="language-plaintext highlighter-rouge">self.n_epochs</code>, and <code class="language-plaintext highlighter-rouge">self.epochs</code>.</li>
+</ul>
+
+<h2 id="callbacks-applied-annealing">
+<a class="anchor" href="#callbacks-applied-annealing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Callbacks Applied: Annealing</h2>
+
+<p><em>(<a href="https://course.fast.ai/videos/?lesson=9&amp;t=7013">Time in lesson 9 video</a>)</em></p>
+
+<p>Rather than spend too much time on understanding <code class="language-plaintext highlighter-rouge">Runner</code>, let’s move onto doing something useful - implementing some callbacks.</p>
+
+<p>Let’s implement callbacks to do <em>one-cycle</em> training. If you can train the first batches well, then the whole training will be better, and you can get super-convergence. Good annealing is critical to doing the first few batches well.</p>
+
+<p>First let’s make a callback <code class="language-plaintext highlighter-rouge">Recorder</code> that records the learning rate and loss after every batch. This calls will need two lists for the learning rates and the losses that are initialized at the being of the training loop, and it will need to append to these lists after every batch.</p>
+
+<p><code class="language-plaintext highlighter-rouge">Recorder</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Recorder</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="bp">self</span><span class="p">.</span><span class="n">lrs</span><span class="p">,</span><span class="bp">self</span><span class="p">.</span><span class="n">losses</span> <span class="o">=</span> <span class="p">[],[]</span>
+
+    <span class="k">def</span> <span class="nf">after_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">lrs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">opt</span><span class="p">.</span><span class="n">param_groups</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s">'lr'</span><span class="p">])</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">losses</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">loss</span><span class="p">.</span><span class="n">detach</span><span class="p">().</span><span class="n">cpu</span><span class="p">())</span>        
+
+    <span class="c1"># methods for plotting results
+</span>    <span class="k">def</span> <span class="nf">plot_lr</span>  <span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">lrs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">plot_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="n">plt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">losses</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Next we need a callback class that can update the parameters of the optimizer <code class="language-plaintext highlighter-rouge">opt</code> according to some schedule function based on how many epochs have elapsed.</p>
+
+<p><code class="language-plaintext highlighter-rouge">ParamScheduler</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">ParamScheduler</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">_order</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pname</span><span class="p">,</span> <span class="n">sched_func</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="p">.</span><span class="n">pname</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">sched_func</span> <span class="o">=</span> <span class="n">pname</span><span class="p">,</span> <span class="n">sched_func</span>
+
+    <span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pg</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">.</span><span class="n">opt</span><span class="p">.</span><span class="n">param_groups</span><span class="p">:</span>
+            <span class="n">pg</span><span class="p">[</span><span class="bp">self</span><span class="p">.</span><span class="n">pname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">sched_func</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">n_epochs</span><span class="o">/</span><span class="bp">self</span><span class="p">.</span><span class="n">epochs</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">begin_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">in_train</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">set_param</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Next we want to define some annealing functions for raising and lowering the learning rate as shown in these plots:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><img src="/blog/images/fastai/Sun,%2016%20Feb%202020%20153042.png" alt="img"></th>
+      <th><img src="/blog/images/fastai/Sun,%2016%20Feb%202020%20153056.png" alt="img"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td> </td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>These annealers should take a start and end value and a position between 0 and 1 denoting the relative position in the schedule. Rather than writing a function that takes all 3 of these arguments, when 2 of them are constant, we could either implement the annealing functions as an abstract base class or just use partial functions. Here partial functions are used:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">annealer</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_inner</span>
+
+<span class="o">@</span><span class="n">annealer</span>
+<span class="k">def</span> <span class="nf">sched_lin</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span> 
+    <span class="k">return</span> <span class="n">start</span> <span class="o">+</span> <span class="n">pos</span><span class="o">*</span><span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+    
+<span class="o">@</span><span class="n">annealer</span>
+<span class="k">def</span> <span class="nf">sched_cos</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span> 
+    <span class="k">return</span> <span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="p">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="p">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">pos</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="o">@</span><span class="n">annealer</span>
+<span class="k">def</span> <span class="nf">sched_no</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>  
+    <span class="k">return</span> <span class="n">start</span>
+<span class="o">@</span><span class="n">annealer</span>
+<span class="k">def</span> <span class="nf">sched_exp</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span> 
+    <span class="k">return</span> <span class="n">start</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="o">/</span><span class="n">start</span><span class="p">)</span> <span class="o">**</span> <span class="n">pos</span>
+
+<span class="k">def</span> <span class="nf">cos_1cycle_anneal</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">sched_cos</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">high</span><span class="p">),</span> <span class="n">sched_cos</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">end</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">annearler</code> is a <em>decorator</em> function. Decorators take a function and return another function and have the fancy <code class="language-plaintext highlighter-rouge">@decorator</code> syntax in Python.</p>
+
+<p>We want to combine raising and lowering schedules in a single function alongside a list of positions for when the different schedules start. This is the <code class="language-plaintext highlighter-rouge">combine_scheds</code> function:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">combine_scheds</span><span class="p">(</span><span class="n">pcts</span><span class="p">,</span> <span class="n">scheds</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pcts</span><span class="p">)</span> <span class="o">==</span> <span class="mf">1.</span>
+    <span class="n">pcts</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">listify</span><span class="p">(</span><span class="n">pcts</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">torch</span><span class="p">.</span><span class="nb">all</span><span class="p">(</span><span class="n">pcts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">pcts</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pcts</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&gt;=</span> <span class="n">pcts</span><span class="p">).</span><span class="n">nonzero</span><span class="p">().</span><span class="nb">max</span><span class="p">()</span>
+        <span class="n">actual_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span><span class="o">-</span><span class="n">pcts</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">pcts</span><span class="p">[</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">pcts</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">scheds</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="n">actual_pos</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_inner</span>
+
+<span class="n">sched</span> <span class="o">=</span> <span class="n">combine_scheds</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span> <span class="p">[</span><span class="n">sched_cos</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span> <span class="n">sched_cos</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)])</span> 
+</code></pre></div></div>
+
+<p>Which gives the following schedule:</p>
+
+<p><img src="/blog/images/fastai/Sun,%2016%20Feb%202020%20153920.png" alt="img"></p>
+
+<p>Now we can make our list of callbacks and run the training loop:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cbs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Recorder</span><span class="p">(),</span>
+       <span class="n">AvgStatsCallback</span><span class="p">(</span><span class="n">accuracy</span><span class="p">),</span>
+       <span class="n">ParamScheduler</span><span class="p">(</span><span class="s">'lr'</span><span class="p">,</span> <span class="n">sched</span><span class="p">)]</span>
+<span class="n">learn</span> <span class="o">=</span> <span class="n">create_learner</span><span class="p">(</span><span class="n">get_model_func</span><span class="p">(</span><span class="mf">0.3</span><span class="p">),</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">run</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">cbs</span><span class="o">=</span><span class="n">cbs</span><span class="p">)</span>
+<span class="n">run</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can then check the <code class="language-plaintext highlighter-rouge">Recorder</code> plots to see if it worked:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><img src="/blog/images/fastai/Sun,%2016%20Feb%202020%20155704.png" alt="img"></th>
+      <th><img src="/blog/images/fastai/Sun,%2016%20Feb%202020%20155714.png" alt="img"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td> </td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Super!</p>
+
+<h2 id="q--a">
+<a class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<ul>
+  <li>
+    <p><em>Why do we have to zero out our gradients in PyTorch?</em></p>
+
+    <blockquote>
+      <p>In models, Parameters often have lots of sources of gradients. The <code class="language-plaintext highlighter-rouge">grad</code> stored by the parameters in PyTorch is a running sum - it is updated with <code class="language-plaintext highlighter-rouge">+=</code>, not <code class="language-plaintext highlighter-rouge">=</code>. If we didn’t zero the gradients after every update then these old values from previous batches would accumulate.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>Why does the optimizer separate <code class="language-plaintext highlighter-rouge">step</code> and <code class="language-plaintext highlighter-rouge">zero_grad</code>?</em></p>
+
+    <blockquote>
+      <p>If we merged the two, we remove the ability to <em>not</em> zero the gradients here. There are cases where we may want that control. For example, what if we are dealing with super resolution 4K images and we can only fit a batch size of 2 into RAM. The stability you get from this batch size is poor and you need a larger batch size. We could instead <em>not</em> zero the grads every time, rather do it ever other batch. Our effective batch size would have then <em>doubled</em>. That’s called <em>gradient accumulation</em>.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>What’s the difference between FastAI callbacks and PyTorch Hooks?</em></p>
+
+    <blockquote>
+      <p>PyTorch hooks allow you to hook into the internals of your model. So if you want to look at the forward pass of layer 2 of you model, FastAI callbacks couldn’t do that because they are operating at a higher level. All FastAI sees is the forward and backward passes of your model. What goes on within them is PyTorch’s domain.</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li>Lecture video: <a href="https://youtu.be/AcA8HAYh7IE">Lesson9</a>
+</li>
+  <li>Course notebooks: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/04_callbacks.ipynb">04_callbacks.ipynb</a>, <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl2/05_anneal.ipynb">05_anneal.ipynb</a>
+</li>
+  <li>
+<a href="https://medium.com/@lankinen/fast-ai-lesson-9-notes-part-2-v3-ca046a1a62ef">Lesson notes</a> by @Lankinen are great transcriptions of the lecture.</li>
+  <li>An even deeper dive into PyTorch’s classes, written by the FastAI team: <a href="https://pytorch.org/tutorials/beginner/nn_tutorial.html">What is torch.nn really?</a>
+</li>
+  <li>
+    <p><a href="https://www.youtube.com/watch?v=roc-dOSeehM">Sylvain’s talk, An Infinitely Customizable Training Loop</a> (from the NYC PyTorch meetup) and the <a href="https://drive.google.com/open?id=1eWWpyHeENyNNCVTtblX2Jm02WZWw-Kes">slides</a> that go with it</p>
+  </li>
+  <li><a href="https://stats.stackexchange.com/questions/233658/softmax-vs-sigmoid-function-in-logistic-classifier">Softmax vs Sigmoid? tl;dr sigmoid is a special case of softmax.</a></li>
+  <li>Some other cool Log tricks: <a href="https://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick/">Exp-normalize trick</a>, <a href="https://timvieira.github.io/blog/post/2014/07/31/gumbel-max-trick/">Gumbel-max trick</a>
+</li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/16/fast-ai-lesson-9-notes-training-in-depth.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
