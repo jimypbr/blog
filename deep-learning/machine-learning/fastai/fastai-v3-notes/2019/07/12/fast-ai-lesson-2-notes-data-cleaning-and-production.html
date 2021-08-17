@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Fast.ai v3 Lesson 2 Notes: Data Cleaning and Production | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Fast.ai v3 Lesson 2 Notes: Data Cleaning and Production" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My personal notes on Lesson 2 of fast.ai v3 - Data cleaning and production; SGD from scratch." />
+<meta property="og:description" content="My personal notes on Lesson 2 of fast.ai v3 - Data cleaning and production; SGD from scratch." />
+<link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/12/fast-ai-lesson-2-notes-data-cleaning-and-production.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/12/fast-ai-lesson-2-notes-data-cleaning-and-production.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-07-12T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/12/fast-ai-lesson-2-notes-data-cleaning-and-production.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 2 Notes: Data Cleaning and Production","dateModified":"2019-07-12T00:00:00-05:00","datePublished":"2019-07-12T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/12/fast-ai-lesson-2-notes-data-cleaning-and-production.html"},"description":"My personal notes on Lesson 2 of fast.ai v3 - Data cleaning and production; SGD from scratch.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Fast.ai v3 Lesson 2 Notes: Data Cleaning and Production</h1><p class="page-description">My personal notes on Lesson 2 of fast.ai v3 - Data cleaning and production; SGD from scratch.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-07-12T00:00:00-05:00" itemprop="datePublished">
+        Jul 12, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      11 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#deep-learning">deep-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#fastai-v3-notes">fastai-v3-notes</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview-of-lesson">Overview of Lesson</a></li>
+<li class="toc-entry toc-h2"><a href="#download-your-own-image-data">Download Your Own Image Data</a></li>
+<li class="toc-entry toc-h2"><a href="#then-train-with-a-cnn">Then Train With A CNN</a></li>
+<li class="toc-entry toc-h2"><a href="#intepretation">Intepretation</a></li>
+<li class="toc-entry toc-h2"><a href="#cleaning-up-your-dataset">Cleaning Up Your Dataset</a></li>
+<li class="toc-entry toc-h2"><a href="#putting-your-model-into-production">Putting your Model into Production</a></li>
+<li class="toc-entry toc-h2"><a href="#things-that-can-go-wrong">Things That Can Go Wrong</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#the-truth-about-overfitting">The Truth About Overfitting</a></li>
+<li class="toc-entry toc-h3"><a href="#underfitting">Underfitting</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#sgd-from-scratch">SGD From Scratch</a></li>
+<li class="toc-entry toc-h2"><a href="#jeremy-says">Jeremy Says…</a></li>
+<li class="toc-entry toc-h2"><a href="#q--a">Q &amp; A</a></li>
+<li class="toc-entry toc-h2"><a href="#links-and-references">Links and References</a></li>
+</ul><p><img src="/blog/images/fastai/image-20190706182251357.png" alt="image-20190706182251357"></p>
+
+<h2 id="overview-of-lesson">
+<a class="anchor" href="#overview-of-lesson" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview of Lesson</h2>
+
+<p>This lesson has two parts. The first part is about constructing a image classifier from your own data. It details data collection from Google images, creating a validation set, and cleaning the data using the model.</p>
+
+<p>In the second part, we construct a simple linear model from scratch in PyTorch and train it using <em>gradient descent</em> and <em>stochastic gradient descent</em>. That part got quite lengthy so I made it its own blog post <a href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/pytorch/2019/07/13/sgd-from-scratch-fast-ai.html">here</a>.</p>
+
+<h2 id="download-your-own-image-data">
+<a class="anchor" href="#download-your-own-image-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Download Your Own Image Data</h2>
+
+<p>There is a trick to downloading data from google images. You can do the search manually for the images, then run some javascript magic to get the URLs for the images. You can then save these in a file and then download them from the command line.</p>
+
+<ol>
+  <li>
+    <p>Go to Google images and search for your desired images.</p>
+  </li>
+  <li>
+    <p>Open the browser javascript console: (⌘+⎇+J on Mac, Crtl+Shift+J on Windows/Linux).</p>
+  </li>
+  <li>
+    <p>Run the following the console:</p>
+
+    <div class="language-javascript highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="nx">urls</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="k">from</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelectorAll</span><span class="p">(</span><span class="dl">'</span><span class="s1">.rg_di.rg_meta</span><span class="dl">'</span><span class="p">)).</span><span class="nx">map</span><span class="p">(</span><span class="nx">el</span><span class="o">=&gt;</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">textContent</span><span class="p">).</span><span class="nx">ou</span><span class="p">);</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="dl">'</span><span class="s1">data:text/csv;charset=utf-8,</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">escape</span><span class="p">(</span><span class="nx">urls</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="dl">'</span><span class="se">\n</span><span class="dl">'</span><span class="p">)));</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>This initiates a download of a CSV that contains all the urls to the images shown on Google images.</p>
+  </li>
+  <li>
+    <p>Use fastai’s <code class="language-plaintext highlighter-rouge">download_images</code> function and pass it the path to the CSV file as the argument.</p>
+  </li>
+  <li>
+    <p>Remove images that aren’t valid. Use fastai’s <code class="language-plaintext highlighter-rouge">verify_images</code> to delete these.</p>
+  </li>
+</ol>
+
+<h2 id="then-train-with-a-cnn">
+<a class="anchor" href="#then-train-with-a-cnn" aria-hidden="true"><span class="octicon octicon-link"></span></a>Then Train With A CNN</h2>
+
+<p>Following the steps from Lesson 1:</p>
+
+<ol>
+  <li>
+    <p>Load data using the DataBunch API:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span> <span class="c1"># fix seed for to get same validation set
+</span><span class="n">data</span> <span class="o">=</span> <span class="n">ImageDataBunch</span><span class="p">.</span><span class="n">from_folder</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="s">'.'</span><span class="p">,</span> <span class="n">valid_pct</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+                                  <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(),</span> <span class="n">size</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> 
+                                  <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">).</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">)</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Create the CNN learner and specify the architecture:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">learn</span> <span class="o">=</span> <span class="n">create_cnn</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">models</span><span class="p">.</span><span class="n">resnet34</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">error_rate</span><span class="p">)</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>First fit the <em>head</em> of the pretrained CNN with a few cycles:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">...</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Then <em>unfreeze</em> the <em>body</em> of the pretrained CNN:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">unfreeze</span><span class="p">()</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Run the learning rate finder:</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">lr_find</span><span class="p">()</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Inspect the learning rate graph and find the strongest downward slope whose negative trend persists for while with the increasing learning rate. Try to pick a learning rate corresponding to the steepest part of this slope.</p>
+
+    <p><img src="https://github.com/hiromis/notes/raw/master/lesson2/13.png" alt="img"></p>
+  </li>
+  <li>
+    <p>Train the whole network again for a few cycles using a range of learning rates for each layer group, with the learning rate you picked being the highest. This is called <strong>Discriminative Layer Training</strong> in fastai.</p>
+
+    <div class="language-python highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code><span class="n">learn</span><span class="p">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_lr</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mf">3e-5</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<p>In the Bear example Jeremy does this produces an error rate of 1.4% with a few hundred images and a few minutes of training time on a GPU.</p>
+
+<h2 id="intepretation">
+<a class="anchor" href="#intepretation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Intepretation</h2>
+
+<p>For a classification task such as the Bear example in the lecture, you want to look at the confusion matrix to see where it is failing (well, except where you have loads of classes). FastAI has a handy class for interpreting classification results:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">interp</span> <span class="o">=</span> <span class="n">ClassificationInterpretation</span><span class="p">.</span><span class="n">from_learner</span><span class="p">(</span><span class="n">learn</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">interp</span><span class="p">.</span><span class="n">plot_confusion_matrix</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson2/14.png" alt="img"></p>
+
+<p>Pretty good - only one mistake!</p>
+
+<h2 id="cleaning-up-your-dataset">
+<a class="anchor" href="#cleaning-up-your-dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cleaning Up Your Dataset</h2>
+
+<p>Maybe there is noise or mistakes in your dataset. If we download images from google then perhaps there are images that are of the wrong thing. We want to clean it up.
+Here is where human intelligence and a computer learner can be combined! It’s very unlikely that a mislabeled data is going to be predicted correctly and with high confidence. We can look at the instances that the computer learner is least confident about - i.e. the instances with the highest loss. There is a nice widget for Jupyter notebook for inspecting and deleting things called <code class="language-plaintext highlighter-rouge">FileDeleter</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">fastai.widgets</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">losses</span><span class="p">,</span><span class="n">idxs</span> <span class="o">=</span> <span class="n">interp</span><span class="p">.</span><span class="n">top_losses</span><span class="p">()</span>
+<span class="n">top_loss_paths</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">valid_ds</span><span class="p">.</span><span class="n">x</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>After cycling through <code class="language-plaintext highlighter-rouge">FileDeleter</code> and deleting the bad data you should eventually see fewer and fewer bad data points. At this point you are done and should retrain your model on the cleaned dataset.</p>
+
+<p>Generally these CNN models are pretty good at handling small amounts of noise so this data cleaning will normally give you a small improvement.</p>
+
+<h2 id="putting-your-model-into-production">
+<a class="anchor" href="#putting-your-model-into-production" aria-hidden="true"><span class="octicon octicon-link"></span></a>Putting your Model into Production</h2>
+
+<p>You probably want to use CPU for inference, except for massive scale (and you almost certainly don’t need to train in real time). GPU is only effective if you can get things into neat batches with sizes like 64, which exploits the GPU parallelism. In PyTorch you can specify CPU via:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">fastai</span><span class="p">.</span><span class="n">defaults</span><span class="p">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">device</span><span class="p">(</span><span class="s">'cpu'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s use the trained model for <em>inference</em>. We upload an image of a bear and store that in a variable <code class="language-plaintext highlighter-rouge">img</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">img</span> <span class="o">=</span> <span class="n">open_image</span><span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="s">'black'</span><span class="o">/</span><span class="s">'00000021.jpg'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><img src="https://github.com/hiromis/notes/raw/master/lesson2/bear.png" alt="img"></p>
+
+<p>And as per usual, we created a data bunch, but this time, we’re not going to create a data bunch from a folder full of images, we’re going to create a special kind of data bunch which is one that’s going to grab one single image at a time. So we’re not actually passing it any data. The only reason we pass it a path is so that it knows where to load our model from. That’s just the path that’s the folder that the model is going to be in.</p>
+
+<p>You also need to pass it the same transformations , size, and normalizations that you used when training the CNN. You then <code class="language-plaintext highlighter-rouge">create_cnn</code> with this fake dataset and then load the weights that were saved in the training phase:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="s">'black'</span><span class="p">,</span> <span class="s">'grizzly'</span><span class="p">,</span> <span class="s">'teddys'</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="n">ImageDataBunch</span><span class="p">.</span><span class="n">single_from_classes</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(),</span> 																											 <span class="n">size</span><span class="o">=</span><span class="mi">224</span><span class="p">).</span><span class="n">normalize</span><span class="p">(</span><span class="n">imagenet_stats</span><span class="p">)</span>
+<span class="n">learn</span> <span class="o">=</span> <span class="n">create_cnn</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span> <span class="n">models</span><span class="p">.</span><span class="n">resnet34</span><span class="p">)</span>
+<span class="n">learn</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">'stage-2'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Then prediction is done using the <code class="language-plaintext highlighter-rouge">predict</code> method and passing in the real single image data:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pred_class</span><span class="p">,</span><span class="n">pred_idx</span><span class="p">,</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">learn</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">pred_class</span>
+
+<span class="o">&gt;</span> <span class="s">'black'</span>
+</code></pre></div></div>
+
+<p>This is the engine of an web-app. The rest of the app can be coded up in a framework like Flask or Starlette. Here is a great example that uses Starlette: <a href="https://github.com/simonw/cougar-or-not">cougar-or-not</a>.</p>
+
+<p>There are services for hosting, such as: https://www.pythonanywhere.com/</p>
+
+<h2 id="things-that-can-go-wrong">
+<a class="anchor" href="#things-that-can-go-wrong" aria-hidden="true"><span class="octicon octicon-link"></span></a>Things That Can Go Wrong</h2>
+
+<p>The problems will basically be either:</p>
+
+<ul>
+  <li>The learning rate is too high or too low</li>
+  <li>The number of epochs is too many or too few</li>
+</ul>
+
+<p><strong>Learning rate too high</strong>: basically ruins everything and results in a super high validation loss</p>
+
+<p><strong>Learning rate too low</strong>: the error rate goes down <em>really slowly</em>. The other thing you see if your learning rate is too small is that your training loss will be higher than your validation loss. You never want a model where your training loss is higher than your validation loss. That always means you are <em>under-fitting</em> which means either your learning rate is too low or your number of epochs is too low. So if you have a model like that, train it some more or train it with a higher learning rate.</p>
+
+<p><strong>Number of epochs too few</strong>: training loss much higher than validation loss, which is a symptom of <em>under-fitting</em>. It needs to learn more.</p>
+
+<p><strong>Number of epochs too many</strong>: Too many epochs create something called “overfitting”. If you train for too long as we’re going to learn about it, it will learn to recognize your particular teddy bears but not teddy bears in general.</p>
+
+<p>This is a good post about diagnosing your fit in machine learning: <a href="https://machinelearningmastery.com/learning-curves-for-diagnosing-machine-learning-model-performance/">machine learning mastery</a>.</p>
+
+<h3 id="the-truth-about-overfitting">
+<a class="anchor" href="#the-truth-about-overfitting" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Truth About Overfitting</h3>
+
+<p>The only thing that tells you you are overfitting is that the error rate improves for a while and then starts getting worse again.</p>
+
+<p><strong>Myth</strong>: If the training loss is less than the validation loss then the model is overfitting. <strong>Absolutely not true</strong>.</p>
+
+<blockquote>
+  <p>Any model that is trained correctly will always have a lower training loss than validation loss</p>
+</blockquote>
+
+<p>You want your model to have a low error. So as long as you’re training and your model error is improving, you’re not overfitting.</p>
+
+<p>In Jeremy’s option, despite what you hear, it’s actually very hard to overtrain in deep learning.</p>
+
+<h3 id="underfitting">
+<a class="anchor" href="#underfitting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Underfitting</h3>
+
+<p>How can the training loss be <em>higher</em> than the validation loss? This doesn’t really seem like it could happen except if you had some contrived validation set. It can however happen quite easily with training neural networks because of <strong>dropout</strong>.</p>
+
+<p>Dropout is <em>turned on</em> while training and <em>turned off</em> in the validation. If the result is made much worse by dropout then it means that the network has not learned sufficiently well and it is therefore underfitting. Ways to fix this are: train with more epochs, use higher learning rate, use less dropout, or adjust weight decay parameters.</p>
+
+<p>Batch Norm also operates differently at training and test time.</p>
+
+<h2 id="sgd-from-scratch">
+<a class="anchor" href="#sgd-from-scratch" aria-hidden="true"><span class="octicon octicon-link"></span></a>SGD From Scratch</h2>
+
+<p>This part kind of outgrew this blog post so I have spun this out into its own blog post <a href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/pytorch/2019/07/13/sgd-from-scratch-fast-ai.html">here</a>.</p>
+
+<h2 id="jeremy-says">
+<a class="anchor" href="#jeremy-says" aria-hidden="true"><span class="octicon octicon-link"></span></a>Jeremy Says…</h2>
+
+<ol>
+  <li>If forum posts are overwhelming, click “summarize this topic” at the bottom of the first post. (Only works for &gt;50 replies).</li>
+  <li>Please follow the official server install/setup instructions, they work and are easy.</li>
+  <li>It’s okay to feel intimidated, there’s a lot, but just pick one piece and dig into it. Try to push a piece of code, or learn a concept like regular expressions, or create a classifier, or whatever. Context: <a href="https://youtu.be/ccMHJeQU4Qw?t=600">Lesson 2: It’s okay to feel intimidated 30</a>
+</li>
+  <li>If you’re stuck, keep going. See image below! Context: <a href="https://youtu.be/ccMHJeQU4Qw?t=867">Lesson 2: If you’re stuck, keep going 38</a>
+</li>
+  <li>If you’re not sure which learning rate is best from plot, try both and see.</li>
+  <li>When you put a model into production, you probably want to use CPU for inference, except at massive scale. Context: <a href="https://youtu.be/ccMHJeQU4Qw?t=2308">Lesson 2: Putting Model into Production 17</a>
+</li>
+  <li>Most organizations spend too much time gathering data. Get a small amount first, see how it goes.</li>
+  <li>If you think you’re not a math person, check out Rachel’s talk: <a href="https://youtu.be/q6DGVGJ1WP4">There’s no such thing as “not a math person” 56</a>. My own input: only 6 minutes, everyone should watch it!</li>
+</ol>
+
+<p><img src="https://forums.fast.ai/uploads/default/optimized/3X/d/e/de73a146088bb62668b7e2d0215b398d9452177e_2_690x422.png" alt="keepgoing"></p>
+
+<p>(<a href="https://forums.fast.ai/t/things-jeremy-says-to-do/36682">Source: Robert Bracco</a>)</p>
+
+<h2 id="q--a">
+<a class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<ul>
+  <li>
+    <p><em>When generating new image dataset, how do you know how many images are enough? What are ways to measure “enough”?</em></p>
+
+    <blockquote>
+      <p>That’s a great question. Another possible problem you have is you don’t have enough data. How do you know if you don’t have enough data? Because you found a good learning rate (i.e. if you make it higher than it goes off into massive losses; if you make it lower, it goes really slowly) and then you train for such a long time that your error starts getting worse. So you know that you trained for long enough. And you’re still not happy with the accuracy﹣it’s not good enough for the teddy bear cuddling level of safety you want. So if that happens, there’s a number of things you can do and we’ll learn pretty much all of them during this course but one of the easiest one is get more data. If you get more data, then you can train for longer, get higher accuracy, lower error rate, without overfitting.</p>
+
+      <p>Unfortunately, there is no shortcut. I wish there was. I wish there’s some way to know ahead of time how much data you need. But I will say this﹣most of the time, you need less data than you think. So organizations very commonly spend too much time gathering data, getting more data than it turned out they actually needed. So get a small amount first and see how you go.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><em>What do you do if you have unbalanced classes such as 200 grizzly and 50 teddies?</em></p>
+
+    <blockquote>
+      <p>Nothing. Try it. It works. A lot of people ask this question about how do I deal with unbalanced data. I’ve done lots of analysis with unbalanced data over the last couple of years and I just can’t make it not work. It always works. There’s actually a paper that said if you want to get it slightly better then the best thing to do is to take that uncommon class and just make a few copies of it. That’s called “oversampling” but I haven’t found a situation in practice where I needed to do that. I’ve found it always just works fine, for me.</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="links-and-references">
+<a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
+
+<ul>
+  <li><a href="https://youtu.be/ccMHJeQU4Qw">Link to Lesson 2 lecture</a></li>
+  <li>Homework notebooks:
+    <ul>
+      <li>Notebook 1: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson2-download.ipynb">lesson2-download.ipynb</a>
+</li>
+      <li>Notebook 2: <a href="https://github.com/fastai/course-v3/blob/master/nbs/dl1/lesson2-sgd.ipynb">lesson2-sgd.ipynb</a>
+</li>
+    </ul>
+  </li>
+  <li>Parts of my notes have been copied from the excellent lecture transcriptions made by @hiromi. Link: <a href="https://github.com/hiromis/notes/blob/master/Lesson2.md">Lesson2 Detailed Notes</a>.</li>
+  <li>This is an in-depth tutorial on PyTorch: <a href="https://towardsdatascience.com/understanding-pytorch-with-an-example-a-step-by-step-tutorial-81fc5f8c4e8e">https://towardsdatascience.com/understanding-pytorch-with-an-example-a-step-by-step-tutorial-81fc5f8c4e8e</a>
+</li>
+  <li>
+<a href="https://www.fast.ai/2017/11/13/validation-sets/">How (and why) to create a good validation set</a> by @rachel</li>
+  <li>
+<a href="https://www.youtube.com/watch?v=q6DGVGJ1WP4">There’s no such thing as “not a math person”</a> by @rachel</li>
+  <li>
+<a href="https://github.com/kennethreitz/responder">Responder</a> - a web app framework built on top of Starlette</li>
+  <li>Post about an <a href="https://www.christianwerner.net/tech/Build-your-image-dataset-faster/">alternative image downloader/cleaner</a> by @cwerner</li>
+  <li>
+<a href="https://forums.fast.ai/t/tool-for-deleting-files-on-the-google-image-search-page-before-downloading/28900">A tool for excluding irrelevant images from Google Image Search results</a> by @melonkernel</li>
+  <li>
+<a href="https://medium.com/@ageitgey/machine-learning-is-fun-part-3-deep-learning-and-convolutional-neural-networks-f40359318721">Machine Learning is Fun</a> - source of image/number GIF animation shown in lesson</li>
+  <li>
+<a href="https://arxiv.org/abs/1710.05381">A systematic study of the class imbalance problem in convolutional neural networks</a>, mentioned by Jeremy as a way to solve imbalanced datasets.</li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/07/12/fast-ai-lesson-2-notes-data-cleaning-and-production.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
