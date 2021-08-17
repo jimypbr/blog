@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>SIFTing Images | go-seq</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="SIFTing Images" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals." />
+<meta property="og:description" content="In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals." />
+<link rel="canonical" href="https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html" />
+<meta property="og:url" content="https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html" />
+<meta property="og:site_name" content="go-seq" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fleuron/headpiece.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-12-30T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html","@type":"BlogPosting","headline":"SIFTing Images","dateModified":"2016-12-30T00:00:00-06:00","datePublished":"2016-12-30T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fleuron/headpiece.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/2016/12/30/fleuronbovw.html"},"description":"In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     tex2jax: {
+       inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       processEscapes: true
+     }
+   });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">go-seq</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">SIFTing Images</h1><p class="page-description">In this post I describe my work on extracting and filtering printers' ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-12-30T00:00:00-06:00" itemprop="datePublished">
+        Dec 30, 2016
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      19 min read
+    
+</span></p>
+
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><img src="/blog/images/fleuron/headpiece.png" alt="headpiece" /></p>
+
+<h2 id="the-fleuron-project">The Fleuron Project</h2>
+
+<p>I have been involved in the Fleuron project this year. The aim of this project is to use computer vision to extract printers’ ornaments from a large corpus of ~150,000 scanned documents (32 million pages) from the 18th century. Printed books in the 18th century were highly decorated with miniature pieces of printed artwork - ‘ornaments’. Their pages were adorned with ornaments that ranged from small floral embellishments to large and intricate head- and tailpieces, depicting all manner of people, places, and things. Printers’ ornaments are of interest to historians from many disciplines, not least for their importance as examples of early graphic design and craftsmanship. They can help solve the mysteries of the book trade, and they can be used to detect piracy and fraud.</p>
+
+<p>In this project an OpenCV based code was developed to automatically detect ornaments in a scanned image of a page and extract them into their own file. This code worked very well and extracted over 3 million images from the data, but it was quite over-sensitive in its detection so there were many false-positives. The code was heuristic based and didn’t use any machine intelligence to further evaluate the potential images for validity. We therefore chose to tune the code to have good recall at the expense of precision – i.e. we would rather it didn’t miss valid images, even if it means that some invalid images get through too. Often these invalid images were of blocks of text so we initially experimented with using OCR to catch these cases. However this had the unwanted effect of making recall worse. We decided a better solution would be to train a machine learning classifier to discriminate between the valid and invalid images.</p>
+
+<p>My contribution to the project was to use the extraction code to generate data, which I then hand-labelled to create a training set to train a machine learning based filter to remove the bad images. The final filtered dataset is presented on the website: <a href="http://fleuron.lib.cam.ac.uk">http://fleuron.lib.cam.ac.uk</a> <em>(EDIT 2021: Fleuron now defunct. Has since become Compositor)</em>, which I also designed and built.  In this blog post I will describe the methodology and results of the image filtering part of the project.</p>
+
+<h2 id="extraction">Extraction</h2>
+
+<p>The first challenge is to extract the ornaments from the raw page scans. This is an example of a page containing two ornaments, at the top of the page and at the start of the text body:</p>
+
+<p><img src="/blog/images/fleuron/example_page.png" alt="Typical Page" /></p>
+
+<p>We required an algorithm that could ignore the text and draw bounding boxes around the two ornaments on the page. To solve this problem we enlisted <a href="https://dirkgorissen.com/">Dirk Gorissen</a> to develop a method using Python and OpenCV. I will not dive deeply into how Dirk’s algorithm works here. Basically it uses combines heuristics of where ornaments are typically located and how they look with various image filtering techniques to weed out text and other artifacts on the page to leave just the artwork intact.</p>
+
+<p>Here is a demonstration of how each of the different stages of the algorithm work using on the single page shown above as an example:</p>
+
+<p><img alt="Extracting ornaments" src="/blog/images/fleuron/debug_1.png" width="500" /></p>
+
+<p>Ornaments are visually very dense compared to the text. In the first stage the image is cleaned removing dust and stains in the white space of the page. Then through several iterations of blurring and contouring are applied until just the ornaments are left as single contours as seen in stage 5. A bounding box is then drawn around these contours and content of these boxes is then extracted from the original image.</p>
+
+<p>This method is simple and effective, but it is also apt to falsely classifying blocks of text. In the following example you can see clearly how this can happen:</p>
+
+<p><img alt="Extracting ornaments with a false positive" src="/blog/images/fleuron/debug_2.png" width="500" /></p>
+
+<p>After running extraction on all of the pages, I found that in a random sample of the images, most of them were just images of blocks of text! However, given that most of the pages in the dataset contain only text and no ornaments, perhaps this is to be expected even if the algorithm is fairly good at removing text.</p>
+
+<p>After extracting the ornaments from a large sample of the books, I hand labeled a random sample of 15000 images as valid and invalid. Here is a collage of valid images:</p>
+
+<p><img alt="Examples of valid images" src="/blog/images/fleuron/collage_valid.jpg" width="500" /></p>
+
+<p><br />
+Here is a collage of invalid images that we want to filter out:</p>
+
+<p><img alt="Examples of invalid images" src="/blog/images/fleuron/collage_invalid.jpg" width="500" /></p>
+
+<h2 id="image-filtering-pipeline">Image Filtering Pipeline</h2>
+
+<p>The choice of image representation is essential to getting a well performing machine learning based classifier. The Images are black and white and so we can’t use any colour features and contain very rich textures. 
+The pipeline for the image filtering system:</p>
+
+<ol>
+  <li>Create a labelled data set for training</li>
+  <li>Represent each training image by a vector using Bag of Visual Words</li>
+  <li>Train a classifier on the vector to discriminate between valid and invalid images</li>
+  <li>Apply the classifier to unseen images in the data set.</li>
+</ol>
+
+<h2 id="bag-of-visual-words-bovw">Bag of Visual Words (BoVW)</h2>
+
+<p>The Bag of Visual Words (BoVW) method is a common feature representation of images in computer vision. The method is directly inspired by the Bag of Words (BoW) method used in <em>text classificiation</em>. In the BoW method, the basic idea is that a text document is split up into its component words. Each of the words in the document is then matched to a word in the dictionary, and the number of unique words in the document is counted. The text document is then represented as a sparse <em>histogram</em> of word counts that is as long as the dictionary.</p>
+
+<p>This histogram can be interpreted as a vector in some high dimensional space, and two different documents will be represented by two different vectors. So for a dictionary with $D$ words the vector for document $i$ is:</p>
+
+\[v_i = [n(w_1,i), n(w_2,i), ..., n(w_D, i)]\]
+
+<p>Where $n(w)$ counts the number of occurrences of word $w$. The distance between these two vectors (e.g. L2, cosine, etc) can therefore be used as a proxy for the <strong>similarity</strong> of the two documents. If everything is working well, then a low distance will indicate high similarity and a large distance will represent a high dissimilarity. With this representation we are able to throw machine learning algorithms at the data or do document retrieval.</p>
+
+<p>BoVW is exactly the same method except that instead of using actual words it uses ‘visual words’ extracted from the images. Visual words basically take the form of ‘iconic’ patches or fragments of an image.</p>
+
+<h3 id="1-extract-notable-features-from-the-images">1. Extract notable features from the images</h3>
+
+<div class="row">
+<div class="col-md-6">
+<img src="/blog/images/fleuron/image_to_words_1.jpg" width="500" />
+</div>
+<div class="col-md-6">
+<img src="/blog/images/fleuron/image_to_words_2.jpg" width="500" />
+</div>
+</div>
+
+<h3 id="2-learn-a-visual-dictionary">2. Learn a visual dictionary</h3>
+
+<p>Use a clustering algorithm like k-means with a apriori number of clusters (&gt;1000) to learn a set of $k$ compound visual words.</p>
+
+<p><img src="/blog/images/fleuron/image_dict.png" width="500" /></p>
+
+<h3 id="3-quantize-features-using-the-visual-vocabulary">3. Quantize features using the visual vocabulary</h3>
+
+<p>Now we could then take an image, find its visual words and match each of those words to their nearest equivalent in the dictionary.</p>
+
+<h3 id="4-represent-images-by-histogram-of-visual-word-counts">4. Represent images by histogram of visual word counts</h3>
+<p>By counting how many times a word in the dictionary is matched, the image can be re-represented as a histogram of word counts:</p>
+
+<p><img src="/blog/images/fleuron/image_hist.png" alt="Historgram of visual word counts" /></p>
+
+<p>Similar looking images will have contains many of the same words and counts.</p>
+
+<h2 id="sift---the-visual-word">SIFT - The Visual Word</h2>
+
+<p>Now that we have outlined the concept of the BoVW method, what do we actually use as the ‘visual word’? To create the visual words I used SIFT - ‘Scale Invariant Feature Transform’. SIFT is a method for detecting multiple interesting <em>keypoints</em> in a grey-scale image and describing each of those points using a 128 dimensional vector. The SIFT descriptor is invariant to scale, rotation, and illumination, which is why it is such a popular method in classification and CBIR. An excellent technical description of SIFT can be found <a href="http://www.scholarpedia.org/article/Scale_Invariant_Feature_Transform">here</a>.</p>
+
+<p>OpenCV has an implementation of a SIFT detector included. The following code finds all the keypoints in an image and draws them back onto the image.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">imread</span><span class="p">(</span><span class="s">'image_2.png'</span><span class="p">)</span>
+<span class="n">img_gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="p">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+<span class="n">kp</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">sift</span><span class="p">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">img_gray</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+<span class="n">img2</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">drawKeypoints</span><span class="p">(</span><span class="n">img_gray</span><span class="p">,</span> <span class="n">kp</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="p">.</span><span class="n">DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS</span><span class="p">)</span>
+
+<span class="n">cv2</span><span class="p">.</span><span class="n">imwrite</span><span class="p">(</span><span class="s">'image_sift_2.png'</span><span class="p">,</span> <span class="n">img2</span><span class="p">)</span>
+</code></pre></div></div>
+<p>Here is the output of this for two images from the dataset, one valid and the other invalid:</p>
+
+<div class="row">
+<div class="col-md-6">
+<img src="/blog/images/fleuron/image_sift_1.png" />
+</div>
+
+<div class="col-md-6">
+<img src="/blog/images/fleuron/image_sift_2.png" />
+</div>
+</div>
+
+<p>There is a simple improvement that can be made to SIFT called <a href="https://www.robots.ox.ac.uk/~vgg/publications/2012/Arandjelovic12/presentation.pdf">RootSIFT</a>.  RootSIFT is a small modification to the SIFT descriptor that corrects the L2 distance between two SIFT descriptors. This generally always improves performance for classification and image retrieval. Here is an implementation in python:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">rootsift_descriptor</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="s">"""
+    Extract root sift descriptors from image stored in file f
+    :param: f : str or unicode filename
+    :return: desc : numpy array [n_sift_desc, 128]
+    """</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">imread</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">img_gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="p">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+    <span class="n">sift</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">SIFT</span><span class="p">()</span>
+    <span class="n">kp</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">sift</span><span class="p">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">img_gray</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'Warning: No SIFT features found in {}'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">desc</span> <span class="o">/=</span> <span class="p">(</span><span class="n">desc</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-7</span><span class="p">)</span>
+    <span class="n">desc</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">desc</span>
+</code></pre></div></div>
+
+<h2 id="building-a-visual-word-dictionary">Building a Visual Word Dictionary</h2>
+
+<p>To create a visual word dictionary we need to first collect and store all the RootSIFT descriptors from a large sample of images from our dataset. Here I used a sample size of 50,000 images. For 50,000 images, $N \approx 1~ billion$.  The following script iterates through every image in the target directory, finds the RootSIFT descriptors of the image, and then stores them in a large $N\times128$ array in a HDF5 file.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">tables</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">bovw</span> <span class="kn">import</span> <span class="n">rootsift_descriptor</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">sample</span><span class="p">,</span> <span class="n">shuffle</span>
+
+
+<span class="k">def</span> <span class="nf">create_descriptor_bag</span><span class="p">(</span><span class="n">filelist</span><span class="p">):</span>
+    <span class="s">"""
+    creates an array of descriptor vectors generated from every
+    file in filelist
+    """</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">filelist</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">filelist</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'Processing file: {} of {}...'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">rootsift_descriptor</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">desc</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">X</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">h5f</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">openFile</span><span class="p">(</span><span class="s">'/scratch/ECCO/rootsift_vectors_50k.hdf'</span><span class="p">,</span> <span class="s">'w'</span><span class="p">)</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">Atom</span><span class="p">.</span><span class="n">from_dtype</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">'Float32'</span><span class="p">))</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">h5f</span><span class="p">.</span><span class="n">createEArray</span><span class="p">(</span><span class="n">h5f</span><span class="p">.</span><span class="n">root</span><span class="p">,</span> 
+                          <span class="s">'descriptors'</span><span class="p">,</span> 
+                          <span class="n">atom</span><span class="p">,</span> 
+                          <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> 
+                          <span class="n">expectedrows</span><span class="o">=</span><span class="mi">1000000</span><span class="p">)</span>
+
+    <span class="n">PATH</span> <span class="o">=</span> <span class="s">'/home/jb914/ECCO_dict/random50k/'</span>
+    <span class="n">all_files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">PATH</span><span class="p">,</span> <span class="s">'*.png'</span><span class="p">))</span>
+    <span class="n">rand_sample</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_files</span><span class="p">)),</span> <span class="mi">5000</span><span class="p">)]</span>
+    <span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">rand_sample</span><span class="p">),</span> <span class="n">chunk_size</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'Creating rootsift descriptor bag...'</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">create_descriptor_bag</span><span class="p">(</span><span class="n">rand_sample</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">])</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="s">'Writing file: rootsift_vectors_5000.hdf'</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+            <span class="n">ds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="bp">None</span><span class="p">])</span>
+        <span class="n">ds</span><span class="p">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="c1">#ds[:] = X
+</span>    <span class="n">h5f</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>HDF5 files are great for storing large multidimensional arrays of data to disk because they store the meta-data of the array dimensions and allow for streaming the data from disk to memory. This is especially useful when the full data is much larger than memory like here.</p>
+
+<p>Creating the dictionary is the hardest and most time consuming part with BoVW. There are many vectors to cluster, the number of words is very large (between 1000 and 1,000,000), and the vectors are high dimensional. This stretches the capabilities of many clustering algorithms in all possible ways. In my experiments I found that the standard K-Means clustering algorithm quickly became intractable for larger numbers of vectors and clusters. Moreover the algorithm is offline - it needs to see all the data at once. Algorithms better suited for this task are approximate k-means (AKM) and mini-batch k-means.</p>
+
+<p>I found success with two open source implementations of these in <a href="https://github.com/philbinj/fastcluster">fastcluster</a> (AKM), and in <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MiniBatchKMeans.html">MiniBatchKMeans</a> from scikit-learn. Fastcluster has the advantage that it uses distributed parallelism via MPI to split the large data up across multiple machines. However this useful code lacks documentation and no longer maintained. MiniBatchKMeans on the other hand isn’t parallel, however it does allow for streaming of the data through memory so it works great with HDF5.</p>
+
+<p>In my experiments I found that setting the dictionary size to 20,000 words was sufficient.</p>
+
+<p>The following script can stream a HDF5 file in a user defined number of chunks performing clustering with those chunks. The total clustering time for this was approximately 24 hours running in serial on a Intel Xeon Ivybridge CPU.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">tables</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">MiniBatchKMeans</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">checkpoint_file</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">datah5f</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">open_file</span><span class="p">(</span><span class="s">'/scratch/ECCO/rootsift_vectors_50k.hdf'</span><span class="p">,</span> <span class="s">'r'</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">datah5f</span><span class="p">.</span><span class="n">root</span><span class="p">.</span><span class="n">descriptors</span><span class="p">.</span><span class="n">shape</span>
+    <span class="n">datah5f</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">'Read in SIFT data with size in chunks: '</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">'Running MiniBatchKMeans with cluster sizes: '</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">n_clusters</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">'n_clusters:'</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">checkpoint_file</span><span class="p">:</span>
+        <span class="n">mbkm</span> <span class="o">=</span> <span class="n">pickle</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">checkpoint_file</span><span class="p">,</span> <span class="s">'r'</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mbkm</span> <span class="o">=</span> <span class="n">MiniBatchKMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> 
+                               <span class="n">init_size</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s">'random'</span><span class="p">,</span> 
+                               <span class="n">compute_labels</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_chunks</span>
+    <span class="n">start_i</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">*</span><span class="n">step</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">start_i</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">step</span><span class="p">):</span>
+        <span class="n">datah5f</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">open_file</span><span class="p">(</span><span class="s">'/scratch/ECCO/rootsift_vectors_{}.hdf'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">datasize</span><span class="p">),</span> <span class="s">'r'</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">datah5f</span><span class="p">.</span><span class="n">root</span><span class="p">.</span><span class="n">descriptors</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">]</span>
+        <span class="n">datah5f</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="n">mbkm</span><span class="p">.</span><span class="n">partial_fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'</span><span class="se">\t</span><span class="s"> ({} of {}) Time taken: {}'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span>
+        <span class="n">chunk</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">pickle</span><span class="p">.</span><span class="n">dump</span><span class="p">(</span><span class="n">mbkm</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s">'chkpt_{}.p'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">),</span> <span class="s">'w'</span><span class="p">))</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">mbkm</span><span class="p">.</span><span class="n">cluster_centers_</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">X</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">open_file</span><span class="p">(</span><span class="s">'fleuron_codebook_{}.hdf'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">),</span> <span class="s">'w'</span><span class="p">)</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">Atom</span><span class="p">.</span><span class="n">from_dtype</span><span class="p">(</span><span class="n">X</span><span class="p">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="n">create_carray</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">root</span><span class="p">,</span> <span class="s">'clusters'</span><span class="p">,</span> <span class="n">atom</span><span class="p">,</span> <span class="n">X</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">ds</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">X</span>
+    <span class="n">f</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">checkpoint_file</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="matching-key-points-to-the-dictionary">Matching Key Points to the Dictionary</h2>
+
+<p>With the dictionary created the next step is to represent all the images in the labeled training set as a histogram of matching keypoints. This is a nearest neighbour matching problem so with a brute force algorithm this is a $O(N)$ so this is slow for very high numbers of words. Faster nearest neighbour matching can be achieved with the <a href="http://www.cs.ubc.ca/research/flann/">FLANN</a> library. OpenCV contains a wrapper for FLANN. I wrote a class that uses the FLANN matcher in OpenCV to match an array of descriptors to a codebook:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">FLANN_INDEX_COMPOSITE</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">FLANN_DIST_L2</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<span class="k">class</span> <span class="nc">Codebook</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdffile</span><span class="p">):</span>
+        <span class="n">clusterf</span> <span class="o">=</span> <span class="n">tables</span><span class="p">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">hdffile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">clusterf</span><span class="p">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">'/clusters'</span><span class="p">))</span>
+        <span class="n">clusterf</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="p">.</span><span class="n">_clusterids</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">_clusters</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">n_clusters</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">_clusters</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="p">.</span><span class="n">_flann</span> <span class="o">=</span> <span class="n">cv2</span><span class="p">.</span><span class="n">flann_Index</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">_clusters</span><span class="p">,</span>
+                                      <span class="nb">dict</span><span class="p">(</span><span class="n">algorithm</span><span class="o">=</span><span class="n">FLANN_INDEX_COMPOSITE</span><span class="p">,</span>
+                                           <span class="n">distance</span><span class="o">=</span><span class="n">FLANN_DIST_L2</span><span class="p">,</span>
+                                           <span class="n">iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                                           <span class="n">branching</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                                           <span class="n">trees</span><span class="o">=</span><span class="mi">50</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xdesc</span><span class="p">):</span>
+        <span class="s">"""
+        Takes Xdesc a (n,m) numpy array of n img descriptors length m and returns
+        (n,1) where every n has been assigned to a cluster id.
+        """</span>
+        <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="o">=</span> <span class="n">Xdesc</span><span class="p">.</span><span class="n">shape</span>
+        <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">cm</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">_clusters</span><span class="p">.</span><span class="n">shape</span>
+        <span class="k">assert</span> <span class="n">m</span> <span class="o">==</span> <span class="n">cm</span>
+
+        <span class="n">result</span><span class="p">,</span> <span class="n">dists</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">_flann</span><span class="p">.</span><span class="n">knnSearch</span><span class="p">(</span><span class="n">Xdesc</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{})</span>
+        <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+
+<p>The following code takes a list of image files and a dictionary and returns the count vectors for each of those image files using the <code class="language-plaintext highlighter-rouge">sparse</code> matrix type from <code class="language-plaintext highlighter-rouge">scipy</code>. It is also multi-threaded using the <code class="language-plaintext highlighter-rouge">joblib</code> library:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">count_vector</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">codebook</span><span class="p">):</span>
+    <span class="s">"""
+    Takes a list of SIFT vectors from an image and matches
+    each SIFT vector to its nearest equivalent in the codebook
+    :param: f : Image file path
+    :return: countvec : sparse vector of counts for each visual-word in the codebook
+    """</span>
+    <span class="n">desc</span> <span class="o">=</span> <span class="n">rootsift_descriptor</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># if no sift features found return 0 count vector
+</span>        <span class="k">return</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">codebook</span><span class="p">.</span><span class="n">n_clusters</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">codebook</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+    <span class="n">unique</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">unique</span><span class="p">(</span><span class="n">matches</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">countvec</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">codebook</span><span class="p">.</span><span class="n">n_clusters</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">countvec</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">unique</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span>
+    <span class="k">return</span> <span class="n">countvec</span>
+
+
+<span class="k">class</span> <span class="nc">CountVectorizer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocabulary_file</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">_codebook</span> <span class="o">=</span> <span class="n">Codebook</span><span class="p">(</span><span class="n">hdffile</span><span class="o">=</span><span class="n">vocabulary_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+        <span class="s">"""
+        Transform image files to a visual-word count matrix.
+        :param: images : iterable
+                    An iterable of str or unicode filenames
+        :return: X : sparse matrix, [n_images, n_visual_words]
+                     visual-word count matrix
+        """</span>
+
+        <span class="n">sparse_rows</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s">'threading'</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">n_jobs</span><span class="p">)(</span>
+            <span class="p">(</span><span class="n">delayed</span><span class="p">(</span><span class="n">count_vector</span><span class="p">)(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">_codebook</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">images</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">),</span> <span class="bp">self</span><span class="p">.</span><span class="n">_codebook</span><span class="p">.</span><span class="n">n_clusters</span><span class="p">),</span>
+                       <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sparse_row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sparse_rows</span><span class="p">):</span>
+            <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sparse_row</span>
+
+        <span class="k">return</span> <span class="n">X</span><span class="p">.</span><span class="n">tocsr</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Given a list of files the following code will return the count vectors for those images:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">vectorizer</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="s">'codebook_20k.hdf'</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">Xcounts</span> <span class="o">=</span> <span class="n">vectorizer</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="tf-idf">tf-idf</h3>
+
+<p>Not all words are created equal, some are more frequent than others. This is the same in human language and in the create visual vocabulary. Words like ‘the’, ‘what’, ‘where’, etc will swamp the count vectors of english words in almost all english documents. Clearly they are less interesting than a rare word like ‘disestablishment’ and that we’d like two different documents both containing a word like ‘disestablishment’ to have a high similarity. So we’d like to reweight words which appear in few documents so that they have a higher importance, and words that appear in most documents to have lower importance. 
+In another case, if a document only contained the word ‘disestablishment’ 1000 times should it be 1000 times more relevant than a document containing it once? So within an individual document we may want to reweight words that are repeated over and over so that they cannot artificially dominate.</p>
+
+<p>These two reweightings can be achieved using <a href="https://en.wikipedia.org/wiki/Tf%E2%80%93idf"><em>tf-idf</em></a> (term frequency inverse document frequency) weighting. This weighting is designed to reflect how important a particular word is in a document corpus. It is perfectly applicable in our visual word case also. <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html#sklearn.feature_extraction.text.TfidfTransformer">Scikit-learn</a> has an implementation of a tf-idf transformer for text classification that we can repurpose here. To following produces the final representation for the training data that we can use in the machine learning algorithm, $X$.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">TfidfTransformer</span>
+<span class="n">transformer</span> <span class="o">=</span> <span class="n">TfidfTransformer</span><span class="p">()</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">transformer</span><span class="p">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">Xcount</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="visualisation-of-bovw">Visualisation of BoVW</h2>
+
+<p>That that we’ve transformed the images into tf-idf weighted, 20k dimensional, sparse vectors to visual word counts, we can visualise them and see if there is any apparent structure in this high dimensional data. Great algorithms for visualising high dimensional data are PCA and T-SNE, both of which have implementations in scikit-learn. I found here that PCA worked best. For high dimensional sparse data, the <code class="language-plaintext highlighter-rouge">TruncatedSVD</code> algorithm works best:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">TruncatedSVD</span>
+
+<span class="n">svd</span> <span class="o">=</span> <span class="n">TruncatedSVD</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">svd</span><span class="p">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can plot this with the images inlined and with colours representing the valid (red) and invalid (blue) labels:</p>
+
+<p><img src="/blog/images/fleuron/pca_both.png" alt="PCA viz" /></p>
+
+<p>You can clearly see that there is clear structure in the higher dimensions and that the valid and invalid images separate quite well from each other. This is quite promising for the performance of a machine learning algorithm!</p>
+
+<h2 id="classifying-the-bad-images-with-machine-learning">Classifying the Bad Images with Machine Learning</h2>
+
+<p>I tried a number of algorithms including Random forest, logistic regression and linear SVM. I found that SVM with a linear kernel by far performed the best compared to the other algorithms.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="kn">import</span> <span class="n">LinearSVC</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">LinearSVC</span><span class="p">()</span>
+<span class="n">clf</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">LinearSVC</code> with the default settings performed very well with $97\%$ accuracy. High accuracy is generally a good sign, especially here where the numbers of valid and invalid images are of a similar size. Two other important statistics for classification are <strong>precision</strong> and <strong>recall</strong>.</p>
+
+<p>Recall is a measure of what the probability that the classifier will identify and image as invalid given that it is invalid: $P(\hat{y}=1 | y=1)$. You can think of recall as the <strong>ratio of the number of images correctly classed as invalid over the number of all invalid images</strong>.</p>
+
+<p>Precision on the other hand is a measure of the probability that an image is invalid given that the classifier says it is invalid: $P(y=1|\hat{y}=1)$.  You can think of precision as the <strong>ratio of the number of images correctly classed as invalid over the number of all images classified</strong>.</p>
+
+<p>The difference between them is subtle (<a href="https://www.quora.com/What-is-the-best-way-to-understand-the-terms-precision-and-recall">here</a> is a great explanation of the difference), but you may want to favour a trade-off of one for the other depending on your business case. In our case it is <strong>worse</strong> to misclassify a valid images as invalid because we are losing good images. We would much rather have some invalid images get through than lose good images, which is the same as <em>favouring extra precision over recall</em>.</p>
+
+<p>We can tune the precision by adjusting the <strong>class weights</strong> of the Linear SVM, such that the penalty for classifying a valid image as invalid is <em>much worse</em> than classifying an invalid image as valid. I used cross-validation to find the best values for these. These give the valid images a weight of 20 and invalid images a weight of 0.1:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="kn">import</span> <span class="n">LinearSVC</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">LinearSVC</span><span class="p">(</span><span class="n">class_weight</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
+<span class="n">clf</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This yielded the final performance of $95\%$ accuracy, $99.5\%$ precision, and $93.8\%$ recall:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Confusion</span> <span class="n">matrix</span><span class="p">:</span> 
+ <span class="p">[[</span><span class="mi">1134</span>   <span class="mi">11</span><span class="p">]</span>
+ <span class="p">[</span> <span class="mi">161</span> <span class="mi">2439</span><span class="p">]]</span>
+<span class="n">Accuracy</span> <span class="n">score</span><span class="p">:</span>  <span class="mf">0.954072096128</span>
+<span class="bp">False</span> <span class="n">Positive</span> <span class="n">Rate</span><span class="p">:</span>  <span class="mf">0.00960698689956</span>
+<span class="bp">False</span> <span class="n">Negative</span> <span class="n">Rate</span><span class="p">:</span>  <span class="mf">0.0619230769231</span>
+<span class="n">Precision</span><span class="p">:</span>  <span class="mf">0.995510204082</span>
+<span class="n">Recall</span><span class="p">:</span>  <span class="mf">0.938076923077</span>
+<span class="n">F1</span> <span class="n">Score</span><span class="p">:</span>  <span class="mf">0.965940594059</span>
+</code></pre></div></div>
+
+<p>The performance of approach this is very good. The trained classifier was then applied across the whole image dataset. In the end there were approximately 3 million invalid images and 2 million valid images detected.</p>
+
+<h2 id="further-ideas">Further Ideas</h2>
+
+<h3 id="image-search">Image search</h3>
+
+<p>The BoVW approach is also very useful for image retrieval. This means that given some image we can find duplications and similar looking images in the rest of the image set simply by finding the BoVW vectors that are closest to that image’s own BoVW vector. This is just a nearest neighbour search. It is complicated by the number of images because scaling nearest neighbour search with large numbers of vectors that don’t necessarily fit into memory relies on more complicated algorithms.</p>
+
+<h3 id="neural-networks">Neural Networks</h3>
+
+<p>Convolutional Neural Networks (CNNs) have shown great application in image classification in recent years. While they perform well at classification, they also have the advantage that they can discover vector representations of the images given the just the raw pixels. So it doesn’t require all this work with inventing a representation for images such as BoVW. The downside is that they require a lot of data (10s of thousands of examples) to be effective. Rather than hand labelling more examples, it would be quicker to look at the output of images classified by the SVM, and eyeball any false negatives or false positives in there. Artificial data could also be created using image transformations like rotation and inversion.</p>
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="jimypbr/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2016/12/30/fleuronbovw.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Jim Briggs&#39; blog about ML, software, etc</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/jimypbr" title="jimypbr"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
