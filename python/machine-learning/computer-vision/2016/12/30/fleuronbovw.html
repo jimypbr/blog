@@ -4,9 +4,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>SIFTing Images | go-seq</title>
+<title>SIFTing 3 Million Images | go-seq</title>
 <meta name="generator" content="Jekyll v4.1.1" />
-<meta property="og:title" content="SIFTing Images" />
+<meta property="og:title" content="SIFTing 3 Million Images" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals." />
 <meta property="og:description" content="In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals." />
@@ -17,7 +17,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2016-12-30T00:00:00-06:00" />
 <script type="application/ld+json">
-{"url":"https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html","@type":"BlogPosting","headline":"SIFTing Images","dateModified":"2016-12-30T00:00:00-06:00","datePublished":"2016-12-30T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fleuron/headpiece.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html"},"description":"In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.","@context":"https://schema.org"}</script>
+{"url":"https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html","@type":"BlogPosting","headline":"SIFTing 3 Million Images","dateModified":"2016-12-30T00:00:00-06:00","datePublished":"2016-12-30T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fleuron/headpiece.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/python/machine-learning/computer-vision/2016/12/30/fleuronbovw.html"},"description":"In this post I describe my work on extracting and filtering printers’ ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
@@ -84,7 +84,7 @@ window.onload = wrap_img;
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">SIFTing Images</h1><p class="page-description">In this post I describe my work on extracting and filtering printers' ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-12-30T00:00:00-06:00" itemprop="datePublished">
+    <h1 class="post-title p-name" itemprop="name headline">SIFTing 3 Million Images</h1><p class="page-description">In this post I describe my work on extracting and filtering printers' ornaments from digitized 18th century documents in Fleuron project at the University of Cambridge in 2016. I used techniques from computer vision and machine learning to accomplish my goals.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-12-30T00:00:00-06:00" itemprop="datePublished">
         Dec 30, 2016
       </time>
        • <span class="read-time" title="Estimated read time">
@@ -148,7 +148,7 @@ window.onload = wrap_img;
 
 <p>In this project an OpenCV based code was developed to automatically detect ornaments in a scanned image of a page and extract them into their own file. This code worked very well and extracted over 3 million images from the data, but it was quite over-sensitive in its detection so there were many false-positives. The code was heuristic based and didn’t use any machine intelligence to further evaluate the potential images for validity. We therefore chose to tune the code to have good recall at the expense of precision – i.e. we would rather it didn’t miss valid images, even if it means that some invalid images get through too. Often these invalid images were of blocks of text so we initially experimented with using OCR to catch these cases. However this had the unwanted effect of making recall worse. We decided a better solution would be to train a machine learning classifier to discriminate between the valid and invalid images.</p>
 
-<p>My contribution to the project was to use the extraction code to generate data, which I then hand-labelled to create a training set to train a machine learning based filter to remove the bad images. The final filtered dataset is presented on the website: <a href="http://fleuron.lib.cam.ac.uk">http://fleuron.lib.cam.ac.uk</a> <em>(EDIT 2021: Fleuron now defunct. Has since become Compositor)</em>, which I also designed and built.  In this blog post I will describe the methodology and results of the image filtering part of the project.</p>
+<p>My contribution to the project was to use the extraction code to generate data, which I then hand-labelled to create a training set to train a machine learning based filter to remove the bad images. The final filtered dataset is presented on the website: <a href="http://fleuron.lib.cam.ac.uk">http://fleuron.lib.cam.ac.uk</a> <em>(EDIT 2021: Fleuron now defunct. Has since become Compositor)</em>, which I also designed and built.  In this blog post I will describe the methodology and results of the image filtering part of the project, which was the first time I ever used machine learning in a real project.</p>
 
 <h2 id="extraction">
 <a class="anchor" href="#extraction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Extraction</h2>
