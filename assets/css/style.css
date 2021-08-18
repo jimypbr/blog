@@ -488,4 +488,14 @@ p code { font-size: 19px; }
 
 li code { font-size: 18px; }
 
+.post-content h2:before { content: "# "; font-weight: bold; color: #DDD; }
+
+.post-content h3:before { content: "## "; font-weight: bold; color: #DDD; }
+
+.post-content h4:before { content: "### "; font-weight: bold; color: #DDD; }
+
+.post-content h5:before { content: "#### "; font-weight: bold; color: #DDD; }
+
+.post-content h6:before { content: "##### "; font-weight: bold; color: #DDD; }
+
 /*# sourceMappingURL=style.css.map */
