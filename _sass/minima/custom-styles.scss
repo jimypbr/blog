@@ -9,3 +9,11 @@
 
 // If you want to turn off dark background for syntax highlighting, comment or delete the below line.
 @import "minima/fastpages-dracula-highlight"; 
+
+.math span {
+    font-size: 21px;
+}
+
+li code {
+    font-size: 18px;
+}
