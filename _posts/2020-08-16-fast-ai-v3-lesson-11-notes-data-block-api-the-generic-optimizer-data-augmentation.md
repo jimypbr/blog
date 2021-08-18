@@ -5,7 +5,7 @@ date: 2020-08-16
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 11 of part 2 of fast.ai v3 - Data Block API, the Generic Optimzier, and Data Augmentation
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20200714125023158.png
 comments: true
 ---
 

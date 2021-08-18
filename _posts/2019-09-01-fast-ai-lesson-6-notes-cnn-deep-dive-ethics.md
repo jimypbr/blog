@@ -5,7 +5,7 @@ date: 2019-09-01
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 6 of part 1 of fast.ai v3 - Regularization; Convolutions; Data ethics
-image: images/fastai/image-20190706182251357.png
+image: https://github.com/hiromis/notes/raw/master/lesson6/29.png
 comments: true
 ---
 

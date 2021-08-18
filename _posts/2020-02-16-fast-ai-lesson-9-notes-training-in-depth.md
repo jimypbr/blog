@@ -5,7 +5,7 @@ date: 2020-02-16
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 9 of part 2 of fast.ai v3 - Loss functions, optimizers, and the training loop
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20200215165056610.png
 comments: true
 ---
 

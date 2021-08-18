@@ -5,7 +5,7 @@ date: 2019-07-23
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 3 of part 1 of fast.ai v3 - Data blocks; Multi-label classification; Segmentation. 
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20190717172222609.png
 comments: true
 ---
 

@@ -5,7 +5,7 @@ date: 2019-07-12
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 2 of fast.ai v3 - Data cleaning and production; SGD from scratch. 
-image: images/fastai/image-20190706182251357.png
+image: images/fastai/oxana-lyashenko-07eCb8SVGus-unsplash.jpg
 comments: true
 ---
 

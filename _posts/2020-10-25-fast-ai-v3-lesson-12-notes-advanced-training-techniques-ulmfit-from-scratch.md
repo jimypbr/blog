@@ -5,7 +5,7 @@ date: 2020-10-25
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 12 of part 2 of fast.ai v3 - Advanced training techniques; ULMFiT from scratch
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20201015002514416.png
 comments: true
 ---
 

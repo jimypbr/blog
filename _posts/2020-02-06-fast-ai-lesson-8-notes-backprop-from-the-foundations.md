@@ -5,7 +5,7 @@ date: 2020-02-06
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes 
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20200206010837769.png
 comments: true
 ---
 
@@ -751,22 +751,14 @@ loss.backward() # do the backward pass!
 ## Links and References
 
 - Lesson 8 [lecture video](https://youtu.be/4u8FxNEDUeg).
-
 - [Lesson notes from Laniken](https://medium.com/@lankinen/fast-ai-lesson-8-notes-part-2-v3-8965a6532f51) provide a transcription of the lesson.
-
 - Broadcasting tutorial from Jake Vanderplas: [Computation on Arrays: Broadcasting](https://jakevdp.github.io/PythonDataScienceHandbook/02.05-computation-on-arrays-broadcasting.html).
-
 - Deeplearning.ai notes on initialisation with nice demos of different initialisations and their effects: [deeplearning.ai](https://www.deeplearning.ai/ai-notes/initialization/)
-
 - Kaiming He paper on initialization with ReLu activations (**assignment**: read section 2.2 of this paper): [Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification](https://arxiv.org/abs/1502.01852)
-
 - Fixup Initialization: [paper](https://arxiv.org/abs/1901.09321) where they trained a 10,000 layer NN with no normalization layers through careful initialization.
-
 - Things that made Backprop 'click' for me:
-
   - CS231: backpropagation explained using the a circuit model: [http://cs231n.github.io/optimization-2/](http://cs231n.github.io/optimization-2/)
   - [CS231: backpropagation lecture (Andrej Karpathy)](https://youtu.be/i94OvYb6noo), [slides](http://cs231n.stanford.edu/slides/2019/cs231n_2019_lecture04.pdf).
   - [Blog post](https://amva4newphysics.wordpress.com/2017/03/28/understanding-neural-networks-part-ii-back-propagation/) with worked examples of backpropagation on simple calculations.
   - [Calculus on Computational Graphs, Chris Olah.](https://colah.github.io/posts/2015-08-Backprop/)
-
 - StackExchange: [Tradeoff batch size vs. number of iterations to train a neural network](https://stats.stackexchange.com/questions/164876/tradeoff-batch-size-vs-number-of-iterations-to-train-a-neural-network) - worth reading about somewhat unintuitive effect batchsize has on training performance and speed.

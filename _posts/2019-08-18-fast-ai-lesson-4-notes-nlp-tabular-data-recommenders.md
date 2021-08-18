@@ -5,7 +5,7 @@ date: 2019-08-18
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings 
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20190727203324398.png
 comments: true
 ---
 
@@ -17,18 +17,6 @@ The first part of this lesson dives into _natural language processing_ (NLP), us
 Next the lesson shows how to use deep learning with _tabular data_ using fastai. 
 
 Lastly the lesson shows how *collaborative filtering* models (aka recommender systems) can be built using similar ideas to those for tabular data, but with some special tricks to get both higher accuracy and more informative model interpretation.
-
-<div class="row">
-<div class="col-md-6" id="mdtoc">
-
-__Table of Contents__
-
-* TOC
-{:toc}
-</div>
-
-</div>
-
 
 
 ## Natural Language Processing (NLP)

@@ -5,7 +5,7 @@ date: 2020-03-24
 toc: true
 categories: deep-learning machine-learning fastai fastai-v3-notes
 description: My personal notes on Lesson 10 of part 2 of fast.ai v3 - Looking inside the model
-image: images/fastai/image-20190706182251357.png
+image: /images/fastai/image-20200323213749046.png
 comments: true
 ---
 
