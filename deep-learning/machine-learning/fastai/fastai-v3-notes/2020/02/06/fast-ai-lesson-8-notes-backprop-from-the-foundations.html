@@ -13,11 +13,11 @@
 <link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html" />
 <meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html" />
 <meta property="og:site_name" content="go-seq" />
-<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20200206010837769.png" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-02-06T00:00:00-06:00" />
 <script type="application/ld+json">
-{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 8 Notes: Backprop from the Foundations","dateModified":"2020-02-06T00:00:00-06:00","datePublished":"2020-02-06T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html"},"description":"My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes","@context":"https://schema.org"}</script>
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 8 Notes: Backprop from the Foundations","dateModified":"2020-02-06T00:00:00-06:00","datePublished":"2020-02-06T00:00:00-06:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20200206010837769.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2020/02/06/fast-ai-lesson-8-notes-backprop-from-the-foundations.html"},"description":"My personal notes on Lesson 8 of part 2 of fast.ai v3 - Matrix Multiplication; Forward and Backward Passes","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
@@ -800,27 +800,16 @@ q(x,y) = x+y\]
 <a class="anchor" href="#links-and-references" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links and References</h2>
 
 <ul>
+  <li>Lesson 8 <a href="https://youtu.be/4u8FxNEDUeg">lecture video</a>.</li>
   <li>
-    <p>Lesson 8 <a href="https://youtu.be/4u8FxNEDUeg">lecture video</a>.</p>
-  </li>
-  <li>
-    <p><a href="https://medium.com/@lankinen/fast-ai-lesson-8-notes-part-2-v3-8965a6532f51">Lesson notes from Laniken</a> provide a transcription of the lesson.</p>
-  </li>
-  <li>
-    <p>Broadcasting tutorial from Jake Vanderplas: <a href="https://jakevdp.github.io/PythonDataScienceHandbook/02.05-computation-on-arrays-broadcasting.html">Computation on Arrays: Broadcasting</a>.</p>
-  </li>
-  <li>
-    <p>Deeplearning.ai notes on initialisation with nice demos of different initialisations and their effects: <a href="https://www.deeplearning.ai/ai-notes/initialization/">deeplearning.ai</a></p>
-  </li>
-  <li>
-    <p>Kaiming He paper on initialization with ReLu activations (<strong>assignment</strong>: read section 2.2 of this paper): <a href="https://arxiv.org/abs/1502.01852">Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification</a></p>
-  </li>
-  <li>
-    <p>Fixup Initialization: <a href="https://arxiv.org/abs/1901.09321">paper</a> where they trained a 10,000 layer NN with no normalization layers through careful initialization.</p>
-  </li>
-  <li>
-    <p>Things that made Backprop ‘click’ for me:</p>
-
+<a href="https://medium.com/@lankinen/fast-ai-lesson-8-notes-part-2-v3-8965a6532f51">Lesson notes from Laniken</a> provide a transcription of the lesson.</li>
+  <li>Broadcasting tutorial from Jake Vanderplas: <a href="https://jakevdp.github.io/PythonDataScienceHandbook/02.05-computation-on-arrays-broadcasting.html">Computation on Arrays: Broadcasting</a>.</li>
+  <li>Deeplearning.ai notes on initialisation with nice demos of different initialisations and their effects: <a href="https://www.deeplearning.ai/ai-notes/initialization/">deeplearning.ai</a>
+</li>
+  <li>Kaiming He paper on initialization with ReLu activations (<strong>assignment</strong>: read section 2.2 of this paper): <a href="https://arxiv.org/abs/1502.01852">Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification</a>
+</li>
+  <li>Fixup Initialization: <a href="https://arxiv.org/abs/1901.09321">paper</a> where they trained a 10,000 layer NN with no normalization layers through careful initialization.</li>
+  <li>Things that made Backprop ‘click’ for me:
     <ul>
       <li>CS231: backpropagation explained using the a circuit model: <a href="http://cs231n.github.io/optimization-2/">http://cs231n.github.io/optimization-2/</a>
 </li>
@@ -831,9 +820,7 @@ q(x,y) = x+y\]
       <li><a href="https://colah.github.io/posts/2015-08-Backprop/">Calculus on Computational Graphs, Chris Olah.</a></li>
     </ul>
   </li>
-  <li>
-    <p>StackExchange: <a href="https://stats.stackexchange.com/questions/164876/tradeoff-batch-size-vs-number-of-iterations-to-train-a-neural-network">Tradeoff batch size vs. number of iterations to train a neural network</a> - worth reading about somewhat unintuitive effect batchsize has on training performance and speed.</p>
-  </li>
+  <li>StackExchange: <a href="https://stats.stackexchange.com/questions/164876/tradeoff-batch-size-vs-number-of-iterations-to-train-a-neural-network">Tradeoff batch size vs. number of iterations to train a neural network</a> - worth reading about somewhat unintuitive effect batchsize has on training performance and speed.</li>
 </ul>
 
   </div><!-- from https://github.com/utterance/utterances -->

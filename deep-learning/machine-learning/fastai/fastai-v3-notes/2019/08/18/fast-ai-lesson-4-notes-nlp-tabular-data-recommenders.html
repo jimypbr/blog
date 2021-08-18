@@ -13,11 +13,11 @@
 <link rel="canonical" href="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html" />
 <meta property="og:url" content="https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html" />
 <meta property="og:site_name" content="go-seq" />
-<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png" />
+<meta property="og:image" content="https://jimypbr.github.io/blog/images/fastai/image-20190727203324398.png" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2019-08-18T00:00:00-05:00" />
 <script type="application/ld+json">
-{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 4 Notes: NLP; Tabular Data; Recommenders","dateModified":"2019-08-18T00:00:00-05:00","datePublished":"2019-08-18T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190706182251357.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html"},"description":"My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings","@context":"https://schema.org"}</script>
+{"url":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html","@type":"BlogPosting","headline":"Fast.ai v3 Lesson 4 Notes: NLP; Tabular Data; Recommenders","dateModified":"2019-08-18T00:00:00-05:00","datePublished":"2019-08-18T00:00:00-05:00","image":"https://jimypbr.github.io/blog/images/fastai/image-20190727203324398.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://jimypbr.github.io/blog/deep-learning/machine-learning/fastai/fastai-v3-notes/2019/08/18/fast-ai-lesson-4-notes-nlp-tabular-data-recommenders.html"},"description":"My personal notes on Lesson 4 of part 1 of fast.ai v3 - NLP; Tabular data; Collaborative filtering; Embeddings","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://jimypbr.github.io/blog/feed.xml" title="go-seq" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
@@ -157,17 +157,6 @@ window.onload = wrap_img;
 <p>Next the lesson shows how to use deep learning with <em>tabular data</em> using fastai.</p>
 
 <p>Lastly the lesson shows how <em>collaborative filtering</em> models (aka recommender systems) can be built using similar ideas to those for tabular data, but with some special tricks to get both higher accuracy and more informative model interpretation.</p>
-
-<div class="row">
-<div class="col-md-6" id="mdtoc">
-
-__Table of Contents__
-
-* TOC
-{:toc}
-</div>
-
-</div>
 
 <h2 id="natural-language-processing-nlp">
 <a class="anchor" href="#natural-language-processing-nlp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Natural Language Processing (NLP)</h2>
