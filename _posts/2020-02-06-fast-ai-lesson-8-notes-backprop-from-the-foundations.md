@@ -492,7 +492,7 @@ How does this fit into backpropagation? Things become clearer when the model is 
 
 Imagine some neuron $f$ in the middle of a bigger network. In the forward pass, data $x$ and $y$ flows from left to right through the neuron $f$, outputting $z$,  then calculating the loss $L$. Then we want the gradients of all the variables wrt the loss. Here is a diagram taken from [CS231 course](http://cs231n.stanford.edu/) :
 
-![image-20200205212902584](/images/fastai/image-20200205212902584.png)
+![image-20200205212902584]({{site.baseurl}}/images/fastai/image-20200205212902584.png)
 
 *([Source](http://cs231n.stanford.edu/slides/2019/cs231n_2019_lecture04.pdf): brilliant CS231 course from Stanford. This lecture made backpropagation 'click' for me: [video](https://youtu.be/GZTvxoSHZIo), [notes](http://cs231n.github.io/optimization-2/)).*
 
