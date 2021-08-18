@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "SIFTing Images"
+title: "SIFTing 3 Million Images"
 date: 2016-12-30
 toc: true
 comments: true 
@@ -18,7 +18,7 @@ I have been involved in the Fleuron project this year. The aim of this project i
 
 In this project an OpenCV based code was developed to automatically detect ornaments in a scanned image of a page and extract them into their own file. This code worked very well and extracted over 3 million images from the data, but it was quite over-sensitive in its detection so there were many false-positives. The code was heuristic based and didn't use any machine intelligence to further evaluate the potential images for validity. We therefore chose to tune the code to have good recall at the expense of precision -- i.e. we would rather it didn't miss valid images, even if it means that some invalid images get through too. Often these invalid images were of blocks of text so we initially experimented with using OCR to catch these cases. However this had the unwanted effect of making recall worse. We decided a better solution would be to train a machine learning classifier to discriminate between the valid and invalid images. 
 
-My contribution to the project was to use the extraction code to generate data, which I then hand-labelled to create a training set to train a machine learning based filter to remove the bad images. The final filtered dataset is presented on the website: [http://fleuron.lib.cam.ac.uk](http://fleuron.lib.cam.ac.uk) *(EDIT 2021: Fleuron now defunct. Has since become Compositor)*, which I also designed and built.  In this blog post I will describe the methodology and results of the image filtering part of the project. 
+My contribution to the project was to use the extraction code to generate data, which I then hand-labelled to create a training set to train a machine learning based filter to remove the bad images. The final filtered dataset is presented on the website: [http://fleuron.lib.cam.ac.uk](http://fleuron.lib.cam.ac.uk) *(EDIT 2021: Fleuron now defunct. Has since become Compositor)*, which I also designed and built.  In this blog post I will describe the methodology and results of the image filtering part of the project, which was the first time I ever used machine learning in a real project. 
 
 ## Extraction
 
