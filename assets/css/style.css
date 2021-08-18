@@ -498,4 +498,6 @@ li code { font-size: 18px; }
 
 .post-content h6:before { content: "##### "; font-weight: bold; color: #DDD; }
 
+.site-title, .site-title:visited { font-size: 2rem; font-weight: 600; }
+
 /*# sourceMappingURL=style.css.map */
